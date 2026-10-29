@@ -119,6 +119,19 @@ describe('c3d_save_document / c3d_export', () => {
   });
 });
 
+describe('checkpoints survive a server restart', () => {
+  it('lists checkpoint files already on disk and continues the id sequence', async () => {
+    const dir = path.join(t.ctx.config.workDir, 'checkpoints');
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, '1793276359012-cp7-P5-environment-signs-done.jas'), 'x');
+    const list = await runTool(restoreCheckpoint, { list_only: true }, t.ctx);
+    expect((list.structured.checkpoints as any[]).map((c) => c.id)).toEqual(['cp7']);
+    expect((list.structured.checkpoints as any[])[0].label).toBe('P5-environment-signs-done');
+    const next = await runTool(checkpoint, { label: 'after restart' }, t.ctx);
+    expect((next.structured.checkpoint as any).id).toBe('cp8');
+  });
+});
+
 describe('checkpoints', () => {
   it('creates, lists and restores via a new window', async () => {
     const a = await runTool(checkpoint, { label: 'before boolean!' }, t.ctx);

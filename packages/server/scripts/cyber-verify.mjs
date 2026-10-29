@@ -1,0 +1,15 @@
+import { connect } from './live-driver.mjs';
+import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+const run = '~/Documents/c3dmcpserver/evals/results/cyberpunk-main/work';
+const cp = readdirSync(join(run, 'checkpoints')).find((f) => f.includes('P7-final-delivered'));
+const dir = '/tmp/cyberverify/' + Date.now(); mkdirSync(dir, { recursive: true });
+const copy = join(dir, 'final_copy.jas'); copyFileSync(join(run, 'checkpoints', cp), copy);
+const { call, close } = await connect({ C3D_MCP_WORKDIR: dir });
+const must = async (l, n, a) => { const r = await call(n, a); if (r.isError) { console.log('FAIL', l, JSON.stringify(r.sc).slice(0, 300)); throw new Error(l); } return r; };
+await must('open', 'c3d_open_document', { path: copy });
+const info = (await must('info', 'c3d_get_document_info', {})).sc.document; console.log('objects', info.objectCount, 'materials', info.materialCount, 'camera', JSON.stringify(info.activeCamera));
+const ls = await must('ls', 'c3d_list_scene', { depth: 0, limit: 50 }); console.log('top-level', ls.sc.total, ls.sc.items.map((i) => `${i.name}(${i.childCount})`).join(', '));
+const t = Date.now(); const r = await must('render', 'c3d_render_image', { path: join(dir, 'verify_1456.png') }); console.log('re-render', Date.now() - t, 'ms', r.sc.width, r.sc.height, 'luma', r.sc.meanLuma.toFixed(4));
+console.log('OUT', dir);
+await close();

@@ -42,6 +42,8 @@ export interface ToolServiceDeps {
   capabilities: () => Promise<Record<string, unknown>>;
   statics: Pick<ToolServices, 'searchDocs' | 'lint' | 'imageTools'>;
   legacyClientCapabilities: () => { elicitation?: unknown } | undefined;
+  /** C3D_MCP_AUTO_CONFIRM: unattended agent runs where nobody can answer an elicitation prompt. */
+  autoConfirm?: boolean;
 }
 
 /** Per-call services: progress and confirm need the current request's context. */
@@ -53,6 +55,7 @@ export function createToolServices(deps: ToolServiceDeps, call?: ServerContext):
     capabilities: () => deps.capabilities() as Promise<Record<string, any>>,
     // eslint-disable-next-line @typescript-eslint/require-await -- must reject (not throw synchronously) with ConfirmationNeeded
     async confirm({ message, confirmFlag }) {
+      if (deps.autoConfirm && confirmFlag === true) return true;
       const key = `confirm-${createHash('sha256').update(message).digest('hex').slice(0, 12)}`;
       const prior = call ? inputResponse(call.mcpReq.inputResponses, key) : ({ kind: 'missing' } as const);
       if (prior.kind === 'elicit') return prior.action === 'accept' && prior.content?.confirm === true;

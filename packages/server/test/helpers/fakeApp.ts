@@ -38,6 +38,7 @@ export function makeTestEnv(prefix = 'c3d'): TestEnv {
     profile: 'full',
     disableExec: false,
     disableAssets: false,
+    autoConfirm: false,
     disableShell: false,
     mcpDir: join(support, 'MCP'),
     cheetahSupportDir: support,

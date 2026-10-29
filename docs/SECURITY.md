@@ -93,3 +93,6 @@ Open a private security advisory on the GitHub repository (Security → Advisori
 
 ## Confirmation, in plain words
 Before deleting more than 5 objects (or objects with children), overwriting a file, restoring a checkpoint, or running a script that touches files or the shell, the server asks you: through MCP elicitation if your client supports it, otherwise the tool refuses until the agent repeats the call with `confirm:true` (which your client may in turn show you for approval).
+
+## Unattended runs
+`C3D_MCP_AUTO_CONFIRM=1` makes the server accept `confirm:true` from the model without asking a human, even if the client supports elicitation. Use it only for headless/automation runs on a scratch Cheetah3D document; it is deliberately off by default and not set by any client config snippet.

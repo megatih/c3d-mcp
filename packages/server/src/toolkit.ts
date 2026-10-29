@@ -51,6 +51,8 @@ export interface ServerConfig {
   disableExec: boolean;
   disableAssets: boolean;
   disableShell: boolean;
+  /** Unattended runs (C3D_MCP_AUTO_CONFIRM=1): honour `confirm:true` even when the client could ask a human. Off by default. */
+  autoConfirm: boolean;
   mcpDir: string;
   cheetahSupportDir: string;
   logDir: string;

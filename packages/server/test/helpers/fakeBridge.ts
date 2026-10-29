@@ -304,7 +304,7 @@ export function makeCtx(over: { config?: Partial<ServerConfig>; confirm?: boolea
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'c3d-mcp-test-'));
   const bridge = new FakeBridge();
   const helper = new FakeHelper();
-  const config: ServerConfig = { profile: 'full', disableExec: false, disableAssets: false, disableShell: false, mcpDir: dir, cheetahSupportDir: dir, logDir: dir, workDir: path.join(dir, 'work'), ...over.config };
+  const config: ServerConfig = { profile: 'full', disableExec: false, disableAssets: false, disableShell: false, autoConfirm: false, mcpDir: dir, cheetahSupportDir: dir, logDir: dir, workDir: path.join(dir, 'work'), ...over.config };
   const session: SessionState = { ownedPaths: new Set(), scratch: new Map() };
   const confirmCalls: string[] = [];
   let answer = over.confirm ?? true;

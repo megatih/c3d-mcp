@@ -115,6 +115,7 @@ export function buildServer(opts: BuildOptions): BuiltServer {
               {
                 capabilities: () => caps.get(),
                 statics,
+                autoConfirm: config.autoConfirm,
                 // eslint-disable-next-line @typescript-eslint/no-deprecated -- only source of initialize-declared capabilities on 2025-era connections
                 legacyClientCapabilities: () => mcp.server.getClientCapabilities(),
               },

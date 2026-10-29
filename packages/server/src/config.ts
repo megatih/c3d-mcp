@@ -29,6 +29,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, home: string = 
     disableExec: flag(env.C3D_MCP_DISABLE_EXEC),
     disableAssets: flag(env.C3D_MCP_DISABLE_ASSETS),
     disableShell: flag(env.C3D_MCP_DISABLE_SHELL),
+    autoConfirm: flag(env.C3D_MCP_AUTO_CONFIRM),
     mcpDir,
     cheetahSupportDir: support,
     logDir: resolve(env.C3D_MCP_LOG_DIR || join(home, 'Library', 'Logs', 'c3d-mcp')),

@@ -49,3 +49,14 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 - `c3d_export` also writes sibling files (`.mtl`) and creates missing parent directories; the overwrite guard checks the main path only and is not atomic.
 - The helper socket is protected by file mode (0600) only; any process of the same user can use it.
 - Downloads are capped at 100 MB but the body is buffered before the cap is enforced.
+
+
+## Found by the benchmark runs (docs/benchmark/)
+- **Rendering features Cheetah3D does not offer through c3d:** no outlines / Freestyle-style line work, no bloom or glow, no compositor or render passes, no gradient background (camera/BACKGROUND take a flat colour or an image; scripts cannot write image files), so an anime/NPR finish like the Blender result is not reachable.
+- **Materials:** the `Toon` root only accepts `color` (its lit/shaded ramp cannot be set); only `Material`, `Material (PBR)`, `Toon` and `Glass` roots are created by `c3d_create_material`.
+- **Geometry:** `TORUS` has no sweep angle (no quarter-turn pipe elbows); parametric primitives have no polygon/vertex statistics tool.
+- **Lights:** `c3d_set_light`/`c3d_look_at` assume a light casts along its local -Z, but Cheetah3D lights also have an `axis` parameter (default 1) and a distant light aimed this way can face the opposite direction (the residual check cannot catch it). Verify distant-light direction with a test render or set `rotation` by hand. The axis values 0–5 are not yet mapped.
+- **Rotation:** `rotation` components are x=heading, y=pitch, z=bank (default HPB order), not x/y/z axis rotations.
+- **Reparenting:** `keep_world` only works between root-level parents.
+- **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and creating then removing a material (`doc.removeMaterial`) crashed Cheetah3D once (crash #2 in research/08, cause unproven).
+- **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1`.

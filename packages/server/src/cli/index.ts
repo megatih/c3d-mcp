@@ -41,7 +41,7 @@ Options:
   --help, -h
 
 Environment: C3D_MCP_PROFILE=full|local|readonly, C3D_MCP_DISABLE_EXEC/ASSETS/SHELL=1, C3D_MCP_DIR, C3D_CHEETAH_SUPPORT_DIR,
-C3D_MCP_WORKDIR, C3D_MCP_LOG_DIR, C3D_MCP_TRIGGER=auto|helper|osascript.
+C3D_MCP_WORKDIR, C3D_MCP_LOG_DIR, C3D_MCP_TRIGGER=auto|helper|osascript, C3D_MCP_AUTO_CONFIRM=1 (unattended runs only).
 `;
 
 export const defaultIO: CliIO = {

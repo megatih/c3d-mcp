@@ -29,3 +29,6 @@ GitHub repo + v0.1.0 release + Homebrew tap published; helper signed with your A
 
 ## Claude Desktop tool call
 `c3d_doctor` run from Claude Desktop (installed from the .mcpb) passed all checks. Real clients exercised: Claude Code, Codex CLI, Claude Desktop.
+
+## 0.1.1 (benchmark follow-ups)
+Fixes from the Cornell Box and Cyberpunk Diorama runs are released as 0.1.1 (see CHANGELOG.md and docs/benchmark/cyberpunk-diorama-results.md). Remaining open: light `axis` mapping, crash #2 root cause, missing renderer features (docs/limitations.md).

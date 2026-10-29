@@ -236,7 +236,7 @@ Local profile hint: _Create an object: type BOX, BALL, PLANE (use for a floor), 
 | `name` | string (len<=255) | no | Object name. |
 | `parent` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | no | Parent (default: scene root). |
 | `position` | any[] \| object | no | Local position. |
-| `rotation` | any[] \| object | no | Local rotation in degrees (H,P,B for the default HPB order). |
+| `rotation` | any[] \| object | no | Local rotation in degrees. Components are x=HEADING (turn about the vertical Y axis), y=PITCH (tilt about X; positive tips the +Z end down), z=BANK (roll about Z) for the default HPB order. |
 | `scale` | any[] \| object | no | Local scale. |
 | `params` | object | no | Initial parameters, e.g. {"sizeX": 2} (names are case-sensitive) (see c3d_get_parameters). |
 | `light_type` | integer (>=0, <=4) | no | Only for LIGHT: lightType 0..4. |
@@ -272,7 +272,7 @@ Local profile hint: _Move an object under another parent._
 | `ref` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | yes | Object reference: integer id (preferred), "/Path/Name", {id}, {path}, {indexPath:[..]} or {selected:true}. |
 | `parent` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | yes | New parent object. |
 | `index` | integer (>=0, <=9007199254740991) | no | Child index (default: append). |
-| `keep_world` | boolean | no | Preserve world position (default false). |
+| `keep_world` | boolean | no | Preserve world position (default false). Only works when the old and new parent are both root-level; otherwise the call fails with UNSUPPORTED and the object keeps its local transform. |
 
 **Output fields:** `object` (object)
 
@@ -310,7 +310,7 @@ EXPERIMENTAL. Duplicates an object with its children. method "menu" selects it a
 
 **Set transform** - writes, idempotent. Profiles: full, local.
 
-Sets local position, rotation (degrees, rotation order of the object, default HPB = heading/pitch/bank) and/or scale. space "world" supports position only. Omitted components stay unchanged. To aim an object at a target use c3d_look_at.
+Sets local position, rotation (degrees; x=heading i.e. turn about vertical Y, y=pitch about X, z=bank about Z, for the default HPB order) and/or scale. space "world" supports position only. Omitted components stay unchanged. To aim an object at a target use c3d_look_at.
 
 Local profile hint: _Set position/rotation(deg)/scale of an object._
 
@@ -318,7 +318,7 @@ Local profile hint: _Set position/rotation(deg)/scale of an object._
 |---|---|---|---|
 | `ref` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | yes | Object reference: integer id (preferred), "/Path/Name", {id}, {path}, {indexPath:[..]} or {selected:true}. |
 | `position` | any[] \| object | no | 3D vector as [x,y,z] or {x,y,z}. |
-| `rotation` | any[] \| object | no | Degrees. |
+| `rotation` | any[] \| object | no | Degrees: x=heading (turn about vertical Y), y=pitch (about X), z=bank (about Z). |
 | `scale` | any[] \| object | no | 3D vector as [x,y,z] or {x,y,z}. |
 | `space` | `local` \| `world` | no | Default local; world applies to position only. |
 
@@ -910,7 +910,7 @@ EXPERIMENTAL. Brings the top-level objects of a file (jas, obj, fbx, dae, stl, 3
 
 **Run JavaScript in Cheetah3D** - writes, destructive, open-world (network). Profiles: full.
 
-Runs a JavaScript snippet inside Cheetah3D with the full scripting API (doc, ES5-style; JSC engine). Use only when no dedicated tool fits. Search c3d_search_api_docs first. The code is linted first and blocked on error-severity findings unless force:true. Code touching OS.system or files needs confirmation. An automatic checkpoint is saved first (changes cannot be undone otherwise). print() output is returned in log; a trailing expression or return value is returned in value. No setTimeout/require; never call File.mkDir; always obj.update() after core edits.
+Runs a JavaScript snippet inside Cheetah3D with the full scripting API (doc, ES5-style; JSC engine). Use only when no dedicated tool fits. Search c3d_search_api_docs first. The code is linted first and blocked on error-severity findings unless force:true. Code touching OS.system or files needs confirmation. An automatic checkpoint is saved first (changes cannot be undone otherwise). print() output is returned in log; use an explicit return to send a JSON-able value back. doc.addObject puts the new object under the parent of the currently selected object, so parent every new object explicitly with parent.addChildAtIndex(obj, parent.childCount()). A script that throws keeps the geometry it already created (check c3d_list_scene, restore the checkpoint if needed). No setTimeout/require; never call File.mkDir; always obj.update() after core edits.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

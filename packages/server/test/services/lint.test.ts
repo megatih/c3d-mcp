@@ -7,6 +7,7 @@ const rules = (code: string): string[] => lintScript(code).map((f) => f.rule);
 describe('lint rules (positive / negative)', () => {
   const cases: Array<[string, string, string]> = [
     ['file-mkdir', 'File.mkDir("/tmp/x");', 'var f = new File("a");'],
+    ['remove-material', 'doc.removeMaterial(m);', 'var m = doc.addMaterial("Material", "x");'],
     ['os-system', 'OS.system("ls");', 'print("hi");'],
     ['computed-os-access', 'OS["sys"+"tem"]("ls");', 'var a = [1]; a[0];'],
     ['eval', 'eval("1+1");', 'var evaluate = 1;'],

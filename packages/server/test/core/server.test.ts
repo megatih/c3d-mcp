@@ -263,6 +263,17 @@ describe('confirmation', () => {
     expect(r.isError).toBe(true);
   });
 
+  it('C3D_MCP_AUTO_CONFIRM (unattended runs) honours confirm:true even for an elicitation-capable client', async () => {
+    h.rt.config.autoConfirm = true;
+    const { client } = await connect([askTool], { caps: { elicitation: { form: {} } } });
+    const asked: string[] = [];
+    client.setRequestHandler('elicitation/create', (req) => { asked.push((req.params as { message: string }).message); return { action: 'decline' }; });
+    const r = await client.callTool({ name: 'c3d_ask', arguments: { confirm: true } });
+    h.rt.config.autoConfirm = false;
+    expect(r.isError).toBeFalsy();
+    expect(asked).toHaveLength(0);
+  });
+
   it('declined elicitation yields CONFIRMATION_REQUIRED', async () => {
     const { client } = await connect([askTool], { caps: { elicitation: { form: {} } } });
     client.setRequestHandler('elicitation/create', () => ({ action: 'decline' }));

@@ -89,11 +89,11 @@ async function runOnce(task, rep) {
     }
     const sceneBefore = await dumpScene(srv.call);
     const cfg = join(runDir, 'mcp.json');
-    writeFileSync(cfg, JSON.stringify({ mcpServers: { c3d: { command: process.execPath, args: [join(repo, 'packages/server/bin/c3d-mcp.js'), 'serve'], env: { C3D_MCP_PROFILE: task.profile, C3D_MCP_WORKDIR: workDir } } } }));
+    writeFileSync(cfg, JSON.stringify({ mcpServers: { c3d: { command: process.execPath, args: [join(repo, 'packages/server/bin/c3d-mcp.js'), 'serve'], env: { C3D_MCP_PROFILE: task.profile, C3D_MCP_WORKDIR: workDir, C3D_MCP_AUTO_CONFIRM: '1' } } } }));
     const sys = 'You control Cheetah3D through the c3d MCP tools. Do not ask the user questions: act, verify your result (inspect the scene and, for visual tasks, render), then reply with a short summary of what you did.';
     const transcript = []; let answer = ''; let cost = 0; let turns = 0;
     if (AGENT === 'mlx') {
-      const r = await runLocalAgent({ prompt: task.prompt, system: sys, serverArgs: [join(repo, 'packages/server/bin/c3d-mcp.js'), 'serve'], env: { C3D_MCP_PROFILE: task.profile, C3D_MCP_WORKDIR: workDir }, baseUrl: LOCAL_URL, model: MODEL, timeoutMs: (task.timeout_s ?? 300) * 1000 });
+      const r = await runLocalAgent({ prompt: task.prompt, system: sys, serverArgs: [join(repo, 'packages/server/bin/c3d-mcp.js'), 'serve'], env: { C3D_MCP_PROFILE: task.profile, C3D_MCP_WORKDIR: workDir, C3D_MCP_AUTO_CONFIRM: '1' }, baseUrl: LOCAL_URL, model: MODEL, timeoutMs: (task.timeout_s ?? 300) * 1000 });
       transcript.push(...r.transcript); answer = r.answer; turns = r.turns;
     } else await new Promise((res) => {
       const p = spawn('claude', ['-p', task.prompt, '--mcp-config', cfg, '--strict-mcp-config', '--tools', '', '--allowedTools', 'mcp__c3d', '--output-format', 'stream-json', '--verbose', '--max-turns', '40', '--model', MODEL, '--max-budget-usd', String(PER_RUN), '--no-session-persistence', '--append-system-prompt', sys], { cwd: runDir, stdio: ['ignore', 'pipe', 'pipe'] });
