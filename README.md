@@ -1,5 +1,7 @@
 # c3d-mcp — an MCP server for Cheetah3D 8.1.3
 
+> **New to c3d-mcp?** Read the friendly introduction, with install steps and two benchmark scenes (Cornell Box and Cyberpunk Diorama): **[Cheetah3D Meets AI](https://megatih.github.io/2026-10-29-cheetah3d-meets-ai-introducing-c3d-mcp/)**.
+
 Let an AI agent (Claude Code / Claude Desktop, Codex, Gemini CLI, Antigravity, Cursor, LM Studio …) **inspect, build, edit, animate, light, texture, render and export scenes in the running Cheetah3D** on macOS 27+ / Apple Silicon.
 
 Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-mcp` therefore works through three parts:
@@ -106,3 +108,6 @@ scripts/release.sh                                                              
 ## License
 
 MIT. The vendored knowledge base (`vendor/c3d-scripting-kb`) is MIT © its authors; see its `LICENSE`/`NOTICE.md`.
+
+---
+#cheetah3d #mcp #modelcontextprotocol #macos #3d #ai #claude #codex #antigravity #automation #rendering
