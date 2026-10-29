@@ -8,8 +8,8 @@ export const SKILL_TARGETS = ['claude', 'codex', 'antigravity'] as const;
 export type SkillTarget = (typeof SKILL_TARGETS)[number];
 
 /** User-level skill directories of the supported clients (and their project-level equivalents). */
-const USER_DIRS: Record<SkillTarget, string[]> = { claude: ['.claude', 'skills'], codex: ['.agents', 'skills'], antigravity: ['.gemini', 'antigravity', 'skills'] };
-const PROJECT_DIRS: Record<SkillTarget, string[]> = { claude: ['.claude', 'skills'], codex: ['.agents', 'skills'], antigravity: ['.agent', 'skills'] };
+const USER_DIRS: Record<SkillTarget, string[]> = { claude: ['.claude', 'skills'], codex: ['.agents', 'skills'], antigravity: ['.gemini', 'config', 'skills'] };
+const PROJECT_DIRS: Record<SkillTarget, string[]> = { claude: ['.claude', 'skills'], codex: ['.agents', 'skills'], antigravity: ['.agents', 'skills'] };
 
 export interface SkillsOptions {
   targets?: SkillTarget[];

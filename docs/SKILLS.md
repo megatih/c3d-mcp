@@ -17,11 +17,11 @@ Six skills in the open Agent Skills format (a folder with `SKILL.md`, plus `refe
 ```bash
 c3d-mcp skills install                      # all clients
 c3d-mcp skills install --target codex       # claude | codex | antigravity
-c3d-mcp skills install --project .          # into ./.claude/skills, ./.agents/skills, ./.agent/skills
+c3d-mcp skills install --project .          # into ./.claude/skills and ./.agents/skills (Codex and Antigravity)
 c3d-mcp skills install --dry-run            # show what would change
 c3d-mcp skills uninstall                    # removes only what install created
 ```
-User-level folders: `~/.claude/skills`, `~/.agents/skills` (Codex), `~/.gemini/antigravity/skills` (Antigravity). Folders that were not installed by c3d-mcp are never overwritten (installed folders carry a `.c3d-mcp-skill` marker). Start a new session afterwards.
+User-level folders: `~/.claude/skills`, `~/.agents/skills` (Codex), `~/.gemini/config/skills` (Antigravity CLI `agy`; older Antigravity builds read `~/.gemini/antigravity/skills`, so copy the folders there if your build does not see them). Folders that were not installed by c3d-mcp are never overwritten (installed folders carry a `.c3d-mcp-skill` marker). Start a new session afterwards.
 
 **Claude Code plugin:** the skills are inside the plugin (`plugin/skills`), so `/plugin install` brings them along.
 

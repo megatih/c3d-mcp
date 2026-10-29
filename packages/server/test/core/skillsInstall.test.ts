@@ -28,8 +28,8 @@ describe('skills install', () => {
   it('maps targets to each client directory (user and project level)', () => {
     expect(targetDir('claude', { home: '/h' })).toBe('/h/.claude/skills');
     expect(targetDir('codex', { home: '/h' })).toBe('/h/.agents/skills');
-    expect(targetDir('antigravity', { home: '/h' })).toBe('/h/.gemini/antigravity/skills');
-    expect(targetDir('antigravity', { project: '/p' })).toBe('/p/.agent/skills');
+    expect(targetDir('antigravity', { home: '/h' })).toBe('/h/.gemini/config/skills');
+    expect(targetDir('antigravity', { project: '/p' })).toBe('/p/.agents/skills');
     expect(targetDir('codex', { project: '/p' })).toBe('/p/.agents/skills');
   });
 

@@ -41,7 +41,7 @@ Options:
   --brief            doctor: one line when healthy, otherwise only the failing checks (for hooks)
   --form <npx|absolute>   config: launch via "npx -y c3d-mcp serve" (default) or absolute node/bin paths
   --target <t>       skills: claude, codex, antigravity or all (default all)
-  --project <dir>    skills: install into <dir>/.claude|.agents|.agent/skills instead of the home directory
+  --project <dir>    skills: install into <dir>/.claude|.agents/skills instead of the home directory
   --dry-run          skills: show what would change
   --raw              config: print only the snippet (no leading comment lines), e.g. c3d-mcp config codex --raw > snippet.toml
   --help, -h

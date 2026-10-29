@@ -1,6 +1,6 @@
 {
   "name": "c3d-mcp",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "MCP server for Cheetah3D 8.1.3 on macOS",
   "type": "module",
   "license": "MIT",

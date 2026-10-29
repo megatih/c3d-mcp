@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.4
+- Fix: `c3d-mcp skills install --target antigravity` now installs into `~/.gemini/config/skills` (user level) and `.agents/skills` (project level), the folders the current Antigravity CLI (`agy`) reads; verified with `agy` finding all six skills from both locations.
+
 ## 0.1.3
 - **Agent skills** for Claude Code, Codex CLI, Antigravity, Claude Desktop and ChatGPT: `c3d-setup`, `c3d-scene-building`, `c3d-look-dev`, `c3d-scripting` (with a standalone-macro fallback for clients without MCP), `c3d-reference-recreation`, `c3d-animation-export`. They encode the lessons of the benchmark runs.
 - `c3d-mcp skills install|uninstall|list` (targets claude, codex, antigravity; `--project`, `--dry-run`; never overwrites folders it did not create).

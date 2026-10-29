@@ -1,7 +1,7 @@
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', '.test-dist/**', 'coverage/**', 'assets/**', 'node_modules/**'] },
+  { ignores: ['dist/**', '.test-dist/**', 'coverage/**', 'assets/**', 'skills/**', 'node_modules/**'] },
   ...tseslint.configs.strictTypeChecked,
   {
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
