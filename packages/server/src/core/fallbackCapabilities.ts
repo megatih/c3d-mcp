@@ -1,4 +1,4 @@
-// Used when the app is unreachable at schema time (PRD section 4). Values come from M0 probes P16/P17 (research/raw/param_dumps).
+// Used when the app is unreachable at schema time (requirements section 4). Values come from M0 probes P16/P17 (research/raw/param_dumps).
 export const FALLBACK_CAPABILITIES = {
   fallback: true,
   apiVersion: '8.1.3',

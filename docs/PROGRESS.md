@@ -6,7 +6,7 @@
 - Step 2–3: scratch document (`Untitled 2`) with marker folder; `fixtures/empty.jas` created via `saveToFile` (P07/P37).
 - Step 4: probes P01–P24, P27–P33, P35–P37 answered (RESULT lines in `research/08-…`); P21/P22 not run (not needed); P25/P26 deferred to M2 (helper).
 - Step 5: `vendor/c3d-scripting-kb` vendored (commit a9008bf…, MIT); SDK/CLI versions pinned (P27).
-- Contradictions found & amended in PRD/PROTOCOL: trigger needs Cheetah frontmost (P01), ASCII-only I/O, param type strings, non-unique names/`obj.id()`, render formats, glb/gltf unsupported, Undo does not revert macro edits (see PRD Changelog).
+- Contradictions found & amended in requirements/PROTOCOL: trigger needs Cheetah frontmost (P01), ASCII-only I/O, param type strings, non-unique names/`obj.id()`, render formats, glb/gltf unsupported, Undo does not revert macro edits (see requirements Changelog).
 - Modal dialogs caused by probes ("Texture baking error!", 3× "Fileformat … not supported", "could not be opened") were dismissed only by clicking OK on those exact dialogs.
 
 ## M1–M7

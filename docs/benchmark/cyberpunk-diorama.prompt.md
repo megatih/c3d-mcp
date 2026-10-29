@@ -1,6 +1,6 @@
 # Cyberpunk Diorama — c3d-mcp port of the "Astra vs Opus 5.5 / Blender MCP" test
 
-Ported from `Cyberpunk_Diorama_Astra_vs_Opus_Styled.docx`. **Reference image: `docs/benchmark/cyberpunk/reference.png`** (1456×816, 16:9 — the Word text says "square", but the actual image is 16:9, so this port matches the image). The Blender result to compare against is `docs/benchmark/cyberpunk/blender-astra-opus-result.png` (the right-hand "OPUS" building).
+Ported from the Blender MCP challenge prompt in Muska's video [GPT-6 Astra vs Claude Opus 5.5 – Cyberpunk Anime-Style 3D Modeling Challenge Timelapse](https://www.youtube.com/watch?v=SQs27US4FeI) and its document. **Reference image:** the building picture from that video/document (16:9, 1456×816 in our run; the document's text says "square", but the actual image is 16:9, so this port matches the image). It is third-party material and is not included in this repository: take a screenshot or extract it from the document and save it as `docs/benchmark/cyberpunk/reference.png` (the headless runner `packages/server/scripts/cyberpunk-run.mjs` reads it from there or from `C3D_CYBERPUNK_REFERENCE`). Our own result is `docs/benchmark/cyberpunk/cheetah-opus-final.png`.
 
 **Claude Desktop:** attach `reference.png` to the chat, then paste everything from `=====MISSION=====` to the end of this file. **Headless runner:** the text before the first `## PHASE` is the mission, each `## PHASE Pn` block is sent as one resumable turn.
 

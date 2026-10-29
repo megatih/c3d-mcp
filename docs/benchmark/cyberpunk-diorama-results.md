@@ -1,10 +1,10 @@
 # Cyberpunk Diorama — Cheetah3D + c3d MCP + Claude Opus 5.5 vs the Blender MCP / Opus result
 
-Date: 2026-10-29. Prompt: `docs/benchmark/cyberpunk-diorama.prompt.md` (port of `Cyberpunk_Diorama_Astra_vs_Opus_Styled.docx`). Run: headless `claude -p --model claude-opus-5-5` against the real c3d MCP server and the real Cheetah3D 8.1.3, one resumable session, phases P0–P7 (not the Claude Desktop GUI, which cannot be driven from here). Reference image = the one at the top of page 2 of the Word file; it is **16:9 (1456×816)**, not square as the document's text says, so the run matched the real image.
+Date: 2026-10-29. Prompt: `docs/benchmark/cyberpunk-diorama.prompt.md` (port of the prompt in Muska's challenge document). Run: headless `claude -p --model claude-opus-5-5` against the real c3d MCP server and the real Cheetah3D 8.1.3, one resumable session, phases P0–P7 (not the Claude Desktop GUI, which cannot be driven from here). Reference image = the one at the top of page 2 of the Word file; it is **16:9 (1456×816)**, not square as the document's text says, so the run matched the real image.
 
-| | |
-|---|---|
-| ![montage](cyberpunk/montage.png) | Left to right: reference · Blender MCP / Opus 5.5 (right-hand building of the Word file's page-1 thumbnail) · **Cheetah3D + c3d MCP / Opus 5.5** (`cyberpunk/cheetah-opus-final.png`, 1456×816). Full frames: `cyberpunk/montage-fullframe.png`. |
+![work in progress](cyberpunk/wip-montage.png)
+
+*Selected work-in-progress renders, P0 to P7 (all Cheetah3D + c3d MCP + Claude Opus 5.5).* The final render is `cyberpunk/cheetah-opus-final.png` (1456×816). The challenge, its reference picture and the Blender MCP result come from Muska's video [GPT-6 Astra vs Claude Opus 5.5 – Cyberpunk Anime-Style 3D Modeling Challenge Timelapse](https://www.youtube.com/watch?v=SQs27US4FeI) and its accompanying document; those third-party images are not redistributed here, please see the video for the original reference and the Blender result discussed below.
 
 ## What the run did
 | Phase | c3d calls | Errors | Renders | Minutes | Notes |
@@ -22,7 +22,7 @@ Date: 2026-10-29. Prompt: `docs/benchmark/cyberpunk-diorama.prompt.md` (port of 
 Final scene (verified by me, not taken from the agent's report): **1,101 objects, 67 materials**, 13 named folders with exactly the counts the agent reported (architecture 15, roofs 17, facade panels 122, windows/doors 75, awnings/canopies 64, signs 32, pipes/cables 142, machines 77, railings/stairs 49, ground 155, props/plants 318, lights 18, cameras 1). I opened a copy of the final checkpoint in Cheetah3D and **re-rendered it at 1456×816 in 2.4 s** (GI on); output matches the agent's final. Delivered: `final_v2.png`, checkpoint `P7-final-delivered.jas`, `cyberpunk_diorama.fbx` (13 MB) — all under `evals/results/cyberpunk-main/work/`.
 
 ## Comparison with the reference and with the Blender MCP / Opus result
-(Scores 1–5 are my own judgement from the images above; the Blender image is a post-processed promotional thumbnail with a dark vignette, bloom and a reflective floor, so it is not a like-for-like render.)
+(Scores 1–5 are my own judgement from the images (ours here; the Blender one in the video); the Blender image is a post-processed promotional thumbnail with a dark vignette, bloom and a reflective floor, so it is not a like-for-like render.)
 
 | Criterion | Cheetah3D + c3d | Blender MCP / Opus | Comment |
 |---|---|---|---|

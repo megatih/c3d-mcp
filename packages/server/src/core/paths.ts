@@ -70,7 +70,7 @@ async function looksLikeMailbox(dir: string): Promise<boolean> {
 }
 
 /**
- * Creates the mailbox tree with mode 0700 (JS cannot mkdir, PRD rule 3). Returns the directories that did not exist before.
+ * Creates the mailbox tree with mode 0700 (JS cannot mkdir, requirements rule 3). Returns the directories that did not exist before.
  * Directories that already exist are chmod-ed only when they belong to the current user AND look like a mailbox; a user-supplied
  * C3D_MCP_DIR that points at someone else's (or an unrelated) directory is left alone and later refused by assertPrivateDir.
  */

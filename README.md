@@ -32,7 +32,7 @@ Read it first if you like (`curl -fsSL <url> -o install.sh; less install.sh; bas
 <details><summary>Manual install</summary>
 
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app

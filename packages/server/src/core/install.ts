@@ -127,7 +127,7 @@ export async function install(rt: Runtime, opts: InstallOptions = {}): Promise<I
   const createdFiles = new Set(previous?.createdFiles ?? []);
   const backups = [...(previous?.backups ?? [])];
 
-  // Backup of Scripts/ before the first modification (PRD section 0).
+  // Backup of Scripts/ before the first modification (requirements section 0).
   if (macroChanges && (await exists(paths.scriptsDir))) {
     if (!(await exists(paths.backupsDir))) await mkdir(paths.backupsDir, { recursive: true, mode: 0o700 });
     const target = join(paths.backupsDir, `scripts-${timestamp(now())}.tar.gz`);

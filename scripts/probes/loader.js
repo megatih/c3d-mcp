@@ -1,5 +1,5 @@
 // Probe runner (P00 Hello.js): evals $SP/probe/current.js then calls probeMain(doc). Output -> out.json
-var PROBE_DIR='/tmp/c3d-scratch';
+var PROBE_DIR='/tmp/c3d-scratch/probe/';
 function main(doc){
   var out={ok:true};
   try{

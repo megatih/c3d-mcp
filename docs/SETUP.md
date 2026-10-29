@@ -1,6 +1,6 @@
 # Setup per client
 
-> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
+> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
 
 All clients launch the same stdio server: `npx -y c3d-mcp serve` (or `node /path/to/packages/server/bin/c3d-mcp.js serve`).
 `c3d-mcp config <client>` prints a ready-to-paste snippet for each client below (with two leading `#` comment lines naming the config file). Add `--raw` to print only the snippet so it can be redirected into a file, e.g. `c3d-mcp config codex --raw > codex-snippet.toml`.
@@ -21,7 +21,7 @@ Verify: `npx -y c3d-mcp doctor`. After the restart you will find the macro under
 **Requirements:** macOS 14+ on Apple Silicon (developed and tested on macOS 27.2), Cheetah3D 8.1.3, Node.js ≥ 22. Without the helper the server falls back to `osascript` (slower; your terminal/MCP client then needs Accessibility), and `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable.
 
 ## Claude Desktop
-* Easiest: double-click `c3d-mcp-0.2.0.mcpb`.
+* Easiest: double-click `c3d-mcp-0.2.1.mcpb`.
 * Manual: `~/Library/Application Support/Claude/claude_desktop_config.json`
 ```json
 { "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"] } } }

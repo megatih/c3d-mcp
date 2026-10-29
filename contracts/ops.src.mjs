@@ -204,7 +204,7 @@ export const ops = {
   run: {
     rw: 'W',
     args: o({ code: { type: 'string', maxLength: 200000 }, allowShellToken: str, allowFiles: { type: 'array', items: path } }, ['code']),
-    summary: 'Sandboxed user JS (PRD §4 exec). print() output returned.',
+    summary: 'Sandboxed user JS (requirements section 4 exec). print() output returned.',
   },
 };
 

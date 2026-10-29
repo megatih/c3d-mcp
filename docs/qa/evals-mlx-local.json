@@ -169,7 +169,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local/local_simple_scene-2-47Q3at/work/renders/render_output.png 800x600"
+     "detail": "<repo>/evals/results/mlx-local/local_simple_scene-2-47Q3at/work/renders/render_output.png 800x600"
     }
    ],
    "pass": true,

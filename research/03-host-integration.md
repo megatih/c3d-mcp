@@ -30,7 +30,7 @@
 3. **Keyboard shortcut**: assign via Cheetah3D keyboard prefs or `defaults write de.wengenmayer.Cheetah3D NSUserKeyEquivalents -dict-add "<exact menu title>" "@~^b"`; send via `CGEventPost`. Fallback only (background delivery unreliable).
 4. **Manual**: user runs the macro by hand (always available as last resort).
 
-## Bridge protocol (see PRD §3 for the authoritative version)
+## Bridge protocol (see requirements section 3 for the authoritative version)
 - Directory `~/Library/Application Support/Cheetah3D/MCP/` (0700): `inbox/`, `outbox/`, `state.json`, `log/`, `secret` (0600).
 - Server writes `inbox/<uuid>.json.tmp` → rename to `.json`. Macro lists `inbox/` with `File.contentOfDir`, processes sorted by sequence, writes `outbox/<uuid>.json` then empty `outbox/<uuid>.done`. Server reads JSON only after `.done`. No `mv` via `OS.system` in the hot path. JS cannot rename/delete; the *server* deletes processed files.
 - ASCII-only payloads with `\uXXXX` escapes (File.read counts chars; size counts bytes).

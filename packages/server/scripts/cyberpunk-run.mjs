@@ -3,7 +3,7 @@
 //   node scripts/cyberpunk-run.mjs [--from=P0] [--to=P7] [--session=<id>] [--run=<dir>] [--model=claude-opus-5-5] [--max-turns=150] [--phase-timeout-min=45]
 // Each phase is one `claude -p` turn; phases after the first use --resume so the agent keeps its context.
 import { spawn, execFileSync } from 'node:child_process';
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,7 +27,9 @@ const from = phases.findIndex((p) => p.id === (args.from ?? 'P0'));
 const to = phases.findIndex((p) => p.id === (args.to ?? 'P7'));
 if (from < 0 || to < from) throw new Error(`bad phase range ${args.from}..${args.to}`);
 
-copyFileSync(join(repo, 'docs', 'benchmark', 'cyberpunk', 'reference.png'), join(runDir, 'reference.png'));
+const refSrc = process.env.C3D_CYBERPUNK_REFERENCE ?? join(repo, 'docs', 'benchmark', 'cyberpunk', 'reference.png');
+if (!existsSync(refSrc)) throw new Error(`Reference image not found: ${refSrc} (see docs/benchmark/cyberpunk-diorama.prompt.md)`);
+copyFileSync(refSrc, join(runDir, 'reference.png'));
 writeFileSync(join(runDir, 'mcp.json'), JSON.stringify({ mcpServers: { c3d: { command: process.execPath, args: [join(repo, 'packages/server/bin/c3d-mcp.js'), 'serve'], env: { C3D_MCP_PROFILE: 'full', C3D_MCP_WORKDIR: workDir, C3D_MCP_AUTO_CONFIRM: '1' } } } }));
 
 // --- Cheetah hygiene: only dismisses dialogs/panels (OK/Cancel through Accessibility) ---

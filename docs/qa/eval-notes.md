@@ -3,7 +3,7 @@
 - turntable_selected: prompt reduced from a 4 s/30 fps sequence (120 frames, exceeded the 15 min limit) to 2 s/12 fps at 160x120; glob fixed to the actual `turntable_*` prefix.
 - edit_mesh_move / table_four_legs / camera_fov_render: assertions corrected after the first pilot (bbox of the table parts only, pyramid base is 1 m wide, `@activeCamera` selector). Corrections were made before the scored N=3 run, not after seeing its results.
 
-## Local-model (MLX) eval — PRD target ≥ 70 %: MET with Qwen3.8-27B (9/9); smaller models below
+## Local-model (MLX) eval — requirements target ≥ 70 %: MET with Qwen3.8-27B (9/9); smaller models below
 Harness: `evals/runner/mlx-agent.mjs` (`node evals/runner/run.mjs --agent=mlx --model=<id> --profile=local --n=3`) drives the c3d MCP server (profile `local`, 24 tools) through `mlx_lm.server` (OpenAI-compatible tool calling). Tasks with `profile: local`: local_rename_move, local_simple_scene, mesh_pyramid (3 x 3 runs).
 
 | Model | Result | Notes |

@@ -1,7 +1,7 @@
 function nm(o){try{return o.getParameter('name');}catch(e){return '<noname>';}}
 function probeMain(doc){
   assertMarker(doc);
-  var R={};var D='/tmp/c3d-scratch';
+  var R={};var D='/tmp/c3d-scratch/probe/render/';
   var b=doc.addObject(BOX);b.setParameter('name','RB');
   var rend=doc.currentRenderer();
   R.resSet=tryf(function(){rend.setParameter('resolution',new Vec2D(320,240));var v=rend.getParameter('resolution');return {x:v.x,y:v.y};});

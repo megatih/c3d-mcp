@@ -1,7 +1,7 @@
 # c3d-mcp bridge protocol (authoritative implementation spec)
 
-Supersedes research/03 and refines PRD §3–§4 with M0 probe results (research/08). Schemas: `contracts/*.json`.
-If this document and the PRD disagree, this document wins (and the PRD changelog records it).
+Supersedes research/03 and refines requirements section 3–§4 with M0 probe results (research/08). Schemas: `contracts/*.json`.
+If this document and the requirements disagree, this document wins (and the requirements changelog records it).
 
 ## 1. Directory layout (`MCP_DIR = ~/Library/Application Support/Cheetah3D/MCP`, mode 0700, created by Node/Swift only)
 ```

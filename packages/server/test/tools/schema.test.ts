@@ -16,7 +16,7 @@ const PRD_TOOLS = [
 ];
 
 describe('tool registry', () => {
-  it('contains every PRD tool exactly once with c3d_ names', () => {
+  it('contains every requirements tool exactly once with c3d_ names', () => {
     const names = allTools.map((t) => t.name);
     expect(new Set(names).size).toBe(names.length);
     expect([...names].sort()).toEqual([...PRD_TOOLS].sort());

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { BridgeError } from '../../src/toolkit.js';
 import { LIVE, liveRuntime, newScratch } from './live.js';
 
-// Each snippet tries to reach the real global OS/File/eval. Every one must fail or return nothing useful (PRD §4 escape tests).
+// Each snippet tries to reach the real global OS/File/eval. Every one must fail or return nothing useful (requirements section 4 escape tests).
 const ESCAPES: Record<string, string> = {
   'global this': "return this.OS.system('exit 0');",
   globalThis: "return globalThis.OS.system('exit 0');",

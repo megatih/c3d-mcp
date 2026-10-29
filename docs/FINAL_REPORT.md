@@ -1,7 +1,7 @@
 # c3d-mcp — final report (2026-10-29)
 
 ## What shipped
-* **59 MCP tools** (`c3d_*`: 3 health + 56 others), 6 resources (`c3d://…`), 4 prompts; profiles `full` (59) / `local` (24) / `readonly`; opt-outs for exec/assets/shell. Reference: `docs/TOOLS.md`. Every PRD §6 row exists; `c3d_use_document` is one addition (selecting which open window the agent works on).
+* **59 MCP tools** (`c3d_*`: 3 health + 56 others), 6 resources (`c3d://…`), 4 prompts; profiles `full` (59) / `local` (24) / `readonly`; opt-outs for exec/assets/shell. Reference: `docs/TOOLS.md`. Every requirements section 6 row exists; `c3d_use_document` is one addition (selecting which open window the agent works on).
 * **In-app bridge** (`bridge/`): ES5 runtime (41 ops) + loader macro, file-mailbox protocol with seq/lastSeq/`.done`/deadline/cancel idempotency (`docs/PROTOCOL.md`).
 * **Swift helper app** (`helper/`): activation + AXRaise + press + restore, modal detection, window capture, image analysis/downscale, Unix-socket IPC.
 * **TypeScript server** (`packages/server`): queue + cross-process lock, install/uninstall/doctor/config CLI, elicitation/confirm, checkpoints, assets (Poly Haven), docs search (BM25 over the vendored kb), lint, jobs.
@@ -34,8 +34,8 @@ All answered in `research/08-open-questions-and-probes.md` (P21/P22 not needed, 
 ## Known limits
 `docs/limitations.md` (incl. security limits). Highlights: OBJ export crashed Cheetah3D once on a nested scene (checkpoint is taken first); `c3d_run_script` is best-effort containment; one macro run blocks Cheetah3D while it executes (renders are one frame per request).
 
-## Deviations from the PRD (reasons)
-* Global replacement of `OS`/`File` is a no-op in the real app (non-writable globals) → containment = strict inner function + shadowed params + neutralized constructors + guarded objects (PRD §4 amended in spirit; tested live).
+## Deviations from the requirements (reasons)
+* Global replacement of `OS`/`File` is a no-op in the real app (non-writable globals) → containment = strict inner function + shadowed params + neutralized constructors + guarded objects (requirements section 4 amended in spirit; tested live).
 * Trigger needs Cheetah3D frontmost + AXRaise (P01) — added to §3.7 behaviour; helper restores the previous app.
 * `parameterInfo()` type strings instead of `*_PARAMETER` constants; `obj.id()` refs added; world-matrix translation layout; Poly Haven via FBX because glTF unsupported.
 * One extra tool (`c3d_use_document`); `c3d_select` has no `restore_previous`; `doctor --brief`; the helper is installed by `install` from the package (no GitHub-release download step yet).

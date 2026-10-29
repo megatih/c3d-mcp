@@ -1,0 +1,28 @@
+name: CI
+on:
+  push: { branches: [main] }
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Leak scan (private names, paths, tokens, forbidden files)
+        run: node scripts/check-public.mjs --tree .
+      - name: Agent skills validate
+        run: node scripts/build-skills.mjs --check
+      - name: Server lint, typecheck, tests
+        working-directory: packages/server
+        run: |
+          npm ci
+          npm run lint
+          npx tsc --noEmit
+          npx vitest run
+      - name: Installer script tests
+        run: bash scripts/test-install.sh
+      - name: Leak scanner self-test
+        run: bash scripts/test-check-public.sh

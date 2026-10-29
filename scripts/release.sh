@@ -31,4 +31,6 @@ sed -e "s/@@C3D_VERSION@@/$VERSION/" -e "s/@@C3D_TGZ_SHA256@@/$TGZ_SHA/" install
 chmod +x "$OUT/install.sh"; bash -n "$OUT/install.sh"
 cp Install-c3d-mcp.command "$OUT/Install-c3d-mcp.command"; chmod +x "$OUT/Install-c3d-mcp.command"
 
+echo "==> leak scan of every artifact"; node scripts/check-public.mjs --archive "$OUT"/*.tgz "$OUT"/*.mcpb "$OUT"/C3D-Bridge-Helper-*.zip "$OUT"/c3d-skills-*.zip "$OUT"/install.sh "$OUT"/Install-c3d-mcp.command
+
 echo "==> checksums"; (cd "$OUT" && shasum -a 256 *.zip *.mcpb *.tgz *.sh *.command skills/*.zip > SHA256SUMS && cat SHA256SUMS)

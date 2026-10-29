@@ -15,9 +15,9 @@ function probeMain(doc){
   // P18 texture
   R.p18={};
   var img=m.addNodeOfType('image');
-  R.p18.setTexPath=tryf(function(){img.setParameter('texture','/tmp/c3d-scratch');var t=img.getParameter('texture');return {t:typeof t,w:t&&t.width?t.width():'n/a',fn:t&&t.filename?t.filename():'n/a'};});
-  R.p18.setTexString=tryf(function(){rn.setParameter('diffColor.tex','/tmp/c3d-scratch');return 'ok';});
-  R.p18.tex=tryf(function(){var t=new Texture('/tmp/c3d-scratch');return {w:t.width(),h:t.height()};});
+  R.p18.setTexPath=tryf(function(){img.setParameter('texture','/tmp/c3d-scratch/probe/render/r1.png');var t=img.getParameter('texture');return {t:typeof t,w:t&&t.width?t.width():'n/a',fn:t&&t.filename?t.filename():'n/a'};});
+  R.p18.setTexString=tryf(function(){rn.setParameter('diffColor.tex','/tmp/c3d-scratch/probe/render/r1.png');return 'ok';});
+  R.p18.tex=tryf(function(){var t=new Texture('/tmp/c3d-scratch/probe/render/r1.png');return {w:t.width(),h:t.height()};});
   R.p18.connect=tryf(function(){m.addConnection(img.id(),'color',rn.id(),'diffColor');return 'ok';});
   // P31 per-polygon
   R.p31={};

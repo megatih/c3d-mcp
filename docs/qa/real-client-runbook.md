@@ -7,7 +7,7 @@ For each client: `c3d-mcp config <client> --raw` (client = gemini-cli, cursor, l
 3. "Create a pipe through (0,0,0) (2,0,0) (2,2,0) radius 0.1 and render it." - expect a pipe in the image.
 For LM Studio / small local models use `C3D_MCP_PROFILE=local`. Record the client version, model and result in docs/qa/clients.md.
 
-## Timed fresh-Mac install (PRD target: under 10 minutes)
+## Timed fresh-Mac install (requirements target: under 10 minutes)
 On a clean macOS 14+ Apple Silicon account with Cheetah3D 8.1.3 installed and launched once: start a timer, run `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.2/c3d-mcp-0.1.2.tgz install`, restart Cheetah3D, grant Accessibility to the helper, run `doctor`. Stop the timer when doctor is green and note every manual step and any Gatekeeper prompt.
 
 ## Notarization (needs a Developer ID Application certificate)

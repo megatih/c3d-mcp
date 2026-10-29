@@ -171,7 +171,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-1-885Dqh/work/renders/render-1793258476961.png 640x360"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-1-885Dqh/work/renders/render-1793258476961.png 640x360"
     }
    ],
    "pass": true,
@@ -207,7 +207,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-2-UO0MMM/work/renders/render-1793258494811.png 640x360"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-2-UO0MMM/work/renders/render-1793258494811.png 640x360"
     }
    ],
    "pass": true,
@@ -243,7 +243,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-3-QpvWfb/work/renders/render-1793258509207.png 640x360"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-3-QpvWfb/work/renders/render-1793258509207.png 640x360"
     }
    ],
    "pass": true,
@@ -731,7 +731,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-1-oQElDl/work/exports/demo.obj"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/export_obj-1-oQElDl/work/exports/demo.obj"
     },
     {
      "type": "answer_contains",
@@ -767,12 +767,12 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-2-qa9wQE/work/exports/demo.obj"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/export_obj-2-qa9wQE/work/exports/demo.obj"
     },
     {
      "type": "answer_contains",
      "pass": true,
-     "detail": "I exported the scene to `~/Documents/c3dmcpserver/evals/results/202"
+     "detail": "I exported the scene to `<repo>/evals/results/202"
     },
     {
      "type": "scene_unchanged",
@@ -803,7 +803,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-3-lXlwS2/work/exports/demo.obj"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/export_obj-3-lXlwS2/work/exports/demo.obj"
     },
     {
      "type": "answer_contains",
@@ -1026,7 +1026,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/asset.json"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/asset.json"
     },
     {
      "type": "camera_active",
@@ -1041,7 +1041,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
     }
    ],
    "pass": true,
@@ -1068,7 +1068,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/asset.json"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/asset.json"
     },
     {
      "type": "camera_active",
@@ -1083,7 +1083,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
     }
    ],
    "pass": true,
@@ -1110,7 +1110,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/asset.json"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/asset.json"
     },
     {
      "type": "camera_active",
@@ -1125,7 +1125,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/textures/Rockingchair_01_diff_1k.jpg 1024x1024"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/textures/Rockingchair_01_diff_1k.jpg 1024x1024"
     }
    ],
    "pass": true,
@@ -1254,7 +1254,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-1-9OgoNv/work/renders/render-1793259140657.png 800x600"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-1-9OgoNv/work/renders/render-1793259140657.png 800x600"
     }
    ],
    "pass": true,
@@ -1290,7 +1290,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-2-2Huy6p/work/captures/viewport-1793259206353.png 3840x2006"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-2-2Huy6p/work/captures/viewport-1793259206353.png 3840x2006"
     }
    ],
    "pass": true,
@@ -1326,7 +1326,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-3-LJZmIQ/work/renders/render-1793259260857.png 800x600"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-3-LJZmIQ/work/renders/render-1793259260857.png 800x600"
     }
    ],
    "pass": true,
@@ -1559,7 +1559,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-1-zcmaZH/work/renders/render-1793259369615.png 800x500"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-1-zcmaZH/work/renders/render-1793259369615.png 800x500"
     }
    ],
    "pass": true,
@@ -1606,7 +1606,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-2-ieIxH5/work/renders/render-1793259411364.png 800x500"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-2-ieIxH5/work/renders/render-1793259411364.png 800x500"
     }
    ],
    "pass": true,
@@ -1653,7 +1653,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-3-EYcsVh/work/renders/render-1793259443990.png 800x500"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-3-EYcsVh/work/renders/render-1793259443990.png 800x500"
     }
    ],
    "pass": true,
@@ -1802,7 +1802,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-1-cZyVE9/work/renders/render-1793259542670.png 960x540"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/material_study_three-1-cZyVE9/work/renders/render-1793259542670.png 960x540"
     }
    ],
    "pass": true,
@@ -1843,7 +1843,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-2-GmxVXD/work/renders/render-1793259605102.png 1200x600"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/material_study_three-2-GmxVXD/work/renders/render-1793259605102.png 1200x600"
     }
    ],
    "pass": true,
@@ -1884,7 +1884,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-3-BLlryP/work/renders/render-1793259676102.png 960x400"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/material_study_three-3-BLlryP/work/renders/render-1793259676102.png 960x400"
     }
    ],
    "pass": true,
@@ -2372,7 +2372,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-1-zCASOK/copy.jas"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-1-zCASOK/copy.jas"
     },
     {
      "type": "fixture_unchanged",
@@ -2403,7 +2403,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-2-JUp2Zr/copy.jas"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-2-JUp2Zr/copy.jas"
     },
     {
      "type": "fixture_unchanged",
@@ -2434,7 +2434,7 @@
     {
      "type": "file_exists",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-3-su7CaC/copy.jas"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-3-su7CaC/copy.jas"
     },
     {
      "type": "fixture_unchanged",
@@ -2671,7 +2671,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-1-p7aH7l/work/renders/render-1793260147031.png 640x400"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-1-p7aH7l/work/renders/render-1793260147031.png 640x400"
     }
    ],
    "pass": true,
@@ -2717,7 +2717,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-2-aROo7K/work/renders/render-1793260181942.png 640x400"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-2-aROo7K/work/renders/render-1793260181942.png 640x400"
     }
    ],
    "pass": true,
@@ -2763,7 +2763,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-3-QJikYG/work/renders/render-1793260215695.png 640x400"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-3-QJikYG/work/renders/render-1793260215695.png 640x400"
     }
    ],
    "pass": true,
@@ -2815,7 +2815,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-1-0htwqw/work/renders/render-1793260247100.png 960x640"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-1-0htwqw/work/renders/render-1793260247100.png 960x640"
     }
    ],
    "pass": true,
@@ -2867,7 +2867,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-2-35OODy/work/renders/render-1793260288680.png 800x600"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-2-35OODy/work/renders/render-1793260288680.png 800x600"
     }
    ],
    "pass": true,
@@ -2919,7 +2919,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-3-3Pjs5y/work/renders/render-1793260328151.png 800x600"
+     "detail": "<repo>/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-3-3Pjs5y/work/renders/render-1793260328151.png 800x600"
     }
    ],
    "pass": true,

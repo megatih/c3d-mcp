@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+- **Sanitized release.** Sources, documentation and the published git history were scrubbed of personal paths and names; internal planning material, raw app dumps and third-party images were removed from the repository (the benchmark pages now link to the original video instead). Release archives (npm tarball, `.mcpb`, helper zip, installer) are built from the clean sources and scanned before publishing.
+- New `scripts/check-public.mjs` leak scanner (tree, archives, git history) wired into the mirror sync, `scripts/release.sh` and CI.
+- Added `SECURITY.md` (private vulnerability reporting), Dependabot configuration and a CI workflow.
+- Older releases (0.1.0 to 0.2.0) were withdrawn because their packages contained a private folder name in the bundled research notes.
+
 ## 0.2.0
 - **Installer for new users:** `install.sh` / `Install-c3d-mcp.command` (one command; checks macOS, Cheetah3D and Node.js 22+, offers to install Node via Homebrew or a checksum-verified private copy, never `sudo`) and the guided `c3d-mcp setup` wizard (bridge + helper, version-aware and verified opening of the Accessibility / Screen Recording panes, opt-in client configuration with backups, skills, doctor and a test render). See docs/INSTALL.md.
 

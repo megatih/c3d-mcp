@@ -122,7 +122,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-f/local_simple_scene-1-XhBapu/work/renders/render.png 800x600"
+     "detail": "<repo>/evals/results/mlx-local-14b-f/local_simple_scene-1-XhBapu/work/renders/render.png 800x600"
     }
    ],
    "pass": false,
@@ -169,7 +169,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-f/local_simple_scene-2-XM4YM6/work/renders/render.png 800x600"
+     "detail": "<repo>/evals/results/mlx-local-14b-f/local_simple_scene-2-XM4YM6/work/renders/render.png 800x600"
     }
    ],
    "pass": false,
@@ -216,7 +216,7 @@
     {
      "type": "render_nonblank",
      "pass": true,
-     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-f/local_simple_scene-3-cS5xt9/work/renders/render.png 800x600"
+     "detail": "<repo>/evals/results/mlx-local-14b-f/local_simple_scene-3-cS5xt9/work/renders/render.png 800x600"
     }
    ],
    "pass": false,

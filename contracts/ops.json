@@ -3383,7 +3383,7 @@
   },
   "run": {
    "rw": "W",
-   "summary": "Sandboxed user JS (PRD §4 exec). print() output returned.",
+   "summary": "Sandboxed user JS (requirements section 4 exec). print() output returned.",
    "args": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",

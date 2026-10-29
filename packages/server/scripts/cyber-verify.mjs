@@ -1,7 +1,7 @@
 import { connect } from './live-driver.mjs';
 import { copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-const run = '~/Documents/c3dmcpserver/evals/results/cyberpunk-main/work';
+const run = new URL('../../../evals/results/cyberpunk-main/work', import.meta.url).pathname;
 const cp = readdirSync(join(run, 'checkpoints')).find((f) => f.includes('P7-final-delivered'));
 const dir = '/tmp/cyberverify/' + Date.now(); mkdirSync(dir, { recursive: true });
 const copy = join(dir, 'final_copy.jas'); copyFileSync(join(run, 'checkpoints', cp), copy);

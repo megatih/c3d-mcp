@@ -173,7 +173,7 @@ export class Mailbox {
     }
   }
 
-  /** `outbox/_bootstrap-error.json` is written by the loader macro when runtime.js fails to load (PRD section 3.4). */
+  /** `outbox/_bootstrap-error.json` is written by the loader macro when runtime.js fails to load (requirements section 3.4). */
   async takeBootstrapError(sinceMs: number): Promise<string | undefined> {
     const file = join(this.paths.outbox, '_bootstrap-error.json');
     try {

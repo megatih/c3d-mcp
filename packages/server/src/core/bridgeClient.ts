@@ -25,7 +25,7 @@ export interface BridgeClientOptions {
   /** How long after a press the runtime may take to show signs of life before the press is retried. */
   pressGraceMs?: number;
   maxPresses?: number;
-  /** busy longer than max(deadline, this) while the app still responds => RUNTIME_STUCK (PRD 3.11). */
+  /** busy longer than max(deadline, this) while the app still responds => RUNTIME_STUCK (requirements 3.11). */
   stuckAfterMs?: number;
   progressIntervalMs?: number;
 }
@@ -265,7 +265,7 @@ export class BridgeClientImpl implements BridgeClient {
       return this.modalError(dialogs);
     }
     if (!app.running) {
-      await this.abandon(c.seq, c.id); // the request file is kept for diagnosis (PRD 3.5)
+      await this.abandon(c.seq, c.id); // the request file is kept for diagnosis (requirements 3.5)
       return new BridgeError('APP_CRASHED', 'Cheetah3D is no longer running; the in-flight request was lost', 'Restart Cheetah3D, then retry. Unsaved work in the crashed session may be recoverable from Cheetah3D autosave.', { elapsedMs: elapsed, via: app.source });
     }
     if (!c.everRan) {

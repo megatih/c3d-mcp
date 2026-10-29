@@ -96,7 +96,7 @@ describe('c3d_save_document / c3d_export', () => {
     await runTool(saveDocument, { path: 'b.jas', confirm: true }, t.ctx);
     expect(t.confirmCalls.length).toBe(2);
   });
-  it('a .jas opened through this server may be saved over, but only with confirmation (PRD scope note)', async () => {
+  it('a .jas opened through this server may be saved over, but only with confirmation (requirements scope note)', async () => {
     const f = path.join(t.dir, 'opened.jas'); fs.writeFileSync(f, 'old');
     // the helper-reported window title for the opened file lets adoptWindow succeed in the fake environment
     t.helper.handlers.set('windows', () => [{ title: 'opened.jas', role: 'AXWindow', main: true }]);

@@ -1,8 +1,8 @@
 #!/bin/zsh
 # usage: run.sh <probe.js>   — runs a probe in the front doc via the loader macro, prints out.json
-SP=/tmp/c3d-scratch
-P=$SP/probe
-cat ~/Documents/c3dmcpserver/scripts/probes/prelude.js "$1" > $P/current.js; rm -f $P/out.json $P/done
+P=${C3D_PROBE_DIR:-${TMPDIR:-/tmp}/c3d-probe}
+mkdir -p "$P"
+cat "$(dirname "$0")/prelude.js" "$1" > $P/current.js; rm -f $P/out.json $P/done
 PREV=$(osascript -e 'tell application "System Events" to get name of first process whose frontmost is true')
 osascript -e 'tell application "System Events" to set frontmost of process "Cheetah3D" to true'; sleep 0.6
 $SP/axpress Tools Script "Macro Script" C3D-MCP-Probes "P00 Hello.js" >/dev/null

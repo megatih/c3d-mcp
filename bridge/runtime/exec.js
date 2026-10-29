@@ -1,4 +1,4 @@
-/* exec: best-effort sandbox for user JavaScript (PRD section 4). Same-user threat model, NOT a security boundary. */
+/* exec: best-effort sandbox for user JavaScript (requirements section 4). Same-user threat model, NOT a security boundary. */
 (function () {
   var U = C3D.util, S = C3D.scene;
   var RealFunction = Function;

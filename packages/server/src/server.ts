@@ -24,7 +24,7 @@ const TIMEOUT_MS: Partial<Record<ToolDef['group'], number>> = { render: 15 * 60_
 const DEFAULT_TIMEOUT_MS = 2 * 60_000;
 const TEXT_LIMIT = 4000;
 
-/** Profile and opt-out filtering (PRD section 6). `full` exposes everything the opt-outs leave. */
+/** Profile and opt-out filtering (requirements section 6). `full` exposes everything the opt-outs leave. */
 export function selectTools(tools: ToolDef[], config: Pick<RuntimeConfig, 'profile' | 'disableExec' | 'disableAssets'>): ToolDef[] {
   return tools.filter((t) => {
     if (config.disableExec && t.group === 'exec') return false;

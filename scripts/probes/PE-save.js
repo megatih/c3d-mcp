@@ -1,7 +1,7 @@
 function probeMain(doc){
   assertMarker(doc);
   var R={types:{}};
-  var D='/tmp/c3d-scratch';
+  var D='/tmp/c3d-scratch/probe/save/';
   var b=doc.addObject(BOX);b.setParameter('name','SaveBox');
   R.before=String(doc.fileName());
   var types=['jas','obj','mtl','fbx','dae','stl','3ds','usdz','gltf','glb','abc','dxf','svg','png'];

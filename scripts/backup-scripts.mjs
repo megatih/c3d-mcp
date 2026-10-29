@@ -1,4 +1,4 @@
-// Timestamped tar backup of Cheetah3D's Scripts dir (PRD §0). Dirs are created from Node, never from JS.
+// Timestamped tar backup of Cheetah3D's Scripts dir (requirements section 0). Dirs are created from Node, never from JS.
 import { mkdirSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
