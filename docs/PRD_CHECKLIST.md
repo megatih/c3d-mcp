@@ -20,3 +20,6 @@
 
 ## Not part of §1 / not possible here (listed in FINAL_REPORT)
 Runs in Claude Desktop, Gemini CLI, Cursor, LM Studio and Antigravity (not installed here; PRD §1 asks for *tested config snippets*, which are generated and unit-tested; Claude Code and Codex CLI were exercised for real), the timed fresh-Mac install (manual by definition), Developer ID signing/notarization (needs credentials) and any publishing (PRD §9: never without explicit user approval).
+
+## Update after your approvals
+GitHub repo + v0.1.0 release + Homebrew tap published; helper signed with your Apple Development identity (not notarized); npm/registry skipped by your choice; live suite not re-run against the signed helper (interrupted). See `docs/FINAL_REPORT.md` → *Publishing and signing state*.
