@@ -1,6 +1,7 @@
 import { copyFileSync, writeFileSync } from 'node:fs';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { BridgeError } from '../../src/toolkit.js';
+import { dismissTestDialogs } from './cleanup.js';
 import { LIVE, liveRuntime, newScratch } from './live.js';
 
 const osa = (rt: ReturnType<typeof liveRuntime>, script: string) => rt.exec('osascript', ['-e', script]);
@@ -10,7 +11,11 @@ describe.skipIf(!LIVE)('live fault tests', () => {
   const runtimeFile = rt.paths.runtimeFile;
   const backup = `${runtimeFile}.faultbak`;
 
-  afterAll(() => { try { copyFileSync(backup, runtimeFile); } catch { /* nothing to restore */ } });
+  afterAll(async () => {
+    try { copyFileSync(backup, runtimeFile); } catch { /* nothing to restore */ }
+    await dismissTestDialogs();
+  });
+  afterEach(async () => { await dismissTestDialogs(); });
 
   it('(2) an op that throws gives a per-op error; later ops and requests still work', async () => {
     await newScratch(rt);
@@ -50,9 +55,9 @@ describe.skipIf(!LIVE)('live fault tests', () => {
       expect((err as BridgeError).code).toBe('BLOCKED_BY_MODAL');
       expect(JSON.stringify((err as BridgeError).details ?? '') + (err as BridgeError).message).toContain('Texture baking');
     } finally {
-      // Dismiss only the dialog this test caused.
-      await osa(rt, 'tell application "System Events" to tell process "Cheetah3D" to repeat with w in windows\nif subrole of w is "AXDialog" then click button "OK" of w\nend repeat');
-      await new Promise((r) => setTimeout(r, 2500));
+      // Dismiss only the dialog this test caused (by Accessibility, independent of which app is frontmost).
+      await dismissTestDialogs();
+      await new Promise((r) => setTimeout(r, 1500));
     }
     const ok = await rt.bridge.one<{ counter: number }>('ping', { counter: 4 });
     expect(ok.counter).toBe(4);
@@ -66,7 +71,7 @@ describe.skipIf(!LIVE)('live fault tests', () => {
       expect(err).toBeInstanceOf(BridgeError);
       expect(['TRIGGER_FAILED', 'BLOCKED_BY_MODAL']).toContain((err as BridgeError).code);
     } finally {
-      await osa(rt, 'tell application "System Events" to tell process "Cheetah3D" to key code 53');
+      await dismissTestDialogs(); // cancels the Open panel through its Cancel button (Escape would go to the frontmost app)
       await new Promise((r) => setTimeout(r, 1000));
     }
     expect((await rt.bridge.one<{ counter: number }>('ping', { counter: 10 })).counter).toBe(10);

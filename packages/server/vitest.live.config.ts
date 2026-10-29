@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     include: ['test/live/**/*.test.ts'],
     fileParallelism: false,
+    globalSetup: ['test/live/setup.ts'],
     testTimeout: 180_000,
     hookTimeout: 180_000,
   },
