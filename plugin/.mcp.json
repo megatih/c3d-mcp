@@ -2,8 +2,14 @@
   "mcpServers": {
     "c3d": {
       "command": "npx",
-      "args": ["-y", "c3d-mcp@0.1.0", "serve"],
-      "env": { "C3D_MCP_PROFILE": "full" }
+      "args": [
+        "-y",
+        "https://github.com/megatih/c3d-mcp/releases/download/v0.1.0/c3d-mcp-0.1.0.tgz",
+        "serve"
+      ],
+      "env": {
+        "C3D_MCP_PROFILE": "full"
+      }
     }
   }
 }

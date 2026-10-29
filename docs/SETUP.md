@@ -1,5 +1,7 @@
 # Setup per client
 
+> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.0/c3d-mcp-0.1.0.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
+
 All clients launch the same stdio server: `npx -y c3d-mcp serve` (or `node /path/to/packages/server/bin/c3d-mcp.js serve`).
 `c3d-mcp config <client>` prints a ready-to-paste snippet for each client below.
 
