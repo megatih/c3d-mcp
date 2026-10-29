@@ -11,6 +11,8 @@ If the `c3d_*` tools are not available: on clients without the MCP server (for e
 macOS 14+ on Apple Silicon, Cheetah3D 8.1.3, Node.js >= 22. The helper app is optional but strongly recommended: without it `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable and the server falls back to `osascript` (slower; the terminal/MCP client then needs Accessibility).
 
 ## One-time install
+Easiest for a new user (tell them to run it in Terminal; it asks before every change and never uses sudo): `curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/install.sh | bash`. It checks macOS, Cheetah3D and Node.js 22+, can install Node.js, installs c3d-mcp, then runs `c3d-mcp setup` (bridge, helper, Accessibility pane, client configs, skills, test render). Use `--dry-run` to only report. The manual steps below are the equivalent.
+
 Replace `c3d-mcp` with the release tarball URL while the package is not on npm (`npx -y <tarball-url> <command>`).
 
 1. `npx -y c3d-mcp install` - backs up Cheetah3D's `Scripts/`, installs the bridge macro, runtime and helper app (to `~/Library/Application Support/Cheetah3D/MCP/helper/`). Idempotent.

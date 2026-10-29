@@ -13,6 +13,8 @@ Six skills in the open Agent Skills format (a folder with `SKILL.md`, plus `refe
 
 ## Install
 
+The guided installer (`install.sh` / `c3d-mcp setup`, see [INSTALL.md](INSTALL.md)) offers to install the skills for the clients it detects. Manual options:
+
 **One command (Claude Code, Codex CLI, Antigravity):**
 ```bash
 c3d-mcp skills install                      # all clients

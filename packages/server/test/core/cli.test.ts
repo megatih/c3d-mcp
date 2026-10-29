@@ -147,4 +147,28 @@ describe('cli', () => {
     expect(await main(['uninstall', '--json'], json.io)).toBe(0);
     expect(JSON.parse(json.out)).toHaveProperty('removed');
   });
+
+  it('setup validates its options and needs --yes without a TTY', async () => {
+    expect(await main(['setup', '--clients', 'vim'], harness().io)).toBe(2);
+    expect(await main(['setup', '--node-path', 'node'], harness().io)).toBe(2);
+    const c = harness();
+    expect(await main(['setup'], c.io)).toBe(2);
+    expect(c.err).toContain('--yes');
+    const help = harness();
+    await main(['--help'], help.io);
+    expect(help.out).toContain('setup');
+    expect(help.out).toContain('--no-skills');
+  });
+
+  it('setup --dry-run --json prints a structured report', async () => {
+    const c = harness();
+    const home = join(env?.root ?? '', 'home');
+    mkdirSync(home);
+    c.io.env = { ...c.io.env, HOME: home };
+    const code = await main(['setup', '--dry-run', '--json', '--clients', 'none', '--no-skills'], c.io);
+    const report = JSON.parse(c.out) as { dryRun: boolean; requirements: { rows: unknown[] }; steps: unknown[] };
+    expect(report.dryRun).toBe(true);
+    expect(report.requirements.rows.length).toBeGreaterThan(5);
+    expect(code === 0 || code === 1).toBe(true);
+  });
 });

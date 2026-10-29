@@ -25,4 +25,10 @@ rm -rf "$STAGE"
 
 echo "==> agent skills"; node scripts/build-skills.mjs --zip "$OUT"
 
-echo "==> checksums"; (cd "$OUT" && shasum -a 256 *.zip *.mcpb *.tgz skills/*.zip > SHA256SUMS && cat SHA256SUMS)
+echo "==> installer"
+TGZ_SHA=$(shasum -a 256 "$OUT/c3d-mcp-$VERSION.tgz" | cut -d' ' -f1)
+sed -e "s/@@C3D_VERSION@@/$VERSION/" -e "s/@@C3D_TGZ_SHA256@@/$TGZ_SHA/" install.sh > "$OUT/install.sh"
+chmod +x "$OUT/install.sh"; bash -n "$OUT/install.sh"
+cp Install-c3d-mcp.command "$OUT/Install-c3d-mcp.command"; chmod +x "$OUT/Install-c3d-mcp.command"
+
+echo "==> checksums"; (cd "$OUT" && shasum -a 256 *.zip *.mcpb *.tgz *.sh *.command skills/*.zip > SHA256SUMS && cat SHA256SUMS)

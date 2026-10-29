@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0
+- **Installer for new users:** `install.sh` / `Install-c3d-mcp.command` (one command; checks macOS, Cheetah3D and Node.js 22+, offers to install Node via Homebrew or a checksum-verified private copy, never `sudo`) and the guided `c3d-mcp setup` wizard (bridge + helper, version-aware and verified opening of the Accessibility / Screen Recording panes, opt-in client configuration with backups, skills, doctor and a test render). See docs/INSTALL.md.
+
 ## 0.1.4
 - Fix: `c3d-mcp skills install --target antigravity` now installs into `~/.gemini/config/skills` (user level) and `.agents/skills` (project level), the folders the current Antigravity CLI (`agy`) reads; verified with `agy` finding all six skills from both locations.
 

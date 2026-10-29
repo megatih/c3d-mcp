@@ -1,5 +1,17 @@
 # Troubleshooting
 
+## Installer problems
+| Symptom | Fix |
+|---|---|
+| "Cheetah3D not found" | Install Cheetah3D 8.1.3 (<https://www.cheetah3d.com>), launch it once, rerun the installer. `--skip-cheetah-check` installs only the server side. |
+| Node.js missing or older than 22 | Answer yes to the offer (Homebrew or a private copy in `~/.c3d-mcp/node`), or install it yourself (`brew install node@22`) and rerun. `--no-node-install` never installs Node. |
+| "checksum mismatch" | The download is incomplete or was tampered with; nothing was installed. Retry on a different network; report it if it repeats. |
+| `curl ... | bash` cannot ask questions | Run the download-then-`bash install.sh` form, or pass `--yes`. |
+| Settings pane did not open on the right page | The wizard verifies the pane and falls back to showing the click path: System Settings › Privacy & Security › Accessibility (or Screen & System Audio Recording). Add "C3D Bridge Helper" there by hand; the wizard polls until it sees the permission. |
+| macOS says the helper "cannot be opened" | It is signed but not notarized: `xattr -dr com.apple.quarantine "$HOME/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app"` |
+| Menu item missing in Cheetah3D after install | Restart Cheetah3D once; macros are only scanned at launch. |
+| Wizard changed a client config you did not want | Each edited file has a `.c3d-backup-<timestamp>` copy next to it; restore it. |
+
 Run `npx -y c3d-mcp doctor` first; every failing check prints a fix. Logs: `~/Library/Logs/c3d-mcp/`; the in-app runtime log is available through `c3d_get_console`.
 
 Every tool error carries `{code, message, hint, details}`. All codes:

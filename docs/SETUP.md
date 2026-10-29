@@ -1,11 +1,17 @@
 # Setup per client
 
-> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.4/c3d-mcp-0.1.4.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
+> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
 
 All clients launch the same stdio server: `npx -y c3d-mcp serve` (or `node /path/to/packages/server/bin/c3d-mcp.js serve`).
 `c3d-mcp config <client>` prints a ready-to-paste snippet for each client below (with two leading `#` comment lines naming the config file). Add `--raw` to print only the snippet so it can be redirected into a file, e.g. `c3d-mcp config codex --raw > codex-snippet.toml`.
 
-## 0. One-time bridge install (all clients)
+## 0. Guided installer (recommended for new users)
+```
+curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/install.sh | bash
+```
+Checks macOS, Cheetah3D 8.1.3 and Node.js 22+, offers to install Node.js (Homebrew, or a checksum-verified private copy in `~/.c3d-mcp/node`, never `sudo`), installs c3d-mcp into `~/.c3d-mcp`, then runs `c3d-mcp setup`, which installs the bridge and helper, opens the right System Settings pane for Accessibility, configures the AI clients it detects (asking first, with backups), installs the agent skills and runs a test render. Flags: `--dry-run`, `--yes`, `--clients <list|all|none>`, `--no-skills`, `--no-node-install`, `--prefix <dir>`. Full walkthrough: [INSTALL.md](INSTALL.md). Run just the wizard later with `c3d-mcp setup`. The steps below are the manual equivalent.
+
+## 0b. One-time bridge install (all clients)
 ```
 npx -y c3d-mcp install      # backs up Scripts/, installs the bridge macro + runtime and the helper app (to ~/Library/Application Support/Cheetah3D/MCP/helper/)
 ```
@@ -15,7 +21,7 @@ Verify: `npx -y c3d-mcp doctor`. After the restart you will find the macro under
 **Requirements:** macOS 14+ on Apple Silicon (developed and tested on macOS 27.2), Cheetah3D 8.1.3, Node.js ≥ 22. Without the helper the server falls back to `osascript` (slower; your terminal/MCP client then needs Accessibility), and `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable.
 
 ## Claude Desktop
-* Easiest: double-click `c3d-mcp-0.1.4.mcpb`.
+* Easiest: double-click `c3d-mcp-0.2.0.mcpb`.
 * Manual: `~/Library/Application Support/Claude/claude_desktop_config.json`
 ```json
 { "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"] } } }

@@ -8,8 +8,10 @@ import { CLIENTS, configSnippet, type ClientName } from '../core/configSnippets.
 import { doctor } from '../core/doctor.js';
 import { install, uninstall } from '../core/install.js';
 import { createRuntime, type Runtime } from '../core/runtime.js';
+import { SETUP_CLIENTS, type SetupClient } from '../core/clientConfigs.js';
+import { runSetup } from '../core/setup.js';
 import { serve } from '../server.js';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 export interface CliIO {
   out(text: string): void;
@@ -17,7 +19,7 @@ export interface CliIO {
   env: NodeJS.ProcessEnv;
   stdinIsTTY: boolean;
   /** Asks a yes/no question; the default implementation reads from the terminal. */
-  confirm(question: string): Promise<boolean>;
+  confirm(question: string, defaultYes?: boolean): Promise<boolean>;
   runtime(config: RuntimeConfig): Runtime;
   serve(config: RuntimeConfig): void;
 }
@@ -29,6 +31,7 @@ Usage: c3d-mcp <command> [options]
 Commands:
   install            Install the in-app bridge (idempotent; backs up Scripts/ first)
   uninstall          Remove what install created (never backups or your scripts)
+  setup              Guided setup: bridge + helper, permissions, MCP clients, skills, test render (see docs/SETUP.md)
   doctor             Check Cheetah3D, the bridge, permissions and the helper
   skills <action>    Agent skills for Claude Code, Codex and Antigravity: install | uninstall | list (see docs/SKILLS.md)
   config <client>    Print an MCP config snippet (${CLIENTS.join(', ')})
@@ -37,12 +40,15 @@ Commands:
 
 Options:
   --json             Machine-readable output (install, uninstall, doctor, config, version)
-  --yes, -y          Do not ask for confirmation (uninstall)
+  --yes, -y          Do not ask for confirmation (uninstall; setup accepts the defaults)
   --brief            doctor: one line when healthy, otherwise only the failing checks (for hooks)
   --form <npx|absolute>   config: launch via "npx -y c3d-mcp serve" (default) or absolute node/bin paths
   --target <t>       skills: claude, codex, antigravity or all (default all)
   --project <dir>    skills: install into <dir>/.claude|.agents/skills instead of the home directory
-  --dry-run          skills: show what would change
+  --dry-run          skills, setup: show what would change
+  --clients <list>   setup: comma-separated clients (${SETUP_CLIENTS.join(', ')}), all (detected) or none
+  --no-skills        setup: do not install the agent skills
+  --node-path <abs>  setup: pin this node binary in client configs (absolute launch form instead of npx)
   --raw              config: print only the snippet (no leading comment lines), e.g. c3d-mcp config codex --raw > snippet.toml
   --help, -h
 
@@ -55,10 +61,11 @@ export const defaultIO: CliIO = {
   err: (t) => process.stderr.write(t),
   env: process.env,
   stdinIsTTY: process.stdin.isTTY,
-  confirm: async (q) => {
+  confirm: async (q, defaultYes = false) => {
     const rl = createInterface({ input: process.stdin, output: process.stderr });
     try {
-      return /^y(es)?$/i.test((await rl.question(`${q} [y/N] `)).trim());
+      const a = (await rl.question(`${q} [${defaultYes ? 'Y/n' : 'y/N'}] `)).trim();
+      return a === '' ? defaultYes : /^y(es)?$/i.test(a);
     } finally {
       rl.close();
     }
@@ -71,7 +78,7 @@ export const defaultIO: CliIO = {
 
 const PARSE_OPTIONS = {
   allowPositionals: true,
-  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' } },
+  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' }, clients: { type: 'string' }, 'no-skills': { type: 'boolean' }, 'node-path': { type: 'string' } },
 } as const;
 
 function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTIONS>> | string {
@@ -163,6 +170,34 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
           if (c.fix) io.out(`         fix: ${c.fix}\n`);
         }
       }
+      return report.ok ? 0 : 1;
+    }
+
+    case 'setup': {
+      const clientsArg = values.clients;
+      let clients: 'all' | 'none' | SetupClient[] | undefined;
+      if (clientsArg !== undefined) {
+        const names = clientsArg.split(',').map((c) => c.trim()).filter(Boolean);
+        if (names.length === 1 && (names[0] === 'all' || names[0] === 'none')) clients = names[0];
+        else if (names.length > 0 && names.every((n) => (SETUP_CLIENTS as readonly string[]).includes(n))) clients = names as SetupClient[];
+        else {
+          io.err(`--clients must be all, none or a comma-separated list of: ${SETUP_CLIENTS.join(', ')}\n`);
+          return 2;
+        }
+      }
+      if (values['node-path'] !== undefined && !isAbsolute(values['node-path'])) {
+        io.err('--node-path must be an absolute path\n');
+        return 2;
+      }
+      if (!values.yes && !values['dry-run'] && !io.stdinIsTTY) {
+        io.err('setup is interactive: run it in a terminal, or pass --yes to accept the defaults (or --dry-run to preview).\n');
+        return 2;
+      }
+      const report = await runSetup(
+        { yes: values.yes === true, dryRun: values['dry-run'] === true, clients, skills: values['no-skills'] !== true, nodePath: values['node-path'] },
+        { rt: io.runtime(config), home: io.env.HOME, out: json ? (): void => undefined : (t) => io.out(t), confirm: (q, d) => io.confirm(q, d) },
+      );
+      if (json) emit(report);
       return report.ok ? 0 : 1;
     }
 

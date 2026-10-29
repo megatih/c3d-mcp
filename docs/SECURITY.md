@@ -64,6 +64,9 @@ A declined or cancelled elicitation is a refusal. Note that `confirm: true` supp
 * Downloads: HTTPS only, size caps enforced while streaming (the transfer is aborted as soon as the cap is exceeded, with or without `Content-Length`; JSON API responses are capped at 8 MB), extension allow-list, SHA-256 recorded next to the file, licence/attribution recorded. Downloaded files are untrusted data and are only ever opened by Cheetah3D as geometry/images, never executed.
 * The optional helper download at install time must be HTTPS with a pinned SHA-256; the installer step is injectable so offline installs never touch the network. Nothing is published or uploaded by c3d-mcp.
 
+## Installer (`install.sh`, `c3d-mcp setup`)
+Never uses `sudo` and never pipes anything into a privileged shell. It downloads only from nodejs.org (Node.js) and this project's GitHub releases, and verifies every download against a SHA-256 (the Node tarball against nodejs.org's `SHASUMS256.txt`, the c3d-mcp tarball against the checksum stamped into the script or the release's `SHA256SUMS`); a mismatch aborts before anything is installed. Files it writes: `~/.c3d-mcp` (or `--prefix`), optionally a PATH line in `~/.zprofile` (asked), the bridge and helper under Cheetah3D's support folders (with a backup of your Scripts folder), and, only after asking per client, one `c3d` entry in each client's config (timestamped backup next to it; existing entries are never overwritten). It opens System Settings but never changes privacy permissions itself. Inspect the script before running it (`curl -fsSL <url> -o install.sh; less install.sh`). Note that a script fetched with `curl | bash` is only as trustworthy as the channel (GitHub over HTTPS) and cannot check its own checksum; the download-then-read form is the cautious path.
+
 ## Logging
 
 * stderr and `~/Library/Logs/c3d-mcp/c3d-mcp.log` (mode `0600`, rotated at 2 MB, three generations). `C3D_MCP_LOG_LEVEL=debug|info|warn|error`.

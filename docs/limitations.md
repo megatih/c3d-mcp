@@ -15,6 +15,11 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 | Documents | Closing documents / quitting the app is not offered | - | close windows manually |
 | Geometry | Vertex colors | - | - |
 
+## Installation
+- The helper app is signed with a development identity but **not notarized** (needs a Developer ID certificate): on first launch macOS may block it; see the `xattr` note in docs/INSTALL.md.
+- Cheetah3D itself cannot be installed by the installer (commercial software); Node.js can (Homebrew or a checksum-verified private copy).
+- The installer and wizard are verified on macOS 27.2; the System Settings deep links differ between macOS versions, so the wizard verifies which pane opened and otherwise shows the click path. A timed run on a truly fresh Mac is still a manual item (docs/qa/real-client-runbook.md).
+
 ## Experimental (menu automation, needs the helper and Accessibility)
 
 | Tool | How it works | Risk | Fallback |

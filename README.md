@@ -19,8 +19,18 @@ macOS 14+ on Apple Silicon (developed on macOS 27.2), Cheetah3D 8.1.3, Node.js â
 
 ## Quickstart
 
+One command on a new Mac (checks macOS, Cheetah3D 8.1.3 and Node.js 22+, offers to install what is missing, installs the bridge and helper, opens the right System Settings pane, configures your AI clients and installs the agent skills; never uses `sudo`):
+
+```bash
+curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/install.sh | bash
+```
+
+Read it first if you like (`curl -fsSL <url> -o install.sh; less install.sh; bash install.sh`), or double-click `Install-c3d-mcp.command` from the [latest release](https://github.com/megatih/c3d-mcp/releases/latest). Full walkthrough: [docs/INSTALL.md](docs/INSTALL.md).
+
+<details><summary>Manual install</summary>
+
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.4/c3d-mcp-0.1.4.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.1.4/c3d-mcp-0.1.4.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.2.0/c3d-mcp-0.2.0.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app
@@ -37,6 +47,9 @@ npx -y c3d-mcp doctor
 claude mcp add c3d -- npx -y c3d-mcp serve      # Claude Code
 npx -y c3d-mcp config codex                      # prints snippets for claude-desktop, claude-code, codex, gemini-cli, antigravity, cursor, lm-studio
 ```
+
+The guided version of steps 1-5 is `c3d-mcp setup`.
+</details>
 
 Then ask your agent: *"Build a dining table with four legs and a wood material, light it, and render it."*
 
