@@ -1,0 +1,15 @@
+node_modules/
+/packages/server/dist/
+/packages/server/.test-dist/
+/packages/server/coverage/
+/packages/server/assets/
+/bridge/dist/
+/bridge/tests/harness/.build/
+/helper/.build/
+/helper/build/
+/release/
+/evals/results/
+*.tgz
+*.mcpb
+*.log
+.DS_Store

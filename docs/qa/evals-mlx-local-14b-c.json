@@ -1,0 +1,304 @@
+{
+ "model": "mlx-community/Qwen3-14B-4bit",
+ "N": 3,
+ "spent": 0,
+ "rows": [
+  {
+   "id": "local_rename_move",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0,
+   "turns": 4,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_rename_move",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0,
+   "turns": 4,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_rename_move",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0,
+   "turns": 4,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 12,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-c/local_simple_scene-1-Tzom4a/work/renders/render.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 12,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-c/local_simple_scene-2-zGtwUb/work/renders/render.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 12,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/mlx-local-14b-c/local_simple_scene-3-zhzAQO/work/renders/render.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": false,
+     "detail": "size=2.00,2.00,1.50"
+    }
+   ],
+   "pass": false,
+   "score": 0.5
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": false,
+     "detail": "size=2.00,2.00,1.50"
+    }
+   ],
+   "pass": false,
+   "score": 0.5
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": false,
+     "detail": "size=2.00,2.00,1.50"
+    }
+   ],
+   "pass": false,
+   "score": 0.5
+  }
+ ]
+}

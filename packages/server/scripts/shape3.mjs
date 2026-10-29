@@ -1,0 +1,13 @@
+import { connect } from './live-driver.mjs';
+import { copyFileSync, mkdtempSync } from 'node:fs'; import { tmpdir } from 'node:os'; import { join } from 'node:path';
+const { call, close } = await connect();
+const d = mkdtempSync(join(tmpdir(), 'p-')); const f = join(d, 'p.jas'); copyFileSync('../../fixtures/pyramid.jas', f);
+console.log((await call('c3d_open_document', { path: f })).isError ? 'open failed' : 'opened');
+const l = await call('c3d_list_scene', { depth: 3 });
+console.log(JSON.stringify(l.sc.items.map((i) => [i.name, i.type, i.id])));
+const p = l.sc.items.find((i) => i.name === 'Pyramid');
+const m = await call('c3d_get_mesh', { ref: { id: p.id } });
+console.log(JSON.stringify(m.sc).slice(0, 400));
+const m2 = await call('c3d_get_mesh', { ref: { id: p.id }, vertex_limit: 1, polygon_limit: 1 });
+console.log(JSON.stringify(m2.sc).slice(0, 400));
+await close();

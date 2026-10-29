@@ -1,0 +1,11 @@
+id: keyframes_light_fade
+title: "Fade a light"
+profile: full
+timeout_s: 300
+fixture: fixtures/lamp.jas
+tags: ["animation", "lights"]
+prompt: "Animate the intensity of the light named \"Lamp\" from 0 at t=0 to 2 at t=3 s with smooth interpolation. Verify by reading the keys back."
+assertions:
+  - {"type": "keyframe_count", "object_regex": "^Lamp$", "param": "intensity", "min": 2}
+  - {"type": "param_at_time", "object_regex": "^Lamp$", "param": "intensity", "time": 3, "min": 1.9, "max": 2.1}
+  - {"type": "tool_called", "tool": "c3d_get_keyframes"}

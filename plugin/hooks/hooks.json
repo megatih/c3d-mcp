@@ -1,0 +1,12 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          { "type": "command", "command": "command -v c3d-mcp >/dev/null 2>&1 && c3d-mcp doctor --brief 2>/dev/null || true", "timeout": 30 }
+        ]
+      }
+    ]
+  }
+}

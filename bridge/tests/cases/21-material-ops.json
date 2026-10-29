@@ -1,0 +1,797 @@
+{
+ "cases": [
+  {
+   "name": "materials happy path",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "m",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Cube"
+         },
+         "as": "box"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "Wood",
+          "params": {
+           "diffColor": {
+            "r": 0.5,
+            "g": 0.3,
+            "b": 0.1
+           },
+           "specSize": 40
+          }
+         },
+         "as": "m"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "Wood",
+          "type": "Material (PBR)"
+         },
+         "as": "m2"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "T",
+          "type": "Toon"
+         }
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "G",
+          "type": "Glass"
+         }
+        },
+        {
+         "op": "listMaterials"
+        },
+        {
+         "op": "addMaterialNode",
+         "args": {
+          "material": "$m",
+          "type": "image"
+         },
+         "as": "n"
+        },
+        {
+         "op": "addMaterialNode",
+         "args": {
+          "material": {
+           "name": "Wood"
+          },
+          "type": "noise",
+          "params": {
+           "bogus": 1
+          }
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": "$m",
+          "params": {
+           "specColor": [
+            0.1,
+            0.1,
+            0.1,
+            1
+           ]
+          }
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "params": {
+           "mix": 0.5
+          }
+         }
+        },
+        {
+         "op": "setTexture",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "param": "texture",
+          "path": "{MCP}/tmp/tex.png"
+         }
+        },
+        {
+         "op": "connectNodes",
+         "args": {
+          "material": "$m",
+          "fromNode": "$n.nodeId",
+          "fromPara": "color",
+          "toNode": "$m.rootNodeId",
+          "toPara": "diffColor"
+         }
+        },
+        {
+         "op": "getMaterialGraph",
+         "args": {
+          "material": "$m"
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$box",
+          "material": "$m"
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$box",
+          "material": {
+           "index": 1
+          }
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$box",
+          "material": "$m",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": "$box",
+          "include": [
+           "materials",
+           "tags"
+          ]
+         }
+        },
+        {
+         "op": "removeMaterial",
+         "args": {
+          "material": {
+           "name": "Wood.2"
+          }
+         }
+        },
+        {
+         "op": "listMaterials"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "m": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createMaterial",
+          "ok": true,
+          "result": {
+           "index": 0,
+           "name": "Wood",
+           "rootNodeType": "material",
+           "rootNodeId": {
+            "$type": "number"
+           }
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": true,
+          "result": {
+           "index": 1,
+           "name": "Wood.2",
+           "rootNodeType": "pbrmetal"
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": true,
+          "result": {
+           "index": 2,
+           "rootNodeType": "toon"
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": true,
+          "result": {
+           "index": 3,
+           "rootNodeType": "dielectric"
+          }
+         },
+         {
+          "op": "listMaterials",
+          "ok": true,
+          "result": {
+           "materials": [
+            {
+             "index": 0,
+             "name": "Wood",
+             "rootNodeType": "material",
+             "nodeCount": 1
+            },
+            {
+             "index": 1,
+             "name": "Wood.2"
+            },
+            {
+             "index": 2,
+             "name": "T"
+            },
+            {
+             "index": 3,
+             "name": "G"
+            }
+           ]
+          }
+         },
+         {
+          "op": "addMaterialNode",
+          "ok": true,
+          "result": {
+           "nodeId": {
+            "$type": "number"
+           },
+           "type": "image",
+           "inputs": {
+            "$len": 6
+           },
+           "outputs": {
+            "$has": "color"
+           }
+          }
+         },
+         {
+          "op": "addMaterialNode",
+          "ok": true,
+          "result": {
+           "type": "noise",
+           "paramErrors": [
+            {
+             "name": "bogus",
+             "code": "NOT_FOUND"
+            }
+           ]
+          }
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": true,
+          "result": {
+           "applied": [
+            "specColor"
+           ],
+           "errors": []
+          }
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": true,
+          "result": {
+           "applied": [
+            "mix"
+           ]
+          }
+         },
+         {
+          "op": "setTexture",
+          "ok": true,
+          "result": {
+           "path": "{MCP}/tmp/tex.png"
+          }
+         },
+         {
+          "op": "connectNodes",
+          "ok": true,
+          "result": {
+           "connected": true
+          }
+         },
+         {
+          "op": "getMaterialGraph",
+          "ok": true,
+          "result": {
+           "name": "Wood",
+           "nodes": {
+            "$len": 3
+           },
+           "connections": [
+            {
+             "fromPara": "color",
+             "toPara": "diffColor"
+            }
+           ]
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": true,
+          "result": {
+           "tagIndex": 0,
+           "material": "Wood"
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": true,
+          "result": {
+           "tagIndex": 0,
+           "material": "Wood.2"
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": true,
+          "result": {
+           "tagIndex": 1,
+           "material": "Wood"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "materials": [
+            {
+             "material": "Wood.2"
+            },
+            {
+             "material": "Wood"
+            }
+           ],
+           "tags": [
+            {
+             "index": 0,
+             "type": "SHADERTAG"
+            },
+            {
+             "index": 1,
+             "type": "SHADERTAG"
+            }
+           ]
+          }
+         },
+         {
+          "op": "removeMaterial",
+          "ok": true,
+          "result": {
+           "removed": true
+          }
+         },
+         {
+          "op": "listMaterials",
+          "ok": true,
+          "result": {
+           "materials": {
+            "$len": 3
+           }
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.materialAtIndex(0).rootNode().getParameter('specSize')",
+        "equals": 40
+       },
+       {
+        "eval": "doc.materialAtIndex(0).rootNode().getParameter('diffColor').x",
+        "equals": 0.5
+       },
+       {
+        "eval": "doc.materialAtIndex(0).nodeAtIndex(1).getParameter('texture')",
+        "equals": "{MCP}/tmp/tex.png"
+       }
+      ]
+     },
+     "files": {
+      "tmp/tex.png": "PNGMOCK"
+     }
+    }
+   ]
+  },
+  {
+   "name": "materials error paths",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "e",
+       "ops": [
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "M"
+         },
+         "as": "m"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": {
+           "name": "Missing"
+          },
+          "params": {
+           "a": 1
+          }
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": {
+           "index": 7
+          },
+          "params": {
+           "a": 1
+          }
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": "$m",
+          "node": 12345,
+          "params": {
+           "a": 1
+          }
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": "$m",
+          "params": {
+           "nope": 1,
+           "specSize": "big"
+          }
+         }
+        },
+        {
+         "op": "addMaterialNode",
+         "args": {
+          "material": "$m",
+          "type": "notanode"
+         }
+        },
+        {
+         "op": "connectNodes",
+         "args": {
+          "material": "$m",
+          "fromNode": 1,
+          "fromPara": "color",
+          "toNode": 2,
+          "toPara": "diffColor"
+         }
+        },
+        {
+         "op": "addMaterialNode",
+         "args": {
+          "material": "$m",
+          "type": "image"
+         },
+         "as": "n"
+        },
+        {
+         "op": "connectNodes",
+         "args": {
+          "material": "$m",
+          "fromNode": "$n.nodeId",
+          "fromPara": "nope",
+          "toNode": "$m.rootNodeId",
+          "toPara": "diffColor"
+         }
+        },
+        {
+         "op": "setTexture",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "param": "mix",
+          "path": "{MCP}/tmp/tex.png"
+         }
+        },
+        {
+         "op": "setTexture",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "param": "texture",
+          "path": "{MCP}/tmp/nofile.png"
+         }
+        },
+        {
+         "op": "setTexture",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "param": "texture",
+          "path": "relative.png"
+         }
+        },
+        {
+         "op": "setTexture",
+         "args": {
+          "material": "$m",
+          "node": "$n.nodeId",
+          "param": "nope",
+          "path": "{MCP}/tmp/tex.png"
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "material": {
+           "name": "Missing"
+          }
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": {
+           "path": "/"
+          },
+          "material": "$m"
+         }
+        },
+        {
+         "op": "removeMaterial",
+         "args": {
+          "material": {
+           "name": "Missing"
+          }
+         }
+        },
+        {
+         "op": "getMaterialGraph",
+         "args": {
+          "material": "notAnAlias"
+         }
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": ""
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "e": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          },
+          "result": {
+           "applied": [],
+           "errors": {
+            "$len": 2
+           }
+          }
+         },
+         {
+          "op": "addMaterialNode",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "connectNodes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "addMaterialNode",
+          "ok": true
+         },
+         {
+          "op": "connectNodes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "message": {
+            "$re": "refused"
+           }
+          }
+         },
+         {
+          "op": "setTexture",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setTexture",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setTexture",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setTexture",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "removeMaterial",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getMaterialGraph",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "files": {
+      "tmp/tex.png": "PNGMOCK"
+     }
+    }
+   ]
+  },
+  {
+   "name": "getMaterialGraph degrades to \"unavailable\" when connection introspection throws",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "g",
+       "ops": [
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "M"
+         }
+        },
+        {
+         "op": "getMaterialGraph",
+         "args": {
+          "material": {
+           "name": "M"
+          }
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "g": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "getMaterialGraph",
+          "ok": true,
+          "result": {
+           "nodes": {
+            "$len": 1
+           },
+           "connections": "unavailable"
+          }
+         }
+        ]
+       }
+      }
+     },
+     "js": "Parameter.prototype.connected = function () { throw new Error('unsupported'); };"
+    }
+   ]
+  }
+ ]
+}

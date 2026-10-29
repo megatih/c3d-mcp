@@ -1,0 +1,11 @@
+id: document_info
+title: "Report document info"
+profile: full
+timeout_s: 120
+fixture: fixtures/one_box.jas
+tags: ["read", "document"]
+prompt: "Tell me the document name, frame rate, current time, and how many objects and materials it contains. Do not change anything."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_get_document_info"}
+  - {"type": "scene_unchanged"}
+  - {"type": "answer_contains", "regex": "(?i)fps|frame"}

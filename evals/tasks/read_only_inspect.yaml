@@ -1,0 +1,11 @@
+id: read_only_inspect
+title: "Read-only inspection"
+profile: full
+timeout_s: 120
+fixture: fixtures/one_box.jas
+tags: ["read", "profile-readonly"]
+prompt: "Describe what is in the scene (object names, types, materials) without changing anything."
+assertions:
+  - {"type": "scene_unchanged"}
+  - {"type": "tool_not_called", "tool": "c3d_run_script"}
+  - {"type": "answer_contains", "regex": "(?i)box"}

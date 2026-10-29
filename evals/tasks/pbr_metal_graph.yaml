@@ -1,0 +1,13 @@
+id: pbr_metal_graph
+title: "PBR metal material graph"
+profile: full
+timeout_s: 420
+fixture: fixtures/empty.jas
+tags: ["materials", "nodes"]
+prompt: "Create a PBR material called \"BrushedSteel\" with metalness 1 and roughness about 0.35 and a gray base color, plus a noise node connected to its roughness input. Assign it to a new ball."
+assertions:
+  - {"type": "material_exists", "name_regex": "^BrushedSteel", "root_type": "pbrmetal"}
+  - {"type": "material_param", "material_regex": "^BrushedSteel", "param": "reflMetalness", "min": 0.9, "max": 1}
+  - {"type": "material_node", "material_regex": "^BrushedSteel", "node_type": "noise"}
+  - {"type": "material_assigned", "object_regex": ".*", "material_regex": "^BrushedSteel"}
+  - {"type": "object_count", "object_type": "BALL", "min": 1}

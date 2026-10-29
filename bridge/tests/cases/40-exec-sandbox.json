@@ -1,0 +1,2268 @@
+{
+ "cases": [
+  {
+   "name": "sandbox: print capture, JSON-able and non-JSON return values",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "r",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "print('a', 1, [2]); print('b'); return { n: 1, list: [1, 'x', null], v: new Vec3D(1, 2, 3), nested: { ok: true } };"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return doc.root();"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return NaN;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return function () {};"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return typeof doc.addObject + ':' + typeof OS.beep + ':' + typeof C3D.find + ':' + C3D.runtimeVersion;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "var o = doc.addObject(BOX); o.setParameter('name', 'FromScript'); o.update(); return o.getParameter('name');"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return C3D.find({ path: '/FromScript' }).getParameter('name');"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "throw new Error('boom');"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "var x = ;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "}); evil(); (function () {"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "null.x;"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "r": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": {
+            "n": 1,
+            "list": [
+             1,
+             "x",
+             null
+            ],
+            "v": {
+             "x": 1,
+             "y": 2,
+             "z": 3
+            },
+            "nested": {
+             "ok": true
+            }
+           },
+           "log": [
+            "a 1 2",
+            "b"
+           ],
+           "returned": "json-able"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": {
+            "$type": "string"
+           },
+           "returned": null
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": null,
+           "returned": "json-able"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "returned": null
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "returned": null
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "function:function:function:1.0.0"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "FromScript"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "FromScript"
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": "boom",
+           "details": {
+            "message": "boom",
+            "line": {
+             "$type": "number"
+            }
+           }
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "details": {
+            "line": {
+             "$type": "number"
+            }
+           }
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR"
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "details": {
+            "message": {
+             "$re": "null"
+            }
+           }
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "sandbox escape blocked: global this",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return this.OS.system('echo x');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "undefined"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox: `this` and sloppy-function this are undefined, never the global object",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return String(this);"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return String((function () { return this; })());"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return (function () { return typeof this; }).call(null);"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return typeof globalThis;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "try { return globalThis.OS.system('x'); } catch (e) { return 'blocked:' + (e instanceof TypeError); }"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return typeof self + typeof window;"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "undefined"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "undefined"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "object"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "undefined"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "blocked:true"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "undefinedundefined"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "sandbox escape blocked: globalThis",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return globalThis.OS.system('echo x');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "undefined|null|not an object"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: indirect eval (0,eval)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return (0, eval)('OS.system(\"echo x\")');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: eval is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: direct eval",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return eval('1 + 1');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: eval is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: Function constructor via (function(){}).constructor",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return (function () {}).constructor('return this')().OS.system('echo x');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: the Function constructor is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: Function constructor via [].constructor.constructor",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return [].constructor.constructor('return this')();"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: the Function constructor is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: Function(...) identifier",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return Function('return this')();"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: Function is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: Function constructor via prototype chain",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return Object.getPrototypeOf(function () {}).constructor('return this')();"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: the Function constructor is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: AsyncFunction constructor",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var AsyncFunction = Object.getPrototypeOf(async function () {}).constructor; return AsyncFunction('return this');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: the Function constructor is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: GeneratorFunction constructor",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var GeneratorFunction = Object.getPrototypeOf(function* () {}).constructor; return GeneratorFunction('yield 1');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: the Function constructor is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: OS['sys'+'tem']",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return OS['sys' + 'tem']('echo hi');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: OS.system is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: OS.system with an allowShellToken-less call",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return OS.system('echo hi');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: OS.system is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: OS.messageBox (would block the UI)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "OS.messageBox('t', 'm');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: OS.messageBox is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "__stats.dialogCalls",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: OS.runOpenPanel",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "OS.runOpenPanel('png');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: OS.runOpenPanel is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "__stats.dialogCalls",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: reaching geval",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return geval('OS.system(\"echo x\")');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: geval is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: reaching geval through globalThis",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return globalThis.geval('1');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "undefined|null|not an object"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: File.mkDir on an instance",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return new File('{MCP}/tmp/victim').mkDir();"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: File.mkDir is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "__native.exists('{MCP}/tmp/keep.txt')",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;",
+    "files": {
+     "tmp/keep.txt": "keep"
+    }
+   }
+  },
+  {
+   "name": "sandbox escape blocked: File.mkDir static",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return File.mkDir('{MCP}/tmp');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: File.mkDir is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "__native.exists('{MCP}/tmp/keep.txt')",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;",
+    "files": {
+     "tmp/keep.txt": "keep"
+    }
+   }
+  },
+  {
+   "name": "sandbox escape blocked: writing outside tmp and allowFiles",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/outbox/evil.json'); f.open(WRITE_MODE); f.write('x'); f.close();"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: writing .*evil.json is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "__native.exists('{MCP}/outbox/evil.json')",
+        "equals": false
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: path traversal out of tmp",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/tmp/../outbox/evil.json'); f.open(WRITE_MODE);"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: writing .* is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox escape blocked: copyTo outside tmp",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/tmp/ok.txt'); f.open(WRITE_MODE); f.write('x'); f.close(); return new File('{MCP}/tmp/ok.txt').copyTo('{MCP}/inbox/copied.json');"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "C3D sandbox: copying to .* is not allowed"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.mkDirCalls",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox: guarded File allows tmp and allowFiles writes, allowShellToken unlocks OS.system",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/tmp/ok.txt'); f.open(WRITE_MODE); f.write('hello'); f.close(); var g = new File('{MCP}/tmp/ok.txt'); g.open(READ_MODE); var s = g.read(g.size()); g.close(); return s + ':' + g.size();"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/tmp/extra/x.txt'); return f.exist();",
+          "allowFiles": [
+           "{MCP}/tmp/extra"
+          ]
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/inbox/allowed.txt'); f.open(WRITE_MODE); f.write('a'); f.close(); return f.size();",
+          "allowFiles": [
+           "{MCP}/inbox/allowed.txt"
+          ]
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return OS.system('echo ok');",
+          "allowShellToken": "OS.system"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return OS.system('echo no');",
+          "allowShellToken": "yes"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "OS.beep(); return new File('{MCP}/tmp').contentOfDir().length;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return 1;",
+          "allowFiles": [
+           "relative/path"
+          ]
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "hello:5"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": false
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": 1
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": 0
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "OS.system is not allowed"
+           }
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": {
+            "$type": "number"
+           }
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls",
+        "equals": [
+         "echo ok"
+        ]
+       },
+       {
+        "eval": "__stats.beeps",
+        "equals": 1
+       },
+       {
+        "eval": "OS === __h_origOS && File === __h_origFile",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox: real OS/File globals and Function.prototype.constructor are restored even when the code throws",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "throw new Error('after install');"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('{MCP}/outbox/x'); f.open(WRITE_MODE);"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return (function () {}).constructor === Function;"
+         }
+        },
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR"
+          }
+         },
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": false
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "OS === __h_origOS",
+        "equals": true
+       },
+       {
+        "eval": "File === __h_origFile",
+        "equals": true
+       },
+       {
+        "eval": "typeof File.prototype.mkDir",
+        "equals": "function"
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       },
+       {
+        "eval": "(function () {}).constructor('return 7')()",
+        "equals": 7
+       },
+       {
+        "eval": "typeof (0, eval)",
+        "equals": "function"
+       },
+       {
+        "eval": "typeof OS.system",
+        "equals": "function"
+       },
+       {
+        "eval": "__stats.release",
+        "equals": 1
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "var __h_origOS = OS, __h_origFile = File;"
+   }
+  },
+  {
+   "name": "sandbox: a body that tries to close the wrapper is a syntax error and never runs",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "}); globalThis_leak = (function () { return this; })(); (function () {"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "return typeof globalThis_leak;"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "undefined"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "sandbox: a getter on the returned value cannot run after teardown (security review H1)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return { get a() { return (function () {}).constructor('return this')()['O'+'S']['sys'+'tem']('echo pwned'); } };"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       },
+       {
+        "eval": "(function () {}).constructor === Function",
+        "equals": true
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "sandbox: toString of a returned object cannot reach the real Function constructor",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "return { toString: function () { return (function () {}).constructor('return typeof OS')(); } };"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.sysCalls.length",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

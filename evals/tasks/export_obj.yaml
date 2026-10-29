@@ -1,0 +1,12 @@
+id: export_obj
+title: "Export to OBJ"
+profile: full
+timeout_s: 180
+fixture: fixtures/one_box.jas
+tags: ["document", "export"]
+prompt: "Export the current scene as an OBJ file called demo.obj in the default export location and tell me the path."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_export"}
+  - {"type": "file_exists", "path_regex": "demo\\.obj$"}
+  - {"type": "answer_contains", "regex": "demo\\.obj"}
+  - {"type": "scene_unchanged"}

@@ -1,0 +1,794 @@
+{
+ "cases": [
+  {
+   "name": "param serialization: every type string round-trips (String Bool Int Float Vec2D Vec3D Vec4D Texture Link)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Target"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         },
+         "as": "cam"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "name": "Cam2",
+           "activeCamera": false,
+           "rotorder": 3,
+           "fieldOfView": 55.5,
+           "cameraPivot": [
+            1,
+            2,
+            3
+           ],
+           "backgroundColor": {
+            "r": 0.1,
+            "g": 0.2,
+            "b": 0.3
+           },
+           "backgroundImage": {
+            "path": "{MCP}/tmp/bg.png"
+           },
+           "focusOnObject": {
+            "ref": {
+             "path": "/Target"
+            }
+           }
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$cam",
+          "names": [
+           "name",
+           "activeCamera",
+           "rotorder",
+           "fieldOfView",
+           "cameraPivot",
+           "backgroundColor",
+           "backgroundImage",
+           "focusOnObject"
+          ]
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "focusOnObject": null,
+           "backgroundImage": "",
+           "backgroundColor": [
+            1,
+            1,
+            1,
+            0.5
+           ],
+           "activeCamera": 1
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$cam",
+          "names": [
+           "focusOnObject",
+           "backgroundImage",
+           "backgroundColor",
+           "activeCamera"
+          ]
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "type": "SHADERTAG",
+          "params": {
+           "UVScale": [
+            2,
+            3
+           ],
+           "UVRotation": 15
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "names": [
+           "position",
+           "scale"
+          ]
+         }
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "Wood"
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "tag": {
+           "index": 0,
+           "type": "SHADERTAG"
+          },
+          "params": {
+           "material": {
+            "material": {
+             "name": "Wood"
+            }
+           }
+          }
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "tag": {
+           "index": 0
+          },
+          "params": {
+           "UVOffset": {
+            "x": 0.25,
+            "y": 0.5
+           }
+          }
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "tag": {
+           "index": 0,
+           "type": "MODETAG"
+          },
+          "params": {
+           "locked": true
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": {
+           "path": "/Target"
+          },
+          "tag": {
+           "index": 0
+          },
+          "names": [
+           "material",
+           "UVScale",
+           "UVOffset",
+           "UVRotation",
+           "shadeSelection"
+          ]
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "POLYGONOBJ",
+          "name": "Poly"
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": {
+           "path": "/Poly"
+          },
+          "names": [
+           "pointArray",
+           "name"
+          ]
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Poly"
+          },
+          "params": {
+           "pointArray": [
+            1,
+            2,
+            3
+           ]
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Poly"
+          },
+          "include": [
+           "parameters"
+          ]
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "p": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true,
+          "result": {
+           "applied": [
+            "name",
+            "activeCamera",
+            "rotorder",
+            "fieldOfView",
+            "cameraPivot",
+            "backgroundColor",
+            "backgroundImage",
+            "focusOnObject"
+           ],
+           "errors": []
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "name",
+             "type": "String",
+             "value": "Cam2"
+            },
+            {
+             "name": "activeCamera",
+             "type": "Bool",
+             "value": false
+            },
+            {
+             "name": "rotorder",
+             "type": "Int",
+             "value": 3
+            },
+            {
+             "name": "fieldOfView",
+             "type": "Float",
+             "value": 55.5
+            },
+            {
+             "name": "cameraPivot",
+             "type": "Vec3D",
+             "value": {
+              "x": 1,
+              "y": 2,
+              "z": 3
+             }
+            },
+            {
+             "name": "backgroundColor",
+             "type": "Vec4D",
+             "value": {
+              "x": 0.1,
+              "y": 0.2,
+              "z": 0.3,
+              "w": 1
+             }
+            },
+            {
+             "name": "backgroundImage",
+             "type": "Texture",
+             "value": "{MCP}/tmp/bg.png"
+            },
+            {
+             "name": "focusOnObject",
+             "type": "Link",
+             "value": {
+              "id": 1001,
+              "name": "Target"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": true,
+          "result": {
+           "applied": [
+            "focusOnObject",
+            "backgroundImage",
+            "backgroundColor",
+            "activeCamera"
+           ]
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "focusOnObject",
+             "type": "Link",
+             "value": null
+            },
+            {
+             "name": "backgroundImage",
+             "type": "Texture",
+             "value": ""
+            },
+            {
+             "name": "backgroundColor",
+             "type": "Vec4D",
+             "value": {
+              "x": 1,
+              "y": 1,
+              "z": 1,
+              "w": 0.5
+             }
+            },
+            {
+             "name": "activeCamera",
+             "type": "Bool",
+             "value": true
+            }
+           ]
+          }
+         },
+         {
+          "op": "addTag",
+          "ok": true,
+          "result": {
+           "tagIndex": 0
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "position",
+             "type": "Vec3D",
+             "value": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+             }
+            },
+            {
+             "name": "scale",
+             "type": "Vec3D",
+             "value": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true,
+          "result": {
+           "applied": [
+            "material"
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": true,
+          "result": {
+           "applied": [
+            "UVOffset"
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "message": {
+            "$re": "not MODETAG"
+           }
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "material",
+             "type": "Link",
+             "value": {
+              "name": "Wood"
+             }
+            },
+            {
+             "name": "UVScale",
+             "type": "Vec2D",
+             "value": {
+              "x": 2,
+              "y": 3
+             }
+            },
+            {
+             "name": "UVOffset",
+             "type": "Vec2D",
+             "value": {
+              "x": 0.25,
+              "y": 0.5
+             }
+            },
+            {
+             "name": "UVRotation",
+             "type": "Float",
+             "value": 15
+            },
+            {
+             "name": "shadeSelection",
+             "type": "Int",
+             "value": 0
+            }
+           ]
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "pointArray",
+             "type": "unknown",
+             "value": null,
+             "unreadable": true
+            },
+            {
+             "name": "name",
+             "type": "String",
+             "value": "Poly"
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "result": {
+           "applied": [],
+           "errors": [
+            {
+             "name": "pointArray",
+             "code": "UNSUPPORTED"
+            }
+           ]
+          },
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "parameters": {
+            "$len": 19
+           }
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childAtIndex(1).getParameter('activeCamera')",
+        "equals": 1
+       }
+      ]
+     },
+     "files": {
+      "tmp/bg.png": "x"
+     }
+    }
+   ]
+  },
+  {
+   "name": "param write validation: wrong types are rejected per key, valid keys still apply",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "v",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "LIGHT",
+          "name": "L"
+         },
+         "as": "l"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$l",
+          "params": {
+           "intensity": "bright",
+           "samples": 1.5,
+           "cap": "yes",
+           "name": 7,
+           "position": [
+            1,
+            2
+           ],
+           "color": {
+            "x": 1,
+            "y": 1
+           },
+           "iesProfile": 5,
+           "shape": 2,
+           "width": null
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$l",
+          "names": [
+           "shape",
+           "width"
+          ]
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "v": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          },
+          "result": {
+           "applied": [
+            "shape"
+           ],
+           "errors": [
+            {
+             "name": "intensity",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "samples",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "cap",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "name",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "position",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "color",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "iesProfile",
+             "code": "INVALID_ARGUMENT"
+            },
+            {
+             "name": "width",
+             "code": "INVALID_ARGUMENT"
+            }
+           ]
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "shape",
+             "type": "Int",
+             "value": 2
+            },
+            {
+             "name": "width",
+             "type": "Float",
+             "value": 0.5
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "param serialization helpers (JS-side): unsupported types, vec shapes, unreadable values",
+   "presses": [
+    {
+     "expect": {
+      "js": [
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return {}; } }, 'g', 'Gradient')",
+        "equals": {
+         "name": "g",
+         "type": "Gradient",
+         "value": {
+          "unsupported": true
+         }
+        }
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return {}; } }, 'g', 'FloatArray').value",
+        "equals": {
+         "unsupported": true
+        }
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { throw new Error('x'); } }, 'p', 'Float')",
+        "equals": {
+         "name": "p",
+         "type": "Float",
+         "value": null,
+         "unreadable": true
+        }
+       },
+       {
+        "eval": "(function () { try { C3D.params.toNative({}, 'Gradient', 1, 'g'); } catch (e) { return e.code; } })()",
+        "equals": "UNSUPPORTED"
+       },
+       {
+        "eval": "(function () { try { C3D.params.toNative({}, 'FloatArray', [1], 'g'); } catch (e) { return e.code; } })()",
+        "equals": "UNSUPPORTED"
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return new Vec2D(1, 2); } }, 'v', 'Vec2D').value",
+        "equals": {
+         "x": 1,
+         "y": 2
+        }
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return new Vec4D(1, 2, 3, 4); } }, 'v', 'Vec4D').value",
+        "equals": {
+         "x": 1,
+         "y": 2,
+         "z": 3,
+         "w": 4
+        }
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return undefined; } }, 't', 'Texture').value",
+        "equals": ""
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return undefined; } }, 'l', 'Link').value",
+        "equals": null
+       },
+       {
+        "eval": "C3D.params.readParam({ getParameter: function () { return 1; } }, 'b', 'Bool').value",
+        "equals": true
+       },
+       {
+        "eval": "JSON.stringify([C3D.params.numbers([1, 2, 3, 4], 4, 'c'), C3D.params.numbers({ r: 1, g: 2, b: 3 }, 4, 'c'), C3D.params.numbers({ x: 1, y: 2 }, 2, 'c'), C3D.params.numbers([1, 2, 3], 4, 'c')])",
+        "equals": "[[1,2,3,4],[1,2,3,1],[1,2],[1,2,3,1]]"
+       },
+       {
+        "eval": "String(C3D.params.makeVec(3, [1, 2, 3]))",
+        "equals": "[object CallbackObject]"
+       },
+       {
+        "eval": "C3D.params.typeMap({ parameterInfo: function () { return [['resolution', 'unknown'], ['x', 'Int']]; } }).types.resolution",
+        "equals": "Vec2D"
+       },
+       {
+        "eval": "C3D.util.asciiEscape('\\u540d\\u7f6e\\u007f')",
+        "equals": "\\u540d\\u7f6e\\u007f"
+       },
+       {
+        "eval": "C3D.util.adler32('Wikipedia')",
+        "equals": "11e60398"
+       },
+       {
+        "eval": "JSON.stringify(C3D.util.splitPath('/A/b\\\\/c/\\\\\\\\d'))",
+        "equals": "[\"A\",\"b/c\",\"\\\\d\"]"
+       },
+       {
+        "eval": "C3D.util.escapeName('a/b\\\\c')",
+        "equals": "a\\/b\\\\c"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

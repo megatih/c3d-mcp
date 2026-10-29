@@ -1,0 +1,11 @@
+id: spline_extrude
+title: "Spline extrude"
+profile: full
+timeout_s: 300
+fixture: fixtures/empty.jas
+tags: ["modeling", "spline"]
+prompt: "Draw a closed star-like profile with 8 points as a spline and extrude it 0.5 units to make a solid shape (use an Extrude object with the spline as a child)."
+assertions:
+  - {"type": "object_count", "object_type": "SPLINE", "min": 1}
+  - {"type": "object_exists", "name_regex": ".*", "object_type": "EXTRUDE"}
+  - {"type": "parent_of", "child_regex": "(?i)spline|star|profile", "parent_regex": "(?i)extrude"}

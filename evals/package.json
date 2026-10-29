@@ -1,0 +1,1 @@
+{"name":"c3d-mcp-evals","private":true,"type":"module","dependencies":{"@modelcontextprotocol/client":"2.4.0","yaml":"2.8.1"}}

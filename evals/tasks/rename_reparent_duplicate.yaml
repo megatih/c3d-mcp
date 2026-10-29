@@ -1,0 +1,11 @@
+id: rename_reparent_duplicate
+title: "Rename, reparent and duplicate"
+profile: full
+timeout_s: 300
+fixture: fixtures/one_box.jas
+tags: ["scene"]
+prompt: "The scene has a box called \"Box\". Rename it to \"Seat\", create a folder \"Chair\", put the seat inside the folder and make a second copy of the seat called \"Seat2\" inside the same folder."
+assertions:
+  - {"type": "object_exists", "name_regex": "^Chair$", "object_type": "FOLDER"}
+  - {"type": "parent_of", "child_regex": "^Seat$", "parent_regex": "^Chair$"}
+  - {"type": "parent_of", "child_regex": "^Seat2$", "parent_regex": "^Chair$"}

@@ -1,0 +1,11 @@
+id: edit_mesh_move
+title: "Edit a mesh"
+profile: full
+timeout_s: 300
+fixture: fixtures/pyramid.jas
+tags: ["mesh"]
+prompt: "Move the top vertex of the pyramid named \"Pyramid\" up by 1 unit using the mesh tools, then read the mesh back to confirm."
+assertions:
+  - {"type": "bbox", "object": "^Pyramid$", "size_min": [0.9, 2.4, 0.9], "size_max": [1.1, 2.6, 1.1]}
+  - {"type": "tool_called", "tool": "c3d_edit_mesh"}
+  - {"type": "tool_called", "tool": "c3d_get_mesh"}

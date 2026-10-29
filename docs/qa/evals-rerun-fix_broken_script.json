@@ -1,0 +1,100 @@
+{
+ "model": "claude-sonnet-5-5",
+ "N": 3,
+ "spent": 0.44125970000000003,
+ "rows": [
+  {
+   "id": "fix_broken_script",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.2112003,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": false,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": false,
+     "detail": "I didn't run your macro. I created the five boxes directly with the c3d tools an"
+    }
+   ],
+   "pass": false,
+   "score": 0.3333333333333333
+  },
+  {
+   "id": "fix_broken_script",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.15932870000000002,
+   "turns": 17,
+   "calls": 16,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "6 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I fixed the macro and ran it. The scene now has five boxes in a row along X, at "
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "fix_broken_script",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.07073070000000001,
+   "turns": 7,
+   "calls": 6,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I fixed the macro and ran it. The scene now has five boxes at x = 0, 2, 4, 6 and"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  }
+ ]
+}

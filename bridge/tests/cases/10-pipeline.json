@@ -1,0 +1,1557 @@
+{
+ "cases": [
+  {
+   "name": "ping roundtrip",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "a",
+       "ops": [
+        {
+         "op": "ping",
+         "args": {
+          "counter": 7,
+          "echo": "hi"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "a": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "ping",
+          "ok": true,
+          "result": {
+           "counter": 7,
+           "echo": "hi",
+           "runtimeVersion": "1.0.0",
+           "jsc": true,
+           "stateBusy": false,
+           "now": {
+            "$type": "number"
+           }
+          }
+         }
+        ],
+        "runtimeVersion": "1.0.0",
+        "startedAt": {
+         "$type": "number"
+        },
+        "finishedAt": {
+         "$type": "number"
+        }
+       }
+      },
+      "state": {
+       "busy": false,
+       "protocol": 1,
+       "runtimeVersion": "1.0.0",
+       "lastSeq": "1800000000000100",
+       "document": null
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "idempotency: pressing twice executes exactly once",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "a",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Once"
+         }
+        },
+        {
+         "op": "ping",
+         "args": {
+          "counter": 1
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "a": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "Once"
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true,
+          "result": {
+           "counter": 1
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 1
+       }
+      ]
+     }
+    },
+    {
+     "expect": {
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 1
+       },
+       {
+        "eval": "__stats.retain",
+        "equals": 0
+       }
+      ],
+      "state": {
+       "lastSeq": "1800000000000100"
+      },
+      "noFiles": [
+       "outbox/_bootstrap-error.json"
+      ]
+     }
+    },
+    {
+     "expect": {
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 1
+       }
+      ],
+      "responses": {
+       "a": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "stale seq (<= state.lastSeq) is skipped silently, newer one runs",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "old",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "seq": "1800000000000100"
+      },
+      {
+       "label": "new",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "seq": "1800000000001000"
+      }
+     ],
+     "expect": {
+      "noResponse": [
+       "old"
+      ],
+      "responses": {
+       "new": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ],
+      "state": {
+       "lastSeq": "1800000000001000"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "state": {
+     "busy": false,
+     "runtimeVersion": "1.0.0",
+     "lastSeq": "1800000000000900"
+    }
+   }
+  },
+  {
+   "name": "request whose .done marker already exists is not re-executed",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "done",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "preDone": true
+      }
+     ],
+     "expect": {
+      "noResponse": [
+       "done"
+      ],
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "expired deadline gives TIMEOUT and runs no op",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "t",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "deadlineMs": -1000
+      }
+     ],
+     "expect": {
+      "responses": {
+       "t": {
+        "ok": false,
+        "results": [],
+        "error": {
+         "code": "TIMEOUT"
+        }
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.retain",
+        "equals": 0
+       }
+      ]
+     }
+    },
+    {
+     "requests": [
+      {
+       "label": "late",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "seq": "1800000000000050"
+      }
+     ],
+     "expect": {
+      "noResponse": [
+       "late"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "cancel file gives CANCELLED and a stale re-run never executes",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "c",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "cancel": true
+      }
+     ],
+     "expect": {
+      "responses": {
+       "c": {
+        "ok": false,
+        "results": [],
+        "error": {
+         "code": "CANCELLED"
+        }
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ]
+     }
+    },
+    {
+     "expect": {
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "wrong secret is rejected before any op",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "s",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "extra": {
+        "secret": "wrong-secret-0123456789"
+       }
+      }
+     ],
+     "expect": {
+      "responses": {
+       "s": {
+        "ok": false,
+        "results": [],
+        "error": {
+         "code": "INTERNAL",
+         "message": "bad secret"
+        }
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.retain",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "missing secret field is rejected",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "s",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "omit": [
+        "secret"
+       ],
+       "schema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "s": {
+        "ok": false,
+        "error": {
+         "code": "INTERNAL",
+         "message": "bad secret"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "protocol mismatch gives VERSION_SKEW",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "v",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "extra": {
+        "protocol": 2
+       },
+       "schema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "v": {
+        "ok": false,
+        "results": [],
+        "error": {
+         "code": "VERSION_SKEW",
+         "hint": {
+          "$re": "install"
+         }
+        }
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "expectDocument.fileName mismatch gives WRONG_DOCUMENT, match runs",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "bad",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX"
+         }
+        }
+       ],
+       "expectDocument": {
+        "fileName": "other.jas"
+       }
+      },
+      {
+       "label": "good",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "expectDocument": {
+        "fileName": "mine.jas"
+       }
+      }
+     ],
+     "expect": {
+      "responses": {
+       "bad": {
+        "ok": false,
+        "results": [],
+        "error": {
+         "code": "WRONG_DOCUMENT"
+        }
+       },
+       "good": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ],
+      "state": {
+       "document": "mine.jas"
+      }
+     }
+    }
+   ],
+   "setup": {
+    "fileName": "mine.jas"
+   }
+  },
+  {
+   "name": "expectDocument.marker (untitled documents)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "m",
+       "ops": [
+        {
+         "op": "setMarker",
+         "args": {
+          "uuid": "11111111-2222-3333-4444-555555555555"
+         }
+        },
+        {
+         "op": "setMarker",
+         "args": {
+          "uuid": "11111111-2222-3333-4444-555555555555"
+         }
+        },
+        {
+         "op": "getDocumentInfo"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "m": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "setMarker",
+          "ok": true,
+          "result": {
+           "marker": "__c3d_mcp_session_11111111-2222-3333-4444-555555555555",
+           "created": true
+          }
+         },
+         {
+          "op": "setMarker",
+          "ok": true,
+          "result": {
+           "marker": "__c3d_mcp_session_11111111-2222-3333-4444-555555555555",
+           "created": false
+          }
+         },
+         {
+          "op": "getDocumentInfo",
+          "ok": true,
+          "result": {
+           "marker": "__c3d_mcp_session_11111111-2222-3333-4444-555555555555",
+           "fileName": null,
+           "objectCount": 1
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "requests": [
+      {
+       "label": "ok",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "expectDocument": {
+        "marker": "__c3d_mcp_session_11111111-2222-3333-4444-555555555555"
+       }
+      },
+      {
+       "label": "wrong",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "expectDocument": {
+        "marker": "__c3d_mcp_session_99999999-2222-3333-4444-555555555555"
+       }
+      },
+      {
+       "label": "both",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ],
+       "expectDocument": {
+        "marker": "__c3d_mcp_session_11111111-2222-3333-4444-555555555555",
+        "fileName": "x.jas"
+       }
+      }
+     ],
+     "expect": {
+      "responses": {
+       "ok": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       },
+       "wrong": {
+        "ok": false,
+        "error": {
+         "code": "WRONG_DOCUMENT"
+        }
+       },
+       "both": {
+        "ok": false,
+        "error": {
+         "code": "WRONG_DOCUMENT"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "batch refs: as / $alias / $alias.field",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "b",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "G"
+         },
+         "as": "g"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "B",
+          "parent": "$g"
+         },
+         "as": "b"
+        },
+        {
+         "op": "rename",
+         "args": {
+          "ref": "$b",
+          "name": "B2"
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "id": "$b.id"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": "$g"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "b": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "path": "/G"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "path": "/G/B"
+          }
+         },
+         {
+          "op": "rename",
+          "ok": true,
+          "result": {
+           "name": "B2",
+           "path": "/G/B2"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "B2"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "G",
+           "childCount": 1
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "failed dependency gives DEPENDENCY_FAILED, unrelated ops still run",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "d",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "NOPE"
+         },
+         "as": "bad"
+        },
+        {
+         "op": "rename",
+         "args": {
+          "ref": "$bad",
+          "name": "x"
+         }
+        },
+        {
+         "op": "ping"
+        },
+        {
+         "op": "rename",
+         "args": {
+          "ref": "$unknownAlias",
+          "name": "x"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "d": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "rename",
+          "ok": false,
+          "error": {
+           "code": "DEPENDENCY_FAILED"
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         },
+         {
+          "op": "rename",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "unknown op is INVALID_ARGUMENT",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "u",
+       "ops": [
+        {
+         "op": "doesNotExist",
+         "args": {}
+        },
+        {
+         "op": "ping"
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "u": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "doesNotExist",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "message": {
+            "$re": "Unknown op"
+           }
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "malformed request file gives PARSE_ERROR",
+   "presses": [
+    {
+     "expect": {
+      "files": {
+       "outbox/aaaaaaaa-0000-4000-8000-000000000001.json": {
+        "ok": false,
+        "error": {
+         "code": "PARSE_ERROR"
+        }
+       }
+      }
+     },
+     "files": {
+      "inbox/1800000000000500-aaaaaaaa-0000-4000-8000-000000000001.json": "{not json"
+     }
+    }
+   ]
+  },
+  {
+   "name": "drain cap: at most 25 requests per macro run",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p{i}",
+       "ops": [
+        {
+         "op": "ping",
+         "args": {
+          "counter": "{i}"
+         }
+        }
+       ],
+       "times": 30
+      }
+     ],
+     "expect": {
+      "responseCount": {
+       "prefix": "p",
+       "count": 25
+      },
+      "state": {
+       "lastSeq": "1800000000002500"
+      }
+     }
+    },
+    {
+     "expect": {
+      "responseCount": {
+       "prefix": "p",
+       "count": 30
+      },
+      "state": {
+       "lastSeq": "1800000000003000"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "drain cap: at most 8 seconds per macro run",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p{i}",
+       "ops": [
+        {
+         "op": "ping",
+         "args": {
+          "counter": "{i}"
+         }
+        }
+       ],
+       "times": 5,
+       "deadlineMs": 10000000000000
+      }
+     ],
+     "expect": {
+      "js": [
+       {
+        "eval": "__native.list('{MCP}/outbox').filter(function (n) { return /^[0-9a-f]{8}-.*\\.json$/.test(n); }).length",
+        "matches": {
+         "$gte": 1
+        }
+       },
+       {
+        "eval": "__native.list('{MCP}/outbox').filter(function (n) { return /^[0-9a-f]{8}-.*\\.json$/.test(n); }).length",
+        "matches": {
+         "$lte": 3
+        }
+       }
+      ]
+     },
+     "js": "var __origNow = Date.now; var __t = 1000000000000; Date.now = function () { __t += 3000; return __t; };"
+    },
+    {
+     "expect": {
+      "responseCount": {
+       "prefix": "p",
+       "count": 5
+      }
+     },
+     "js": "Date.now = __origNow;"
+    }
+   ]
+  },
+  {
+   "name": "ASCII roundtrip: non-ASCII names via request and response, escaped path",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "n",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "\u540d\u524d"
+         },
+         "as": "a"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "a/b"
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/\u540d\u524d"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/a\\/b"
+          }
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "print('\u540d\u524d'); return '\u00e9';"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "n": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "\u540d\u524d",
+           "path": "/\u540d\u524d"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "path": "/a\\/b"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "\u540d\u524d"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "a/b"
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "\u00e9",
+           "log": [
+            "\u540d\u524d"
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childAtIndex(0).getParameter('name').charCodeAt(0)",
+        "equals": 21517
+       }
+      ],
+      "files": {
+       "outbox/_log.json": {
+        "lines": {
+         "$has": {
+          "$re": "print: "
+         }
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mock fidelity: File.write truncates non-ASCII output (P05)",
+   "presses": [
+    {
+     "expect": {
+      "js": [
+       {
+        "eval": "(function () { var f = new File('{MCP}/tmp/q.txt'); f.open(WRITE_MODE); f.write('\\u540d\\u524d'); f.close(); return new File('{MCP}/tmp/q.txt').size(); })()",
+        "equals": 2
+       },
+       {
+        "eval": "(function () { var f = new File('{MCP}/tmp/q.txt'); f.open(WRITE_MODE); f.write('ab'); f.write('cd'); f.close(); f.open(READ_MODE); return f.read(f.size()); })()",
+        "equals": "abcd"
+       },
+       {
+        "eval": "(function () { var f = new File('{MCP}/tmp/q.txt'); f.open(WRITE_MODE); f.write('x'); f.close(); return new File('{MCP}/tmp/q.txt').size(); })()",
+        "equals": 1
+       },
+       {
+        "eval": "new File('{MCP}/inbox').contentOfDir().length",
+        "equals": 0
+       },
+       {
+        "eval": "(function () { new File('{MCP}/tmp/.dot').open(WRITE_MODE); new File('{MCP}/tmp/b.json.tmp').open(WRITE_MODE); return new File('{MCP}/tmp').contentOfDir(); })()",
+        "equals": [
+         ".dot",
+         "b.json.tmp",
+         "q.txt"
+        ]
+       },
+       {
+        "eval": "String(new Vec3D(1, 2, 3))",
+        "equals": "[object CallbackObject]"
+       },
+       {
+        "eval": "JSON.stringify(new Vec3D(1, 2, 3))",
+        "equals": "{}"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "fault: op throws -> per-op error, redraw lock released, later ops run",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "f",
+       "ops": [
+        {
+         "op": "listMaterials"
+        },
+        {
+         "op": "ping"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "After"
+         }
+        }
+       ]
+      },
+      {
+       "label": "g",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "NextRequest"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "f": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "listMaterials",
+          "ok": false,
+          "error": {
+           "code": "INTERNAL",
+           "message": "boom"
+          }
+         },
+         {
+          "op": "ping",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "After"
+          }
+         }
+        ]
+       },
+       "g": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "NextRequest"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.retain",
+        "equals": 2
+       },
+       {
+        "eval": "__stats.release",
+        "equals": 2
+       },
+       {
+        "eval": "__stats.redraws",
+        "equals": 2
+       },
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 2
+       }
+      ]
+     },
+     "js": "__app.doc.materialCount = function () { throw new Error('boom'); };"
+    }
+   ]
+  },
+  {
+   "name": "fault: runtime syntax error is reported by the loader macro, next press recovers",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "r",
+       "ops": [
+        {
+         "op": "ping"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "noResponse": [
+       "r"
+      ],
+      "noState": true,
+      "files": {
+       "outbox/_bootstrap-error.json": {
+        "message": {
+         "$type": "string"
+        },
+        "macroVersion": "1.0.0",
+        "runtimePath": {
+         "$re": "override\\.js$"
+        },
+        "at": {
+         "$type": "number"
+        }
+       }
+      }
+     },
+     "runtimeSource": "var = ;"
+    },
+    {
+     "expect": {
+      "responses": {
+       "r": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "ping",
+          "ok": true
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "fault: runtime file missing is reported, non-ASCII error text stays ASCII",
+   "presses": [
+    {
+     "expect": {
+      "noState": true,
+      "files": {
+       "outbox/_bootstrap-error.json": {
+        "message": {
+         "$re": "runtime not found"
+        }
+       }
+      }
+     },
+     "runtimeMissing": true
+    },
+    {
+     "expect": {
+      "noState": true,
+      "files": {
+       "outbox/_bootstrap-error.json": {
+        "message": "\u540d"
+       }
+      }
+     },
+     "runtimeSource": "throw new Error('\u540d');"
+    }
+   ]
+  },
+  {
+   "name": "getLog returns the ring buffer across runs, tail and clear",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "rename",
+         "args": {
+          "ref": {
+           "id": 99999
+          },
+          "name": "q"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "rename",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "requests": [
+      {
+       "label": "l",
+       "ops": [
+        {
+         "op": "getLog",
+         "args": {
+          "tail": 1
+         }
+        },
+        {
+         "op": "getLog",
+         "args": {}
+        },
+        {
+         "op": "getLog",
+         "args": {
+          "clear": true
+         }
+        },
+        {
+         "op": "getLog",
+         "args": {}
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "l": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "getLog",
+          "ok": true,
+          "result": {
+           "lines": {
+            "$len": 1
+           }
+          }
+         },
+         {
+          "op": "getLog",
+          "ok": true,
+          "result": {
+           "lines": {
+            "$has": {
+             "$re": "op rename failed: NOT_FOUND"
+            }
+           }
+          }
+         },
+         {
+          "op": "getLog",
+          "ok": true
+         },
+         {
+          "op": "getLog",
+          "ok": true,
+          "result": {
+           "lines": []
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "capabilities reports only constants that exist at runtime",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "c",
+       "ops": [
+        {
+         "op": "capabilities"
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "c": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "capabilities",
+          "ok": true,
+          "result": {
+           "apiVersion": "8.1.3",
+           "runtimeVersion": "1.0.0",
+           "protocol": 1,
+           "objectTypes": {
+            "BOX": 1,
+            "LIGHT": 5,
+            "CAMERA": 2,
+            "FOLDER": 11,
+            "POLYGONOBJ": 36,
+            "SPLINE": 19
+           },
+           "tagTypes": {
+            "SHADERTAG": 102,
+            "BAKETAG": 123
+           },
+           "materialTypes": {
+            "$has": "Material (PBR)"
+           },
+           "nodeTypes": {
+            "$has": "image"
+           },
+           "rotationOrders": {
+            "HPB": 6,
+            "XYZ": 0
+           },
+           "renderers": [
+            "CHEETAH",
+            "FALCON"
+           ],
+           "renderFormats": [
+            "png",
+            "jpg",
+            "tiff"
+           ],
+           "saveTypes": {
+            "$has": "fbx"
+           },
+           "interpolation": {
+            "linear": 1,
+            "soft": 0,
+            "spline": 2,
+            "flat": 2,
+            "const": 3
+           },
+           "limits": {
+            "drainRequests": 25,
+            "drainSeconds": 8
+           },
+           "jsFeatures": {
+            "geval": "undefined"
+           }
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "'SPOTLIGHT' in C3D.capabilities ? 0 : Object.keys(C3D.capabilities.constant('LIGHT') === 5 ? {a: 1} : {}).length",
+        "equals": 1
+       },
+       {
+        "eval": "JSON.stringify(Object.keys(JSON.parse(JSON.stringify(C3D.core.ops.capabilities.fn({}, {}).objectTypes))).filter(function (k) { return /^(SPOTLIGHT|POINTLIGHT|SKYLIGHT|SUBDIVMOD|UVTAG)$/.test(k); }))",
+        "equals": "[]"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}

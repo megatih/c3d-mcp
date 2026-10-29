@@ -1,0 +1,3210 @@
+{
+ "model": "claude-sonnet-5-5",
+ "N": 3,
+ "spent": 6.154893199999999,
+ "rows": [
+  {
+   "id": "bouncing_ball",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "keyframes"
+   ],
+   "cost": 0.08604150000000002,
+   "turns": 17,
+   "calls": 16,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "3 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@0=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@2=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@1=0.5"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "bouncing_ball",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "keyframes"
+   ],
+   "cost": 0.10602550000000001,
+   "turns": 19,
+   "calls": 18,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "5 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@0=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@2=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@1=0.5"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "bouncing_ball",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "keyframes"
+   ],
+   "cost": 0.0855039,
+   "turns": 16,
+   "calls": 15,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "3 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@0=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@2=2"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "positiony@1=0.5"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_fov_render",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "render"
+   ],
+   "cost": 0.042541499999999996,
+   "turns": 6,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "2 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "fieldOfView=30"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Main Camera"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-1-885Dqh/work/renders/render-1793258476961.png 640x360"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_fov_render",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "render"
+   ],
+   "cost": 0.0439973,
+   "turns": 6,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "2 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "fieldOfView=30"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Camera"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-2-UO0MMM/work/renders/render-1793258494811.png 640x360"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_fov_render",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "render"
+   ],
+   "cost": 0.0431213,
+   "turns": 6,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "2 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "fieldOfView=30"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Camera"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/camera_fov_render-3-QpvWfb/work/renders/render-1793258509207.png 640x360"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_look_at_object",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "look_at"
+   ],
+   "cost": 0.029512200000000002,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "camera_aims_at",
+     "pass": true,
+     "detail": "0.0 deg"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I created a new camera named \"AimCamera\" at (5, 3, 5) and aimed it at \"Target\", "
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_look_at_object",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "look_at"
+   ],
+   "cost": 0.0297466,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "camera_aims_at",
+     "pass": true,
+     "detail": "0.0 deg"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I created a new camera, \"AimCamera\" (id 3888925184), at (5, 3, 5) and made it th"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "camera_look_at_object",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "camera",
+    "look_at"
+   ],
+   "cost": 0.0290558,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "camera_aims_at",
+     "pass": true,
+     "detail": "0.0 deg"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I created a new camera, \"AimCamera\" (id 3893066112), at (5, 3, 5) and aimed it a"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "checkpoint_restore",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.0577549,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The box is back. I checkpointed the scene, deleted the Camera and Box, then rest"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "checkpoint_restore",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.058862,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The box is back. I made a checkpoint, deleted the scene contents, and restored t"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "checkpoint_restore",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.0580118,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The box is back. I made the checkpoint, deleted the Box and Camera, then restore"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "delete_confirmation",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "scene",
+    "safety"
+   ],
+   "cost": 0.03760380000000001,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "object_absent",
+     "pass": true,
+     "detail": "0 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "delete_confirmation",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "scene",
+    "safety"
+   ],
+   "cost": 0.037286799999999995,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "object_absent",
+     "pass": true,
+     "detail": "0 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "delete_confirmation",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "scene",
+    "safety"
+   ],
+   "cost": 0.038178500000000004,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "object_absent",
+     "pass": true,
+     "detail": "0 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "document_info",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "read",
+    "document"
+   ],
+   "cost": 0.0229702,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "Here is what the document reports. I didn't change anything.\n\n- **Document name:"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "document_info",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "read",
+    "document"
+   ],
+   "cost": 0.0228702,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The document is `fixture.jas`. I didn't change anything.\n\n- **Frame rate:** 30 f"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "document_info",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "read",
+    "document"
+   ],
+   "cost": 0.0228102,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The document has these properties:\n\n- **Name:** `fixture.jas`\n- **Frame rate:** "
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "edit_mesh_move",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "mesh"
+   ],
+   "cost": 0.0408199,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=1.00,2.50,1.00"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "edit_mesh_move",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "mesh"
+   ],
+   "cost": 0.041169899999999995,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=1.00,2.50,1.00"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "edit_mesh_move",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "mesh"
+   ],
+   "cost": 0.040951100000000004,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=1.00,2.50,1.00"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "export_obj",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "document",
+    "export"
+   ],
+   "cost": 0.0224098,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-1-oQElDl/work/exports/demo.obj"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I exported the scene as an OBJ file. It's at:\n\n`~/Documents/c3dmcps"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "export_obj",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "document",
+    "export"
+   ],
+   "cost": 0.023144,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-2-qa9wQE/work/exports/demo.obj"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I exported the scene to `~/Documents/c3dmcpserver/evals/results/202"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "export_obj",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "document",
+    "export"
+   ],
+   "cost": 0.02283,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/export_obj-3-lXlwS2/work/exports/demo.obj"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I exported the scene as OBJ to the default exports folder. The file is 758 bytes"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "fix_broken_script",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.07940150000000001,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": false,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I fixed the macro and ran it. The scene now has five boxes in a row at x = 0, 2,"
+    }
+   ],
+   "pass": false,
+   "score": 0.6666666666666666
+  },
+  {
+   "id": "fix_broken_script",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.049718099999999994,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": false,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I fixed the macro and ran it. The scene now has five boxes in a row at x = 0, 2,"
+    }
+   ],
+   "pass": false,
+   "score": 0.6666666666666666
+  },
+  {
+   "id": "fix_broken_script",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "script",
+    "lint"
+   ],
+   "cost": 0.09231270000000001,
+   "turns": 11,
+   "calls": 10,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "tool_called",
+     "pass": false,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I fixed the macro and ran it. The scene now has five boxes, \"Box 1\" to \"Box 5\", "
+    }
+   ],
+   "pass": false,
+   "score": 0.6666666666666666
+  },
+  {
+   "id": "grid_of_boxes_script",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "script",
+    "modeling"
+   ],
+   "cost": 0.12361309999999999,
+   "turns": 14,
+   "calls": 13,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "16 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "4 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "grid_of_boxes_script",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "script",
+    "modeling"
+   ],
+   "cost": 0.15392820000000002,
+   "turns": 16,
+   "calls": 15,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "16 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "3 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "grid_of_boxes_script",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "script",
+    "modeling"
+   ],
+   "cost": 0.12124730000000002,
+   "turns": 14,
+   "calls": 13,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "16 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "3 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "import_polyhaven_frame",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "assets",
+    "camera",
+    "render"
+   ],
+   "cost": 0.1089947,
+   "turns": 13,
+   "calls": 12,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/asset.json"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Chair Camera"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I imported the Poly Haven \"Wooden Chair 01\" and rendered it. The whole chair is "
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-1-DkUGKi/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "import_polyhaven_frame",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "assets",
+    "camera",
+    "render"
+   ],
+   "cost": 0.1245502,
+   "turns": 15,
+   "calls": 14,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/asset.json"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Camera"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I imported Poly Haven's \"Wooden Chair 01\", a Gothic-style wooden armchair, and r"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-2-FUEfR2/work/assets/WoodenChair_01/textures/WoodenChair_01_diff_1k.jpg 1024x1024"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "import_polyhaven_frame",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "assets",
+    "camera",
+    "render"
+   ],
+   "cost": 0.1057648,
+   "turns": 13,
+   "calls": 12,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/asset.json"
+    },
+    {
+     "type": "camera_active",
+     "pass": true,
+     "detail": "Camera"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I imported the Poly Haven \"Rockingchair 01\" (a wooden rocking chair) and rendere"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/import_polyhaven_frame-3-vGwnDf/work/assets/Rockingchair_01/textures/Rockingchair_01_diff_1k.jpg 1024x1024"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "keyframes_light_fade",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "lights"
+   ],
+   "cost": 0.0304222,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "intensity@3=2"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "keyframes_light_fade",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "lights"
+   ],
+   "cost": 0.030239000000000002,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "intensity@3=2"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "keyframes_light_fade",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "lights"
+   ],
+   "cost": 0.0305306,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "param_at_time",
+     "pass": true,
+     "detail": "intensity@3=2"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "l_shaped_room",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "mesh"
+   ],
+   "cost": 0.0938849,
+   "turns": 13,
+   "calls": 12,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 POLYGONOBJ"
+    },
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "12 vertices, 7 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=6.00,2.50,4.00"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-1-9OgoNv/work/renders/render-1793259140657.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "l_shaped_room",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "mesh"
+   ],
+   "cost": 0.17700980000000002,
+   "turns": 19,
+   "calls": 18,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 POLYGONOBJ"
+    },
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "13 vertices, 8 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=6.00,2.50,4.00"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-2-2Huy6p/work/captures/viewport-1793259206353.png 3840x2006"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "l_shaped_room",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "mesh"
+   ],
+   "cost": 0.071737,
+   "turns": 9,
+   "calls": 8,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 POLYGONOBJ"
+    },
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "12 vertices, 7 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=6.00,2.50,4.00"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/l_shaped_room-3-LJZmIQ/work/renders/render-1793259260857.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "lint_script",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "lint",
+    "script"
+   ],
+   "cost": 0.0229854,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The linter found two problems. I didn't run the script.\n\n1. **Line 2, `File.mkDi"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "lint_script",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "lint",
+    "script"
+   ],
+   "cost": 0.0227054,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The linter found two problems. I didn't run the script.\n\n1. **Line 2, `File.mkDi"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "lint_script",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "lint",
+    "script"
+   ],
+   "cost": 0.0227554,
+   "turns": 2,
+   "calls": 1,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The linter found two errors. I did not run the script.\n\n1. **Line 2, `file-mkdir"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_rename_move",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0.0237209,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_rename_move",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0.0242309,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_rename_move",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "local",
+    "scene"
+   ],
+   "cost": 0.027559300000000002,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "param_range",
+     "pass": true,
+     "detail": "positionx=3"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0.13842110000000002,
+   "turns": 30,
+   "calls": 29,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "2 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-1-zcmaZH/work/renders/render-1793259369615.png 800x500"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0.1210113,
+   "turns": 28,
+   "calls": 27,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-2-ieIxH5/work/renders/render-1793259411364.png 800x500"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "local_simple_scene",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "local",
+    "render",
+    "modeling"
+   ],
+   "cost": 0.1061193,
+   "turns": 25,
+   "calls": 24,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BOX"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "2 LIGHT"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/local_simple_scene-3-EYcsVh/work/renders/render-1793259443990.png 800x500"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_nodes_checker",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.05660250000000001,
+   "turns": 11,
+   "calls": 10,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_connection",
+     "pass": true,
+     "detail": "connections=[{\"fromNode\":3922286400,\"fromPara\":\"color\",\"toNode\":254631424,\"toPara\":\"diffColor\"}]"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_nodes_checker",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.056642599999999994,
+   "turns": 11,
+   "calls": 10,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_connection",
+     "pass": true,
+     "detail": "connections=[{\"fromNode\":3929622208,\"fromPara\":\"color\",\"toNode\":254631424,\"toPara\":\"diffColor\"}]"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_nodes_checker",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.0545407,
+   "turns": 10,
+   "calls": 9,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_connection",
+     "pass": true,
+     "detail": "connections=[{\"fromNode\":4128893248,\"fromPara\":\"color\",\"toNode\":254631424,\"toPara\":\"diffColor\"}]"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_study_three",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "render"
+   ],
+   "cost": 0.1879758,
+   "turns": 34,
+   "calls": 33,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 BALL"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-1-cZyVE9/work/renders/render-1793259542670.png 960x540"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_study_three",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "render"
+   ],
+   "cost": 0.190199,
+   "turns": 33,
+   "calls": 32,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 BALL"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-2-GmxVXD/work/renders/render-1793259605102.png 1200x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "material_study_three",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "render"
+   ],
+   "cost": 0.1184351,
+   "turns": 24,
+   "calls": 23,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 BALL"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/material_study_three-3-BLlryP/work/renders/render-1793259676102.png 960x400"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 1,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0.032080899999999996,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=2.00,1.50,2.00"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 2,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0.0397384,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=2.00,1.50,2.00"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "mesh_pyramid",
+   "rep": 3,
+   "profile": "local",
+   "tags": [
+    "mesh",
+    "modeling"
+   ],
+   "cost": 0.0440299,
+   "turns": 5,
+   "calls": 4,
+   "results": [
+    {
+     "type": "mesh_stats",
+     "pass": true,
+     "detail": "5 vertices, 5 polygons"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=2.00,1.50,2.00"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "pbr_metal_graph",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.0480747,
+   "turns": 9,
+   "calls": 8,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_param",
+     "pass": true,
+     "detail": "reflMetalness=1"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "pbr_metal_graph",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.0483947,
+   "turns": 9,
+   "calls": 8,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_param",
+     "pass": true,
+     "detail": "reflMetalness=1"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "pbr_metal_graph",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "materials",
+    "nodes"
+   ],
+   "cost": 0.0509787,
+   "turns": 9,
+   "calls": 8,
+   "results": [
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_param",
+     "pass": true,
+     "detail": "reflMetalness=1"
+    },
+    {
+     "type": "material_node",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    },
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 BALL"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "read_only_inspect",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "read",
+    "profile-readonly"
+   ],
+   "cost": 0.0289379,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The document is `fixture.jas`. It has two real objects and no materials. I didn'"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "read_only_inspect",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "read",
+    "profile-readonly"
+   ],
+   "cost": 0.0283979,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The scene in `fixture.jas` has two objects and no materials. I changed nothing.\n"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "read_only_inspect",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "read",
+    "profile-readonly"
+   ],
+   "cost": 0.027720299999999996,
+   "turns": 4,
+   "calls": 3,
+   "results": [
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    },
+    {
+     "type": "tool_not_called",
+     "pass": true,
+     "detail": "0 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The document is `fixture.jas`. It has two scene objects, and I changed nothing.\n"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "rename_reparent_duplicate",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "scene"
+   ],
+   "cost": 0.0549464,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "rename_reparent_duplicate",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "scene"
+   ],
+   "cost": 0.0552912,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "rename_reparent_duplicate",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "scene"
+   ],
+   "cost": 0.054863199999999994,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "run_script_confirm",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "script",
+    "safety"
+   ],
+   "cost": 0.030949200000000003,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": false,
+     "detail": "The script ran. `OS.system(\"echo hi\")` returned `0`, which means the command exi"
+    }
+   ],
+   "pass": false,
+   "score": 0.5
+  },
+  {
+   "id": "run_script_confirm",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "script",
+    "safety"
+   ],
+   "cost": 0.0314059,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I ran `OS.system(\"echo hi\")` in Cheetah3D after the tool asked for confirmation."
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "run_script_confirm",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "script",
+    "safety"
+   ],
+   "cost": 0.031061200000000004,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I ran the script after the confirmation prompt. `OS.system(\"echo hi\")` returned "
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "save_copy_no_overwrite",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.0290976,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-1-zCASOK/copy.jas"
+    },
+    {
+     "type": "fixture_unchanged",
+     "pass": true,
+     "detail": "checksum"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "save_copy_no_overwrite",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.0294768,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-2-JUp2Zr/copy.jas"
+    },
+    {
+     "type": "fixture_unchanged",
+     "pass": true,
+     "detail": "checksum"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "save_copy_no_overwrite",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "document",
+    "safety"
+   ],
+   "cost": 0.029167600000000002,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "file_exists",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/save_copy_no_overwrite-3-su7CaC/copy.jas"
+    },
+    {
+     "type": "fixture_unchanged",
+     "pass": true,
+     "detail": "checksum"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "search_docs",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "docs",
+    "read"
+   ],
+   "cost": 0.0386517,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "**The call is `PolyCore.addIndexPolygon`.** It adds a polygon built from a list "
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "search_docs",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "docs",
+    "read"
+   ],
+   "cost": 0.0383417,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "**The call is `PolyCore.addIndexPolygon`.** It's a method on the object you get "
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "search_docs",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "docs",
+    "read"
+   ],
+   "cost": 0.0391417,
+   "turns": 3,
+   "calls": 2,
+   "results": [
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "2 calls"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "**The call is `PolyCore.addIndexPolygon`.** You get the `PolyCore` from an objec"
+    },
+    {
+     "type": "scene_unchanged",
+     "pass": true,
+     "detail": "compared"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "spline_extrude",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "spline"
+   ],
+   "cost": 0.056236900000000006,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 SPLINE"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "spline_extrude",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "spline"
+   ],
+   "cost": 0.06317930000000001,
+   "turns": 9,
+   "calls": 8,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 SPLINE"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "spline_extrude",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "spline"
+   ],
+   "cost": 0.057257100000000005,
+   "turns": 8,
+   "calls": 7,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "1 SPLINE"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "parent_of",
+     "pass": true,
+     "detail": "found"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "studio_five_lights",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "render"
+   ],
+   "cost": 0.1195441,
+   "turns": 21,
+   "calls": 20,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 LIGHT"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-1-p7aH7l/work/renders/render-1793260147031.png 640x400"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "studio_five_lights",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "render"
+   ],
+   "cost": 0.08900799999999999,
+   "turns": 15,
+   "calls": 14,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 LIGHT"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-2-aROo7K/work/renders/render-1793260181942.png 640x400"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "studio_five_lights",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "render"
+   ],
+   "cost": 0.09717780000000001,
+   "turns": 17,
+   "calls": 16,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 LIGHT"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/studio_five_lights-3-QJikYG/work/renders/render-1793260215695.png 640x400"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "table_four_legs",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials",
+    "render"
+   ],
+   "cost": 0.10741329999999999,
+   "turns": 25,
+   "calls": 24,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "4 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "4 objects"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=3.00,1.10,1.60"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-1-0htwqw/work/renders/render-1793260247100.png 960x640"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "table_four_legs",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials",
+    "render"
+   ],
+   "cost": 0.12333050000000001,
+   "turns": 27,
+   "calls": 26,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "4 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "4 objects"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=2.00,0.80,1.00"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-2-35OODy/work/renders/render-1793260288680.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "table_four_legs",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials",
+    "render"
+   ],
+   "cost": 0.1047788,
+   "turns": 24,
+   "calls": 23,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "5 BOX"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "4 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "4 objects"
+    },
+    {
+     "type": "bbox",
+     "pass": true,
+     "detail": "size=2.00,0.80,1.00"
+    },
+    {
+     "type": "render_nonblank",
+     "pass": true,
+     "detail": "~/Documents/c3dmcpserver/evals/results/2026-10-29T07-19-32-138Z/table_four_legs-3-3Pjs5y/work/renders/render-1793260328151.png 800x600"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "three_point_lighting",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "look_at"
+   ],
+   "error": "Error: list_scene failed: {\"code\":\"TRIGGER_FAILED\",\"message\":\"no document window open\",\"hint\":\"Open a document (newDocument) first.\",\"details\":{\"windows\":[]}}"
+  },
+  {
+   "id": "three_point_lighting",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "look_at"
+   ],
+   "cost": 0.0742988,
+   "turns": 10,
+   "calls": 9,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 LIGHT"
+    },
+    {
+     "type": "light_aims_at",
+     "pass": true,
+     "detail": "0.0,0.0,0.0 deg"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "three_point_lighting",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "look_at"
+   ],
+   "cost": 0.0438431,
+   "turns": 6,
+   "calls": 5,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 LIGHT"
+    },
+    {
+     "type": "light_aims_at",
+     "pass": true,
+     "detail": "0.0,0.0,0.0 deg"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "traffic_cone",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials"
+   ],
+   "cost": 0.1211274,
+   "turns": 23,
+   "calls": 22,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "traffic_cone",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials"
+   ],
+   "cost": 0.17537240000000004,
+   "turns": 27,
+   "calls": 26,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "traffic_cone",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "modeling",
+    "materials"
+   ],
+   "cost": 0.10561779999999998,
+   "turns": 21,
+   "calls": 20,
+   "results": [
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "object_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_exists",
+     "pass": true,
+     "detail": "1 match"
+    },
+    {
+     "type": "material_assigned",
+     "pass": true,
+     "detail": "1 objects"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "turntable_selected",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "render",
+    "selection"
+   ],
+   "cost": 0.085144,
+   "turns": 12,
+   "calls": 11,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "files_exist",
+     "pass": true,
+     "detail": "24 files"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The turntable is rendered: 24 frames at 160x120 and 12 fps, covering 2 seconds. "
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "turntable_selected",
+   "rep": 2,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "render",
+    "selection"
+   ],
+   "cost": 0.116774,
+   "turns": 15,
+   "calls": 14,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "files_exist",
+     "pass": true,
+     "detail": "25 files"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "The turntable is rendered: 25 PNG frames at 160x120, 12 fps.\n\n**Frames:** `/User"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  },
+  {
+   "id": "turntable_selected",
+   "rep": 3,
+   "profile": "full",
+   "tags": [
+    "animation",
+    "render",
+    "selection"
+   ],
+   "cost": 0.10574439999999999,
+   "turns": 14,
+   "calls": 13,
+   "results": [
+    {
+     "type": "keyframe_count",
+     "pass": true,
+     "detail": "2 keys"
+    },
+    {
+     "type": "tool_called",
+     "pass": true,
+     "detail": "1 calls"
+    },
+    {
+     "type": "files_exist",
+     "pass": true,
+     "detail": "24 files"
+    },
+    {
+     "type": "answer_contains",
+     "pass": true,
+     "detail": "I rendered the 24-frame turntable. I didn't open any of the frames to check them"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  }
+ ]
+}

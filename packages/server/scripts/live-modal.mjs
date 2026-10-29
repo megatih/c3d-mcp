@@ -1,0 +1,17 @@
+import { connect } from './live-driver.mjs';
+import { execFileSync } from 'node:child_process';
+const { call, close } = await connect();
+await call('c3d_new_document');
+const b = await call('c3d_create_object', { type: 'BOX', name: 'MB' });
+const t0 = Date.now();
+const r1 = await call('c3d_add_tag', { ref: { id: b.sc.object.id }, type: 'BAKETAG' });
+console.log('add_tag', Date.now() - t0, 'ms', JSON.stringify(r1.sc ?? r1.text).slice(0, 300));
+const M = process.env.HOME + '/Library/Application Support/Cheetah3D/MCP';
+const ctl = M + '/helper/C3D Bridge Helper.app/Contents/MacOS/c3d-helper-ctl';
+console.log(execFileSync(ctl, ['--socket', M + '/helper.sock', 'modalState']).toString().replace(/\s+/g, ' '));
+const r2 = await call('c3d_get_document_info');
+console.log('docinfo', r2.ms, JSON.stringify(r2.sc ?? r2.text).slice(0, 400));
+execFileSync('osascript', ['-e', 'tell application "System Events" to tell process "Cheetah3D" to repeat with w in windows\nif subrole of w is "AXDialog" then click button "OK" of w\nend repeat']);
+await new Promise((r) => setTimeout(r, 2500));
+console.log('after', (await call('c3d_get_document_info')).isError ? 'ERR' : 'ok');
+await close();

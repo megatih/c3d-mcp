@@ -1,0 +1,20 @@
+import { connect } from './live-driver.mjs';
+const { call, close } = await connect();
+let bad = 0;
+const step = async (label, name, args, expectErr = false) => {
+  const r = await call(name, args);
+  const ok = expectErr ? r.isError : !r.isError;
+  if (!ok) bad++;
+  console.log(`${ok ? 'ok  ' : 'FAIL'} ${label} ${name} ${r.ms}ms ${ok ? '' : JSON.stringify(r.sc ?? r.text).slice(0, 400)}`);
+  return r;
+};
+const out = {};
+await step('doctor', 'c3d_doctor', {});
+out.doc = await step('new doc', 'c3d_new_document', {});
+console.log(JSON.stringify(out.doc.sc).slice(0, 300));
+await step('docinfo', 'c3d_get_document_info', {});
+const box = await step('create box', 'c3d_create_object', { type: 'BOX', name: 'Table Top', position: { x: 0, y: 1, z: 0 }, scale: { x: 2, y: 0.1, z: 1 } });
+console.log(JSON.stringify(box.sc).slice(0, 400));
+await step('list', 'c3d_list_scene', {});
+await close();
+console.log(bad ? `${bad} FAILURES` : 'ALL OK');

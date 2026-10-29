@@ -1,0 +1,12 @@
+id: l_shaped_room
+title: "L-shaped room from polygons"
+profile: full
+timeout_s: 420
+fixture: fixtures/empty.jas
+tags: ["modeling", "mesh"]
+prompt: "Model an L-shaped room (floor plus walls, 2.5 m high, footprint 6 m x 4 m with a 2 m x 2 m notch removed) as one polygon mesh built from vertices and polygons, not from boxes. Make it editable geometry and render it from above-corner."
+assertions:
+  - {"type": "object_count", "object_type": "POLYGONOBJ", "min": 1}
+  - {"type": "mesh_stats", "object_regex": ".*", "min_polygons": 7}
+  - {"type": "bbox", "object": "scene", "size_min": [5.5, 2.2, 3.5], "size_max": [6.5, 2.8, 4.5]}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}

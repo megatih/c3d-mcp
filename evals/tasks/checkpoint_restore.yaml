@@ -1,0 +1,12 @@
+id: checkpoint_restore
+title: "Checkpoint and restore"
+profile: full
+timeout_s: 420
+fixture: fixtures/one_box.jas
+tags: ["document", "safety"]
+prompt: "Create a checkpoint, then delete everything in the scene, then restore the checkpoint so the box is back. Explain what happened to the windows."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_checkpoint"}
+  - {"type": "tool_called", "tool": "c3d_restore_checkpoint"}
+  - {"type": "object_exists", "name_regex": "(?i)box", "object_type": "BOX"}
+  - {"type": "answer_contains", "regex": "(?i)window"}

@@ -1,0 +1,27 @@
+{
+ "codes": {
+  "APP_NOT_RUNNING": "Cheetah3D is not running.",
+  "APP_CRASHED": "Cheetah3D exited while a request was in flight.",
+  "APP_BUSY": "Cheetah3D is busy (long operation); retry later.",
+  "TRIGGER_FAILED": "The bridge macro could not be triggered (menu disabled, modal open, bridge not installed or menu not refreshed).",
+  "BLOCKED_BY_MODAL": "A dialog is open in Cheetah3D.",
+  "WRONG_DOCUMENT": "The front document is not the expected one.",
+  "VERSION_SKEW": "Protocol/runtime version mismatch; run `c3d-mcp install`.",
+  "BRIDGE_NOT_INSTALLED": "Bridge macro/runtime not installed.",
+  "PERMISSION_MISSING": "Accessibility or Screen Recording permission missing.",
+  "NOT_FOUND": "Object/material/node/parameter not found.",
+  "AMBIGUOUS": "Reference matches several objects; use id.",
+  "INVALID_ARGUMENT": "Argument failed validation.",
+  "UNSUPPORTED": "Not supported by Cheetah3D 8.1.3 or not yet verified.",
+  "SCRIPT_ERROR": "JavaScript error inside Cheetah3D.",
+  "LINT_BLOCKED": "Script blocked by lint rules.",
+  "CONFIRMATION_REQUIRED": "Destructive action needs confirm:true or user elicitation.",
+  "TIMEOUT": "Request deadline exceeded.",
+  "CANCELLED": "Request cancelled.",
+  "RUNTIME_STUCK": "Runtime reports busy for too long while the app responds.",
+  "DEPENDENCY_FAILED": "An earlier op this op depends on failed.",
+  "NOT_AVAILABLE_IN_PROFILE": "Tool disabled in the active profile.",
+  "PARSE_ERROR": "Malformed JSON from the bridge.",
+  "INTERNAL": "Unexpected internal error."
+ }
+}

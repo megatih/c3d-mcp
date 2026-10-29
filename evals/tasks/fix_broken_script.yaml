@@ -1,0 +1,11 @@
+id: fix_broken_script
+title: "Fix a broken script"
+profile: full
+timeout_s: 300
+fixture: fixtures/empty.jas
+tags: ["script", "lint"]
+prompt: "This Cheetah3D macro should create five boxes in a row but does nothing useful. Fix it and run it: ```function main(doc){ for (var i=0;i<5;i++){ var b = doc.addObject(BOX); b.setParameter(\"position\", Vec3D(i*2,0,0)); } }```"
+assertions:
+  - {"type": "object_count", "object_type": "BOX", "min": 5, "max": 5}
+  - {"type": "tool_called", "tool": "c3d_run_script"}
+  - {"type": "answer_contains", "regex": "(?i)new Vec3D"}

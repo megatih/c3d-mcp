@@ -1,0 +1,12 @@
+id: turntable_selected
+title: "Turntable of the selected object"
+profile: full
+timeout_s: 600
+fixture: fixtures/selected_cube.jas
+tags: ["animation", "render", "selection"]
+prompt: "There is a model selected in the scene. Make a 2 second turntable at 12 fps: rotate it 360 degrees around the Y axis (via a parent folder) and render the frames as a sequence at low resolution (160x120), then tell me where the frames are."
+assertions:
+  - {"type": "keyframe_count", "object_regex": "(?i)turntable", "param": "rotation", "min": 2}
+  - {"type": "tool_called", "tool": "c3d_render_sequence"}
+  - {"type": "files_exist", "glob": "**/turntable_*.png", "min": 20}
+  - {"type": "answer_contains", "regex": "(?i)frame"}

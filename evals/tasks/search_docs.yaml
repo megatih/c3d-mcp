@@ -1,0 +1,11 @@
+id: search_docs
+title: "Search the API docs"
+profile: full
+timeout_s: 120
+fixture: fixtures/empty.jas
+tags: ["docs", "read"]
+prompt: "Which Cheetah3D JavaScript call adds a polygon from a list of vertex indices, and what are the crash risks? Use the documentation search."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_search_api_docs"}
+  - {"type": "answer_contains", "regex": "addIndexPolygon"}
+  - {"type": "scene_unchanged"}

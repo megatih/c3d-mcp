@@ -1,0 +1,13 @@
+id: material_study_three
+title: "Material study with three variants"
+profile: full
+timeout_s: 600
+fixture: fixtures/empty.jas
+tags: ["materials", "render"]
+prompt: "Make three materials \"Gold\", \"Copper\" and \"Chrome\" (PBR metals with different base colors and roughness), apply each to a ball in a row of three and render a comparison."
+assertions:
+  - {"type": "object_count", "object_type": "BALL", "min": 3}
+  - {"type": "material_exists", "name_regex": "^Gold", "root_type": "pbrmetal"}
+  - {"type": "material_exists", "name_regex": "^Copper", "root_type": "pbrmetal"}
+  - {"type": "material_exists", "name_regex": "^Chrome", "root_type": "pbrmetal"}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}

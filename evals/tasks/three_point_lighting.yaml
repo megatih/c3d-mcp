@@ -1,0 +1,10 @@
+id: three_point_lighting
+title: "Three point lighting on existing subject"
+profile: full
+timeout_s: 300
+fixture: fixtures/one_box.jas
+tags: ["lights", "look_at"]
+prompt: "Add three-point lighting (key, fill, back) to the scene and aim all three lights at the box. Verify aim by reading back."
+assertions:
+  - {"type": "object_count", "object_type": "LIGHT", "min": 3, "max": 3}
+  - {"type": "light_aims_at", "target_regex": "(?i)box", "max_angle_deg": 5}

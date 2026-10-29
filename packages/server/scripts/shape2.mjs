@@ -1,0 +1,10 @@
+import { connect } from './live-driver.mjs';
+const { call, close } = await connect();
+await call('c3d_new_document');
+const b = await call('c3d_create_object', { type: 'BOX', name: 'B1' });
+await call('c3d_create_material', { name: 'Wood', color: '#8B5A2B' });
+await call('c3d_assign_material', { ref: { id: b.sc.object.id }, material: 'Wood' });
+console.log(JSON.stringify((await call('c3d_list_materials', { limit: 500, response_format: 'detailed' })).sc));
+console.log(JSON.stringify((await call('c3d_get_material_graph', { material: { name: 'Wood' }, response_format: 'detailed' })).sc).slice(0, 900));
+console.log(JSON.stringify((await call('c3d_get_object', { ref: { id: b.sc.object.id }, include: ['materials', 'tags'] })).sc));
+await close();

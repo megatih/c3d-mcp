@@ -1,0 +1,12 @@
+id: material_nodes_checker
+title: "Checkerboard material nodes"
+profile: full
+timeout_s: 420
+fixture: fixtures/empty.jas
+tags: ["materials", "nodes"]
+prompt: "Create a material \"Checker\" whose diffuse color comes from a checkerboard procedural node, and apply it to a plane-like flat box (4 x 0.1 x 4)."
+assertions:
+  - {"type": "material_exists", "name_regex": "^Checker"}
+  - {"type": "material_node", "material_regex": "^Checker", "node_type": "checkerboard"}
+  - {"type": "material_connection", "material_regex": "^Checker", "to_input": "diffColor"}
+  - {"type": "material_assigned", "object_regex": ".*", "material_regex": "^Checker"}

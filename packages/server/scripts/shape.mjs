@@ -1,0 +1,10 @@
+import { connect } from './live-driver.mjs';
+const { call, close } = await connect();
+await call('c3d_new_document');
+const b = await call('c3d_create_object', { type: 'BOX', name: 'B1', position: [1, 2, 3] });
+const id = b.sc.object.id;
+const r = await call('c3d_get_object', { ref: { id }, include: ['parameters', 'tags', 'bbox', 'worldMatrix', 'materials'], response_format: 'detailed' });
+console.log(JSON.stringify(r.sc).slice(0, 1800));
+const l = await call('c3d_list_scene', { depth: 32, limit: 5, response_format: 'detailed' });
+console.log(JSON.stringify(l.sc).slice(0, 900));
+await close();

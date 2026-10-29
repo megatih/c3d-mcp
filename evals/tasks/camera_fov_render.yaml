@@ -1,0 +1,12 @@
+id: camera_fov_render
+title: "Set camera and FOV, then render"
+profile: full
+timeout_s: 300
+fixture: fixtures/one_box.jas
+tags: ["camera", "render"]
+prompt: "Add a camera at (0, 1.5, 6) looking at the origin with a 30 degree field of view, make it the active camera and render at 640x360."
+assertions:
+  - {"type": "object_exists", "name_regex": ".*", "object_type": "CAMERA"}
+  - {"type": "param_range", "object_regex": "@activeCamera", "param": "fieldOfView", "min": 29.5, "max": 30.5}
+  - {"type": "camera_active", "name_regex": ".*"}
+  - {"type": "render_nonblank", "min_width": 640, "min_height": 360}

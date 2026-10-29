@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "c3d": {
+      "command": "npx",
+      "args": ["-y", "c3d-mcp@0.1.0", "serve"],
+      "env": { "C3D_MCP_PROFILE": "full" }
+    }
+  }
+}

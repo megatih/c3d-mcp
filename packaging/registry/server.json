@@ -1,0 +1,44 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.megatih/c3d-mcp",
+  "description": "MCP server for Cheetah3D 8.1.3 on macOS: inspect, build, animate, light, material and render scenes.",
+  "repository": {
+    "url": "https://github.com/megatih/c3d-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "c3d-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "npx",
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "serve"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "C3D_MCP_PROFILE",
+          "description": "full | local | readonly",
+          "isRequired": false,
+          "default": "full"
+        }
+      ]
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/megatih/c3d-mcp/releases/download/v0.1.0/c3d-mcp-0.1.0.mcpb",
+      "version": "0.1.0",
+      "fileSha256": "d1440c80cba1a93308039055b5ada10ba301bccfe034ffeab2ef25ab3878c3b3",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

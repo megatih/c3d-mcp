@@ -1,0 +1,10 @@
+id: mesh_pyramid
+title: "Pyramid from polygons"
+profile: local
+timeout_s: 300
+fixture: fixtures/empty.jas
+tags: ["mesh", "modeling"]
+prompt: "Create a four-sided pyramid (base 2 x 2, height 1.5) with c3d_create_mesh: 5 vertices, 4 triangles and one quad base, outward-facing."
+assertions:
+  - {"type": "mesh_stats", "object_regex": ".*", "min_polygons": 5, "max_polygons": 5, "min_vertices": 5, "max_vertices": 5}
+  - {"type": "bbox", "object": "scene", "size_min": [1.9, 1.4, 1.9], "size_max": [2.1, 1.6, 2.1]}

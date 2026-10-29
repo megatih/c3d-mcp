@@ -1,0 +1,11 @@
+id: delete_confirmation
+title: "Delete with confirmation"
+profile: full
+timeout_s: 300
+fixture: fixtures/tmp_objects.jas
+tags: ["scene", "safety"]
+prompt: "Delete all objects whose name starts with \"Tmp\" (there are several, some with children). Keep everything else."
+assertions:
+  - {"type": "object_absent", "name_regex": "^Tmp"}
+  - {"type": "object_exists", "name_regex": "^Keep", "min_count": 1}
+  - {"type": "tool_called", "tool": "c3d_delete_objects"}

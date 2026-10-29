@@ -1,0 +1,1559 @@
+{
+ "cases": [
+  {
+   "name": "scene ops happy path",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "s",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "Group"
+         },
+         "as": "g"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Box",
+          "parent": "$g",
+          "params": {
+           "sizeX": 2,
+           "position": {
+            "x": 1,
+            "y": 2,
+            "z": 3
+           }
+          }
+         },
+         "as": "b"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Box"
+         },
+         "as": "b2"
+        },
+        {
+         "op": "listScene",
+         "args": {}
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "offset": 1,
+          "limit": 1,
+          "detail": "detailed"
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "root": "$g",
+          "depth": 0
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Group/Box"
+          },
+          "include": [
+           "parameters",
+           "tags",
+           "children",
+           "bbox",
+           "worldMatrix",
+           "materials"
+          ]
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$b",
+          "names": [
+           "sizeX",
+           "position"
+          ]
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$b",
+          "params": {
+           "sizeY": 3,
+           "locked": true
+          }
+         }
+        },
+        {
+         "op": "rename",
+         "args": {
+          "ref": "$b2",
+          "name": "Box2"
+         }
+        },
+        {
+         "op": "setTransform",
+         "args": {
+          "ref": "$b2",
+          "position": [
+           1,
+           0,
+           0
+          ],
+          "rotation": {
+           "x": 0,
+           "y": 90,
+           "z": 0
+          },
+          "scale": [
+           2,
+           2,
+           2
+          ]
+         }
+        },
+        {
+         "op": "reparent",
+         "args": {
+          "ref": "$b2",
+          "parent": "$g",
+          "index": 0
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": [
+           "$b"
+          ]
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "selected": true
+          }
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": [
+           "$b2"
+          ],
+          "extend": true
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": []
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": "$b",
+          "type": "SHADERTAG",
+          "params": {
+           "shadeSelection": 0
+          }
+         }
+        },
+        {
+         "op": "removeTag",
+         "args": {
+          "ref": "$b",
+          "index": 0
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "indexPath": [
+            0,
+            0
+           ]
+          }
+         }
+        },
+        {
+         "op": "deleteObjects",
+         "args": {
+          "refs": [
+           "$b2",
+           {
+            "path": "/Group"
+           }
+          ]
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {}
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "s": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "ref": {
+            "id": 1001
+           },
+           "id": 1001,
+           "name": "Group",
+           "path": "/Group",
+           "indexPath": [
+            0
+           ],
+           "type": "FOLDER",
+           "typeId": 11,
+           "family": 0,
+           "childCount": 0,
+           "tagCount": 0,
+           "paramErrors": {
+            "$absent": true
+           }
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "ref": {
+            "id": 1002
+           },
+           "name": "Box",
+           "path": "/Group/Box",
+           "indexPath": [
+            0,
+            0
+           ],
+           "type": "BOX",
+           "typeId": 1,
+           "family": 5
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "Box",
+           "path": "/Box",
+           "indexPath": [
+            1
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 3,
+           "nextOffset": null,
+           "items": [
+            {
+             "name": "Group",
+             "depth": 0,
+             "childCount": 1
+            },
+            {
+             "name": "Box",
+             "depth": 1,
+             "path": "/Group/Box"
+            },
+            {
+             "name": "Box",
+             "depth": 0,
+             "path": "/Box"
+            }
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 3,
+           "nextOffset": 2,
+           "items": [
+            {
+             "path": "/Group/Box",
+             "position": {
+              "x": 1,
+              "y": 2,
+              "z": 3
+             },
+             "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+             },
+             "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+             },
+             "tags": []
+            }
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 1,
+           "items": [
+            {
+             "name": "Box",
+             "depth": 0
+            }
+           ]
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "Box",
+           "parameters": {
+            "$has": {
+             "name": "sizeX",
+             "type": "Float",
+             "value": 2
+            }
+           },
+           "tags": [],
+           "children": [],
+           "bbox": {
+            "min": {
+             "x": -1,
+             "y": -1,
+             "z": -1
+            },
+            "max": {
+             "x": 1,
+             "y": 1,
+             "z": 1
+            }
+           },
+           "worldMatrix": {
+            "rows": [
+             [
+              1,
+              0,
+              0
+             ],
+             [
+              0,
+              1,
+              0
+             ],
+             [
+              0,
+              0,
+              1
+             ]
+            ],
+            "position": {
+             "x": 1,
+             "y": 2,
+             "z": 3
+            }
+           },
+           "materials": []
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "ref": {
+            "id": 1002
+           },
+           "parameters": [
+            {
+             "name": "sizeX",
+             "type": "Float",
+             "value": 2
+            },
+            {
+             "name": "position",
+             "type": "Vec3D",
+             "value": {
+              "x": 1,
+              "y": 2,
+              "z": 3
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": true,
+          "result": {
+           "applied": [
+            "sizeY",
+            "locked"
+           ],
+           "errors": []
+          }
+         },
+         {
+          "op": "rename",
+          "ok": true,
+          "result": {
+           "name": "Box2",
+           "path": "/Box2"
+          }
+         },
+         {
+          "op": "setTransform",
+          "ok": true,
+          "result": {
+           "transform": {
+            "position": {
+             "x": 1,
+             "y": 0,
+             "z": 0
+            },
+            "rotation": {
+             "x": 0,
+             "y": 90,
+             "z": 0
+            },
+            "scale": {
+             "x": 2,
+             "y": 2,
+             "z": 2
+            }
+           }
+          }
+         },
+         {
+          "op": "reparent",
+          "ok": true,
+          "result": {
+           "path": "/Group/Box2",
+           "indexPath": [
+            0,
+            0
+           ]
+          }
+         },
+         {
+          "op": "select",
+          "ok": true,
+          "result": {
+           "previous": [],
+           "selected": [
+            {
+             "name": "Box"
+            }
+           ]
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "Box",
+           "path": "/Group/Box"
+          }
+         },
+         {
+          "op": "select",
+          "ok": true,
+          "result": {
+           "previous": [
+            {
+             "name": "Box"
+            }
+           ],
+           "selected": [
+            {
+             "name": "Box"
+            },
+            {
+             "name": "Box2"
+            }
+           ]
+          }
+         },
+         {
+          "op": "select",
+          "ok": true,
+          "result": {
+           "selected": []
+          }
+         },
+         {
+          "op": "addTag",
+          "ok": true,
+          "result": {
+           "tagIndex": 0,
+           "type": "SHADERTAG",
+           "tags": [
+            {
+             "index": 0,
+             "type": "SHADERTAG"
+            }
+           ]
+          }
+         },
+         {
+          "op": "removeTag",
+          "ok": true,
+          "result": {
+           "tagIndex": 0,
+           "type": "SHADERTAG",
+           "tags": []
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "Box2"
+          }
+         },
+         {
+          "op": "deleteObjects",
+          "ok": true,
+          "result": {
+           "removed": 2,
+           "ids": [
+            1003,
+            1001
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 0,
+           "items": []
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.redraws",
+        "equals": 1
+       },
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "scene ops error paths",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "e",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Dup"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Dup"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "F"
+         },
+         "as": "f"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Kid",
+          "parent": "$f"
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Dup"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Nope"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "id": 424242
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "indexPath": [
+            9
+           ]
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "selected": true
+          }
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BANANA"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "lightType": 1
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "parent": {
+           "path": "/Nope"
+          }
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "type": "BAKETAG"
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "type": "NOTATAG"
+         }
+        },
+        {
+         "op": "removeTag",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "index": 3
+         }
+        },
+        {
+         "op": "deleteObjects",
+         "args": {
+          "refs": [
+           {
+            "path": "/"
+           }
+          ]
+         }
+        },
+        {
+         "op": "reparent",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "parent": {
+           "path": "/Cam"
+          }
+         }
+        },
+        {
+         "op": "setTransform",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "position": [
+           1,
+           2
+          ],
+          "scale": [
+           1,
+           1,
+           1
+          ]
+         }
+        },
+        {
+         "op": "setTransform",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "position": [
+           1,
+           2,
+           3
+          ],
+          "space": "world"
+         }
+        },
+        {
+         "op": "setTransform",
+         "args": {
+          "ref": {
+           "path": "/F/Kid"
+          },
+          "position": [
+           1,
+           2,
+           3
+          ],
+          "space": "world"
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "params": {
+           "nope": 1,
+           "fieldOfView": "wide",
+           "distance": 3
+          }
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "tag": {
+           "index": 0
+          },
+          "params": {
+           "x": 1
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "names": [
+           "nope"
+          ]
+         }
+        },
+        {
+         "op": "rename",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "name": ""
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": [
+           {
+            "path": "/Nope"
+           }
+          ]
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "root": {
+           "path": "/Nope"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          },
+          "include": [
+           "bogus"
+          ]
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "e": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "AMBIGUOUS",
+           "details": {
+            "candidates": [
+             {
+              "id": 1001,
+              "path": "/Dup"
+             },
+             {
+              "id": 1002,
+              "path": "/Dup"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND",
+           "message": "nothing is selected"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "type": "BANANA"
+           }
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "addTag",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "hint": {
+            "$re": "modal"
+           }
+          }
+         },
+         {
+          "op": "addTag",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "removeTag",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "deleteObjects",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "reparent",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setTransform",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setTransform",
+          "ok": true
+         },
+         {
+          "op": "setTransform",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "errors": {
+             "$len": 2
+            }
+           }
+          },
+          "result": {
+           "applied": [
+            "distance"
+           ],
+           "errors": [
+            {
+             "name": "nope",
+             "code": "NOT_FOUND"
+            },
+            {
+             "name": "fieldOfView",
+             "code": "INVALID_ARGUMENT"
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "rename",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "select",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 4
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "select restores and clears selection; AMBIGUOUS for multi-selection",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "s",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "A"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "B"
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": [
+           {
+            "path": "/A"
+           },
+           {
+            "path": "/B"
+           }
+          ]
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "selected": true
+          }
+         }
+        },
+        {
+         "op": "deleteObjects",
+         "args": {
+          "refs": [
+           {
+            "selected": true
+           }
+          ]
+         }
+        },
+        {
+         "op": "select",
+         "args": {
+          "refs": []
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "s": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "select",
+          "ok": true,
+          "result": {
+           "selected": [
+            {
+             "name": "A"
+            },
+            {
+             "name": "B"
+            }
+           ]
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": false,
+          "error": {
+           "code": "AMBIGUOUS",
+           "details": {
+            "candidates": {
+             "$len": 2
+            }
+           }
+          }
+         },
+         {
+          "op": "deleteObjects",
+          "ok": true,
+          "result": {
+           "removed": 2
+          }
+         },
+         {
+          "op": "select",
+          "ok": true,
+          "result": {
+           "selected": []
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "listScene paging walks depth-first in sibling order",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "A"
+         },
+         "as": "a"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "A1",
+          "parent": "$a"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "A2",
+          "parent": "$a"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "B"
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "limit": 2
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "limit": 2,
+          "offset": 2
+         }
+        },
+        {
+         "op": "listScene",
+         "args": {
+          "depth": 0
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "p": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 4,
+           "nextOffset": 2,
+           "items": [
+            {
+             "name": "A"
+            },
+            {
+             "name": "A1"
+            }
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 4,
+           "nextOffset": null,
+           "items": [
+            {
+             "name": "A2"
+            },
+            {
+             "name": "B"
+            }
+           ]
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 2,
+           "items": [
+            {
+             "name": "A"
+            },
+            {
+             "name": "B"
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "createObject: lights, cameras, select flag, world-space position at root",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "c",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "LIGHT",
+          "name": "Key",
+          "lightType": 2,
+          "params": {
+           "color": {
+            "r": 1,
+            "g": 0.5,
+            "b": 0.25
+           },
+           "intensity": 3
+          }
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "C1"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "C2",
+          "select": true,
+          "transform": {
+           "position": [
+            0,
+            0,
+            5
+           ],
+           "space": "world"
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": {
+           "path": "/Key"
+          },
+          "names": [
+           "lightType",
+           "color",
+           "intensity"
+          ]
+         }
+        },
+        {
+         "op": "getDocumentInfo"
+        },
+        {
+         "op": "setActiveCamera",
+         "args": {
+          "ref": {
+           "path": "/C1"
+          }
+         }
+        },
+        {
+         "op": "setActiveCamera",
+         "args": {
+          "ref": {
+           "path": "/Key"
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "selected": true
+          }
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "params": {
+           "bogus": 1
+          }
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "c": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "type": "LIGHT"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "C2"
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "lightType",
+             "value": 2
+            },
+            {
+             "name": "color",
+             "value": {
+              "x": 1,
+              "y": 0.5,
+              "z": 0.25,
+              "w": 1
+             }
+            },
+            {
+             "name": "intensity",
+             "value": 3
+            }
+           ]
+          }
+         },
+         {
+          "op": "getDocumentInfo",
+          "ok": true,
+          "result": {
+           "activeCamera": {
+            "name": "C2"
+           }
+          }
+         },
+         {
+          "op": "setActiveCamera",
+          "ok": true,
+          "result": {
+           "activeCamera": {
+            "name": "C1"
+           }
+          }
+         },
+         {
+          "op": "setActiveCamera",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "name": "C2"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true,
+          "result": {
+           "name": "Box",
+           "paramErrors": [
+            {
+             "name": "bogus",
+             "code": "NOT_FOUND"
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,3330 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "c3d-mcp bridge ops",
+ "protocol": 1,
+ "ops": {
+  "ping": {
+   "rw": "R",
+   "summary": "Echo counter/echo; returns runtime version and timestamps.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "counter": {
+      "type": "integer"
+     },
+     "echo": {
+      "type": "string"
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "capabilities": {
+   "rw": "R",
+   "summary": "Type map (objectTypes, tagTypes, materialTypes, nodeTypes, rotationOrders, renderers, jsFeatures, apiVersion, limits).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "getLog": {
+   "rw": "R",
+   "summary": "Runtime log ring buffer.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "tail": {
+      "type": "integer"
+     },
+     "clear": {
+      "type": "boolean"
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "getDocumentInfo": {
+   "rw": "R",
+   "summary": "fileName, fps, time, end, takes, currentTake, renderer, editMode, activeCamera, counts, marker.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "setMarker": {
+   "rw": "W",
+   "summary": "Ensure root-level folder __c3d_mcp_session_<uuid> exists (session marker for untitled docs).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "uuid": {
+      "type": "string",
+      "pattern": "^[0-9a-f-]{36}$"
+     }
+    },
+    "required": [
+     "uuid"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "saveTo": {
+   "rw": "W",
+   "summary": "doc.saveToFile (copy semantics, does not re-point the document; verified P07).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+     },
+     "type": {
+      "enum": [
+       "jas",
+       "obj",
+       "fbx",
+       "dae",
+       "stl",
+       "3ds",
+       "usdz",
+       "gltf",
+       "glb",
+       "dxf"
+      ]
+     }
+    },
+    "required": [
+     "path",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setTime": {
+   "rw": "W",
+   "summary": "setAnimPosition seconds.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "time": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "time"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setFps": {
+   "rw": "W",
+   "summary": "setAnimationFPS.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "fps": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 240
+     }
+    },
+    "required": [
+     "fps"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "takes": {
+   "rw": "W",
+   "summary": "Take management.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "action": {
+      "enum": [
+       "list",
+       "add",
+       "rename",
+       "remove",
+       "select"
+      ]
+     },
+     "name": {
+      "type": "string"
+     },
+     "newName": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "listScene": {
+   "rw": "R",
+   "summary": "Paged depth-first tree walk. Returns {items:[descriptor...], total, nextOffset|null}.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "root": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "depth": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 32
+     },
+     "offset": {
+      "type": "integer",
+      "minimum": 0
+     },
+     "limit": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2000
+     },
+     "detail": {
+      "enum": [
+       "concise",
+       "detailed"
+      ]
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "getObject": {
+   "rw": "R",
+   "summary": "Object detail.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "include": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "parameters",
+        "tags",
+        "children",
+        "bbox",
+        "worldMatrix",
+        "materials"
+       ]
+      }
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "createObject": {
+   "rw": "W",
+   "summary": "doc.addObject(type) (+ reparent, rename, transform, params). Returns descriptor with the ACTUAL name.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "type": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     },
+     "parent": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "transform": {
+      "type": "object",
+      "properties": {
+       "position": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "rotation": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "scale": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "space": {
+        "enum": [
+         "local",
+         "world"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     },
+     "lightType": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+     },
+     "select": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "deleteObjects": {
+   "rw": "W",
+   "summary": "root-level or parent.removeChild for each ref (detach).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "refs": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+        {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "integer"
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "path": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "path"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "indexPath": {
+           "type": "array",
+           "items": {
+            "type": "integer"
+           }
+          }
+         },
+         "required": [
+          "indexPath"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "selected": {
+           "const": true
+          }
+         },
+         "required": [
+          "selected"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "string",
+         "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+        }
+       ]
+      },
+      "minItems": 1,
+      "maxItems": 1000
+     }
+    },
+    "required": [
+     "refs"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "reparent": {
+   "rw": "W",
+   "summary": "addChildAtIndex.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "parent": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "index": {
+      "type": "integer"
+     },
+     "keepWorld": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "ref",
+     "parent"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "rename": {
+   "rw": "W",
+   "summary": "Set name parameter. Returns actual name.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 255
+     }
+    },
+    "required": [
+     "ref",
+     "name"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setTransform": {
+   "rw": "W",
+   "summary": "Set local position/rotation(deg)/scale. world space: position only.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "position": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "z": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "z"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       }
+      ]
+     },
+     "rotation": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "z": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "z"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       }
+      ]
+     },
+     "scale": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "x": {
+          "type": "number"
+         },
+         "y": {
+          "type": "number"
+         },
+         "z": {
+          "type": "number"
+         }
+        },
+        "required": [
+         "x",
+         "y",
+         "z"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 3,
+        "maxItems": 3
+       }
+      ]
+     },
+     "space": {
+      "enum": [
+       "local",
+       "world"
+      ]
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "getParameters": {
+   "rw": "R",
+   "summary": "Typed parameter read for object (or tag via tag:{index}).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "tag": {
+      "type": "object",
+      "properties": {
+       "index": {
+        "type": "integer"
+       },
+       "type": {
+        "type": "string"
+       }
+      },
+      "required": [],
+      "additionalProperties": false
+     },
+     "names": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setParameters": {
+   "rw": "W",
+   "summary": "Typed parameter write for object or one of its tags; unknown parameter -> per-key error list.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "tag": {
+      "type": "object",
+      "properties": {
+       "index": {
+        "type": "integer"
+       },
+       "type": {
+        "type": "string"
+       }
+      },
+      "required": [],
+      "additionalProperties": false
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [
+     "ref",
+     "params"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "select": {
+   "rw": "W",
+   "summary": "selectObject; returns previous selection descriptors.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "refs": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+        {
+         "type": "object",
+         "properties": {
+          "id": {
+           "type": "integer"
+          }
+         },
+         "required": [
+          "id"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "path": {
+           "type": "string"
+          }
+         },
+         "required": [
+          "path"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "indexPath": {
+           "type": "array",
+           "items": {
+            "type": "integer"
+           }
+          }
+         },
+         "required": [
+          "indexPath"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "object",
+         "properties": {
+          "selected": {
+           "const": true
+          }
+         },
+         "required": [
+          "selected"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "string",
+         "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+        }
+       ]
+      }
+     },
+     "extend": {
+      "type": "boolean"
+     },
+     "restore": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "refs"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "addTag": {
+   "rw": "W",
+   "summary": "addTagOfType.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "type": {
+      "type": "string"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [
+     "ref",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "removeTag": {
+   "rw": "W",
+   "summary": "removeTag at index.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "index": {
+      "type": "integer"
+     }
+    },
+    "required": [
+     "ref",
+     "index"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "createMesh": {
+   "rw": "W",
+   "summary": "POLYGONOBJ + PolyCore fill with strict validation (finite coords, indices in range, polygon size>=3) BEFORE any addIndexPolygon. `append` continues a chunked build.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "parent": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "transform": {
+      "type": "object",
+      "properties": {
+       "position": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "rotation": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "scale": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "space": {
+        "enum": [
+         "local",
+         "world"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "vertices": {
+      "type": "array",
+      "items": {
+       "oneOf": [
+        {
+         "type": "object",
+         "properties": {
+          "x": {
+           "type": "number"
+          },
+          "y": {
+           "type": "number"
+          },
+          "z": {
+           "type": "number"
+          }
+         },
+         "required": [
+          "x",
+          "y",
+          "z"
+         ],
+         "additionalProperties": false
+        },
+        {
+         "type": "array",
+         "items": {
+          "type": "number"
+         },
+         "minItems": 3,
+         "maxItems": 3
+        }
+       ]
+      },
+      "minItems": 1,
+      "maxItems": 200000
+     },
+     "polygons": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "integer"
+       },
+       "minItems": 3,
+       "maxItems": 64
+      },
+      "minItems": 1,
+      "maxItems": 200000
+     },
+     "uvs": {
+      "type": "array",
+      "items": {
+       "type": "array",
+       "items": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        },
+        "minItems": 2,
+        "maxItems": 2
+       }
+      }
+     },
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "append": {
+      "type": "object",
+      "properties": {
+       "ref": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "id": {
+            "type": "integer"
+           }
+          },
+          "required": [
+           "id"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "path": {
+            "type": "string"
+           }
+          },
+          "required": [
+           "path"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "indexPath": {
+            "type": "array",
+            "items": {
+             "type": "integer"
+            }
+           }
+          },
+          "required": [
+           "indexPath"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "object",
+          "properties": {
+           "selected": {
+            "const": true
+           }
+          },
+          "required": [
+           "selected"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "string",
+          "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+         }
+        ]
+       }
+      },
+      "required": [
+       "ref"
+      ],
+      "additionalProperties": false
+     }
+    },
+    "required": [
+     "vertices",
+     "polygons"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "getMesh": {
+   "rw": "R",
+   "summary": "Paged vertices/polygons/uvs from core().",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "vertexOffset": {
+      "type": "integer"
+     },
+     "vertexLimit": {
+      "type": "integer"
+     },
+     "polygonOffset": {
+      "type": "integer"
+     },
+     "polygonLimit": {
+      "type": "integer"
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "editMesh": {
+   "rw": "W",
+   "summary": "In-place edits on an editable polygon object.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "setVertices": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "index": {
+         "type": "integer"
+        },
+        "position": {
+         "oneOf": [
+          {
+           "type": "object",
+           "properties": {
+            "x": {
+             "type": "number"
+            },
+            "y": {
+             "type": "number"
+            },
+            "z": {
+             "type": "number"
+            }
+           },
+           "required": [
+            "x",
+            "y",
+            "z"
+           ],
+           "additionalProperties": false
+          },
+          {
+           "type": "array",
+           "items": {
+            "type": "number"
+           },
+           "minItems": 3,
+           "maxItems": 3
+          }
+         ]
+        }
+       },
+       "required": [
+        "index",
+        "position"
+       ],
+       "additionalProperties": false
+      }
+     },
+     "deletePolygons": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     },
+     "flipWinding": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      }
+     },
+     "mergeVertices": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "createSpline": {
+   "rw": "W",
+   "summary": "SPLINE object via SplineCore move/line/curve/close.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "parent": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "transform": {
+      "type": "object",
+      "properties": {
+       "position": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "rotation": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "scale": {
+        "oneOf": [
+         {
+          "type": "object",
+          "properties": {
+           "x": {
+            "type": "number"
+           },
+           "y": {
+            "type": "number"
+           },
+           "z": {
+            "type": "number"
+           }
+          },
+          "required": [
+           "x",
+           "y",
+           "z"
+          ],
+          "additionalProperties": false
+         },
+         {
+          "type": "array",
+          "items": {
+           "type": "number"
+          },
+          "minItems": 3,
+          "maxItems": 3
+         }
+        ]
+       },
+       "space": {
+        "enum": [
+         "local",
+         "world"
+        ]
+       }
+      },
+      "additionalProperties": false
+     },
+     "paths": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "points": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "p": {
+            "oneOf": [
+             {
+              "type": "object",
+              "properties": {
+               "x": {
+                "type": "number"
+               },
+               "y": {
+                "type": "number"
+               },
+               "z": {
+                "type": "number"
+               }
+              },
+              "required": [
+               "x",
+               "y",
+               "z"
+              ],
+              "additionalProperties": false
+             },
+             {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             }
+            ]
+           },
+           "c1": {
+            "oneOf": [
+             {
+              "type": "object",
+              "properties": {
+               "x": {
+                "type": "number"
+               },
+               "y": {
+                "type": "number"
+               },
+               "z": {
+                "type": "number"
+               }
+              },
+              "required": [
+               "x",
+               "y",
+               "z"
+              ],
+              "additionalProperties": false
+             },
+             {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             }
+            ]
+           },
+           "c2": {
+            "oneOf": [
+             {
+              "type": "object",
+              "properties": {
+               "x": {
+                "type": "number"
+               },
+               "y": {
+                "type": "number"
+               },
+               "z": {
+                "type": "number"
+               }
+              },
+              "required": [
+               "x",
+               "y",
+               "z"
+              ],
+              "additionalProperties": false
+             },
+             {
+              "type": "array",
+              "items": {
+               "type": "number"
+              },
+              "minItems": 3,
+              "maxItems": 3
+             }
+            ]
+           }
+          },
+          "required": [
+           "p"
+          ],
+          "additionalProperties": false
+         }
+        },
+        "closed": {
+         "type": "boolean"
+        }
+       },
+       "required": [
+        "points"
+       ],
+       "additionalProperties": false
+      }
+     }
+    },
+    "required": [
+     "paths"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "listMaterials": {
+   "rw": "R",
+   "summary": "Materials with root node type.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "createMaterial": {
+   "rw": "W",
+   "summary": "addMaterial(type||\"Material\", name); params applied to rootNode.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "type": {
+      "type": "string"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [
+     "name"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setMaterialParams": {
+   "rw": "W",
+   "summary": "Set parameters on a material node (default root).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "node": {
+      "type": [
+       "integer",
+       "null"
+      ]
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [
+     "material",
+     "params"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "addMaterialNode": {
+   "rw": "W",
+   "summary": "addNodeOfType. Returns node id + io names.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "type": {
+      "type": "string"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [
+     "material",
+     "type"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "connectNodes": {
+   "rw": "W",
+   "summary": "addConnection(fromID,fromPara,toID,toPara).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "fromNode": {
+      "type": "integer"
+     },
+     "fromPara": {
+      "type": "string"
+     },
+     "toNode": {
+      "type": "integer"
+     },
+     "toPara": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "material",
+     "fromNode",
+     "fromPara",
+     "toNode",
+     "toPara"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "getMaterialGraph": {
+   "rw": "R",
+   "summary": "Nodes, params, connections.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     }
+    },
+    "required": [
+     "material"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "assignMaterial": {
+   "rw": "W",
+   "summary": "SHADERTAG + material link (whole object).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "replaceExisting": {
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "ref",
+     "material"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setTexture": {
+   "rw": "W",
+   "summary": "setParameter(texture param, absolute path).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "node": {
+      "type": "integer"
+     },
+     "param": {
+      "type": "string"
+     },
+     "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024
+     }
+    },
+    "required": [
+     "material",
+     "param",
+     "path"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "removeMaterial": {
+   "rw": "W",
+   "summary": "doc.removeMaterial.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "material": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "name": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "name"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "index": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "index"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     }
+    },
+    "required": [
+     "material"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setActiveCamera": {
+   "rw": "W",
+   "summary": "camera.setParameter(\"activeCamera\",1) (P32).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     }
+    },
+    "required": [
+     "ref"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setKeyframes": {
+   "rw": "W",
+   "summary": "FCurve recipe (P14): one FCurve per component; update() always.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "param": {
+      "type": "string"
+     },
+     "take": {
+      "type": "string"
+     },
+     "replace": {
+      "type": "boolean"
+     },
+     "keys": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "time": {
+         "type": "number"
+        },
+        "value": {
+         "oneOf": [
+          {
+           "type": "number"
+          },
+          {
+           "oneOf": [
+            {
+             "type": "object",
+             "properties": {
+              "x": {
+               "type": "number"
+              },
+              "y": {
+               "type": "number"
+              },
+              "z": {
+               "type": "number"
+              }
+             },
+             "required": [
+              "x",
+              "y",
+              "z"
+             ],
+             "additionalProperties": false
+            },
+            {
+             "type": "array",
+             "items": {
+              "type": "number"
+             },
+             "minItems": 3,
+             "maxItems": 3
+            }
+           ]
+          },
+          {
+           "oneOf": [
+            {
+             "type": "object",
+             "properties": {
+              "x": {
+               "type": "number"
+              },
+              "y": {
+               "type": "number"
+              },
+              "z": {
+               "type": "number"
+              },
+              "w": {
+               "type": "number"
+              }
+             },
+             "required": [
+              "x",
+              "y",
+              "z",
+              "w"
+             ],
+             "additionalProperties": false
+            },
+            {
+             "type": "object",
+             "properties": {
+              "r": {
+               "type": "number"
+              },
+              "g": {
+               "type": "number"
+              },
+              "b": {
+               "type": "number"
+              },
+              "a": {
+               "type": "number"
+              }
+             },
+             "required": [
+              "r",
+              "g",
+              "b"
+             ],
+             "additionalProperties": false
+            },
+            {
+             "type": "array",
+             "items": {
+              "type": "number"
+             },
+             "minItems": 4,
+             "maxItems": 4
+            }
+           ]
+          }
+         ]
+        },
+        "interpolation": {
+         "enum": [
+          "linear",
+          "soft",
+          "spline",
+          "flat",
+          "const"
+         ]
+        }
+       },
+       "required": [
+        "time",
+        "value"
+       ],
+       "additionalProperties": false
+      },
+      "minItems": 1
+     }
+    },
+    "required": [
+     "ref",
+     "param",
+     "keys"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "getKeyframes": {
+   "rw": "R",
+   "summary": "Per-component keys.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "param": {
+      "type": "string"
+     },
+     "take": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "ref",
+     "param"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "removeKeyframes": {
+   "rw": "W",
+   "summary": "removeAllKeys on every component.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "ref": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     },
+     "param": {
+      "type": "string"
+     },
+     "take": {
+      "type": "string"
+     }
+    },
+    "required": [
+     "ref",
+     "param"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "setRenderSettings": {
+   "rw": "W",
+   "summary": "currentRenderer().setParameter (resolution via Vec2D). Returns resulting values.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "renderer": {
+      "enum": [
+       "CHEETAH",
+       "FALCON"
+      ]
+     },
+     "width": {
+      "type": "integer"
+     },
+     "height": {
+      "type": "integer"
+     },
+     "params": {
+      "type": "object",
+      "additionalProperties": {
+       "description": "number | string | boolean | {x,y[,z[,w]]} | {r,g,b,a} | [numbers] | {path} for Texture | {ref} / null for Link"
+      }
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
+  "render": {
+   "rw": "W",
+   "summary": "doc.render(path); extension MUST be png/jpg/tiff (anything else raises a blocking modal).",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "path": {
+      "type": "string",
+      "pattern": "\\.(png|jpg|tiff)$"
+     },
+     "time": {
+      "type": "number"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "additionalProperties": false
+   }
+  },
+  "run": {
+   "rw": "W",
+   "summary": "Sandboxed user JS (PRD §4 exec). print() output returned.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "code": {
+      "type": "string",
+      "maxLength": 200000
+     },
+     "allowShellToken": {
+      "type": "string"
+     },
+     "allowFiles": {
+      "type": "array",
+      "items": {
+       "type": "string",
+       "minLength": 1,
+       "maxLength": 1024
+      }
+     }
+    },
+    "required": [
+     "code"
+    ],
+    "additionalProperties": false
+   }
+  }
+ }
+}

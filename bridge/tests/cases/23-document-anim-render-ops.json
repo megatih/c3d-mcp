@@ -1,0 +1,1454 @@
+{
+ "cases": [
+  {
+   "name": "document, time and take ops",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "d",
+       "ops": [
+        {
+         "op": "getDocumentInfo"
+        },
+        {
+         "op": "setTime",
+         "args": {
+          "time": 2.5
+         }
+        },
+        {
+         "op": "setFps",
+         "args": {
+          "fps": 24
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "list"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "add",
+          "name": "Alt"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "select",
+          "name": "Alt"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "rename",
+          "name": "Alt",
+          "newName": "Alt2"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "select",
+          "name": "Main"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "remove",
+          "name": "Alt2"
+         }
+        },
+        {
+         "op": "getDocumentInfo"
+        },
+        {
+         "op": "saveTo",
+         "args": {
+          "path": "{MCP}/tmp/out.obj",
+          "type": "obj"
+         }
+        },
+        {
+         "op": "saveTo",
+         "args": {
+          "path": "{MCP}/tmp/out.jas",
+          "type": "jas"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "d": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "getDocumentInfo",
+          "ok": true,
+          "result": {
+           "fileName": null,
+           "fps": 30,
+           "time": 0,
+           "end": 10,
+           "takeCount": 1,
+           "currentTake": "Main",
+           "renderer": "CHEETAH",
+           "editMode": "OBJECT_MODE",
+           "activeCamera": null,
+           "objectCount": 0,
+           "materialCount": 0,
+           "marker": null
+          }
+         },
+         {
+          "op": "setTime",
+          "ok": true,
+          "result": {
+           "time": 2.5
+          }
+         },
+         {
+          "op": "setFps",
+          "ok": true,
+          "result": {
+           "fps": 24
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "takes": [
+            {
+             "name": "Main",
+             "length": 10
+            }
+           ],
+           "current": "Main"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "takes": [
+            {
+             "name": "Main"
+            },
+            {
+             "name": "Alt"
+            }
+           ],
+           "current": "Main"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "current": "Alt"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "takes": [
+            {
+             "name": "Main"
+            },
+            {
+             "name": "Alt2"
+            }
+           ],
+           "current": "Alt2"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "current": "Main"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true,
+          "result": {
+           "takes": [
+            {
+             "name": "Main"
+            }
+           ],
+           "current": "Main"
+          }
+         },
+         {
+          "op": "getDocumentInfo",
+          "ok": true,
+          "result": {
+           "fps": 24,
+           "time": 2.5,
+           "takeCount": 1
+          }
+         },
+         {
+          "op": "saveTo",
+          "ok": true,
+          "result": {
+           "path": "{MCP}/tmp/out.obj",
+           "type": "obj",
+           "size": {
+            "$gte": 1
+           }
+          }
+         },
+         {
+          "op": "saveTo",
+          "ok": true,
+          "result": {
+           "type": "jas"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__native.exists('{MCP}/tmp/out.mtl')",
+        "equals": true
+       },
+       {
+        "eval": "__stats.saves",
+        "equals": 2
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "document, time and take error paths",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "e",
+       "ops": [
+        {
+         "op": "setFps",
+         "args": {
+          "fps": 0
+         }
+        },
+        {
+         "op": "setFps",
+         "args": {
+          "fps": 1000
+         }
+        },
+        {
+         "op": "setTime",
+         "args": {
+          "time": "soon"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "add",
+          "name": "Main"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "add"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "select",
+          "name": "Nope"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "rename",
+          "name": "Main"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "remove",
+          "name": "Main"
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "dance",
+          "name": "x"
+         }
+        },
+        {
+         "op": "saveTo",
+         "args": {
+          "path": "relative.obj",
+          "type": "obj"
+         }
+        },
+        {
+         "op": "saveTo",
+         "args": {
+          "path": "{MCP}/tmp/x.png",
+          "type": "png"
+         }
+        },
+        {
+         "op": "saveTo",
+         "args": {
+          "path": "{MCP}/nonexistent-dir/x.obj",
+          "type": "obj"
+         }
+        },
+        {
+         "op": "setMarker",
+         "args": {
+          "uuid": "not-a-uuid"
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "e": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "setFps",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setFps",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setTime",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "message": {
+            "$re": "last take"
+           }
+          }
+         },
+         {
+          "op": "takes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "saveTo",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "saveTo",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "saveTo",
+          "ok": false,
+          "error": {
+           "code": "INTERNAL"
+          }
+         },
+         {
+          "op": "setMarker",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "keyframes: set/get/remove with the FCurve recipe (P14)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "k",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Ball"
+         },
+         "as": "b"
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position",
+          "keys": [
+           {
+            "time": 1,
+            "value": {
+             "x": 3,
+             "y": 0,
+             "z": 0
+            },
+            "interpolation": "linear"
+           },
+           {
+            "time": 0,
+            "value": [
+             0,
+             0,
+             0
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position"
+         }
+        },
+        {
+         "op": "setTime",
+         "args": {
+          "time": 0.5
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$b",
+          "names": [
+           "position"
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1
+           },
+           {
+            "time": 2,
+            "value": 5,
+            "interpolation": "const"
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": [
+           {
+            "time": 2,
+            "value": 7
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX"
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position",
+          "replace": true,
+          "keys": [
+           {
+            "time": 0.5,
+            "value": [
+             1,
+             1,
+             1
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "takes",
+         "args": {
+          "action": "add",
+          "name": "Alt"
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeY",
+          "take": "Alt",
+          "keys": [
+           {
+            "time": 0,
+            "value": 2
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeY"
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeY",
+          "take": "Alt"
+         }
+        },
+        {
+         "op": "removeKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position"
+         }
+        },
+        {
+         "op": "removeKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeZ"
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "k": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "param": "position",
+           "take": "Main",
+           "components": [
+            {
+             "index": 0,
+             "keyCount": 2
+            },
+            {
+             "index": 1,
+             "keyCount": 2
+            },
+            {
+             "index": 2,
+             "keyCount": 2
+            }
+           ]
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "param": "position",
+           "take": "Main",
+           "components": [
+            {
+             "index": 0,
+             "keys": [
+              {
+               "time": 0,
+               "value": 0,
+               "interpolation": "soft"
+              },
+              {
+               "time": 1,
+               "value": 3,
+               "interpolation": "linear"
+              }
+             ]
+            },
+            {
+             "index": 1
+            },
+            {
+             "index": 2
+            }
+           ]
+          }
+         },
+         {
+          "op": "setTime",
+          "ok": true,
+          "result": {
+           "time": 0.5
+          }
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "name": "position",
+             "value": {
+              "x": 1.5,
+              "y": 0,
+              "z": 0
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0,
+             "keyCount": 2
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0,
+             "keyCount": 2
+            }
+           ]
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0,
+             "keys": [
+              {
+               "time": 0,
+               "value": 1
+              },
+              {
+               "time": 2,
+               "value": 7,
+               "interpolation": "soft"
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "keyCount": 1
+            },
+            {
+             "keyCount": 1
+            },
+            {
+             "keyCount": 1
+            }
+           ]
+          }
+         },
+         {
+          "op": "takes",
+          "ok": true
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "take": "Alt",
+           "components": [
+            {
+             "keyCount": 1
+            }
+           ]
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "take": "Main",
+           "components": []
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "take": "Alt",
+           "components": [
+            {
+             "index": 0,
+             "keys": [
+              {
+               "time": 0,
+               "value": 2
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "removeKeyframes",
+          "ok": true,
+          "result": {
+           "removed": 3
+          }
+         },
+         {
+          "op": "removeKeyframes",
+          "ok": true,
+          "result": {
+           "removed": 0
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0,
+             "keys": []
+            },
+            {
+             "index": 1,
+             "keys": []
+            },
+            {
+             "index": 2,
+             "keys": []
+            }
+           ]
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.fcurveUpdates",
+        "matches": {
+         "$gte": 8
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "keyframe error paths",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "e",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "B"
+         },
+         "as": "b"
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "name",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "nope",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "position",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": [
+           {
+            "time": 0,
+            "value": [
+             1,
+             2
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": [
+           {
+            "time": "now",
+            "value": 1
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "take": "Nope",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": [
+           {
+            "time": 0,
+            "value": 1,
+            "interpolation": "bezier"
+           }
+          ]
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "keys": []
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "nope"
+         }
+        },
+        {
+         "op": "removeKeyframes",
+         "args": {
+          "ref": "$b",
+          "param": "sizeX",
+          "take": "Nope"
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "e": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "removeKeyframes",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "render and render settings",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "r",
+       "ops": [
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "width": 320,
+          "height": 240
+         }
+        },
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "renderer": "FALCON",
+          "height": 100,
+          "params": {
+           "gamma": 2.2
+          }
+         }
+        },
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "renderer": "CHEETAH",
+          "params": {
+           "bogus": 1,
+           "exposure": "bright"
+          }
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.png"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.jpg",
+          "time": 1.5
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.tiff"
+         }
+        },
+        {
+         "op": "getDocumentInfo"
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.bmp"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.PNG"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "relative.png"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/no-such-dir/r.png"
+         }
+        },
+        {
+         "op": "render",
+         "args": {
+          "path": "{MCP}/tmp/r.png",
+          "time": "later"
+         }
+        },
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "width": 0
+         }
+        },
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "renderer": "ARNOLD"
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "r": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "setRenderSettings",
+          "ok": true,
+          "result": {
+           "renderer": "CHEETAH",
+           "resolution": {
+            "x": 320,
+            "y": 240
+           },
+           "applied": [
+            "resolution"
+           ],
+           "errors": []
+          }
+         },
+         {
+          "op": "setRenderSettings",
+          "ok": true,
+          "result": {
+           "renderer": "FALCON",
+           "resolution": {
+            "x": 640,
+            "y": 100
+           },
+           "applied": [
+            "resolution",
+            "gamma"
+           ]
+          }
+         },
+         {
+          "op": "setRenderSettings",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          },
+          "result": {
+           "renderer": "CHEETAH",
+           "resolution": {
+            "x": 320,
+            "y": 240
+           },
+           "applied": [],
+           "errors": {
+            "$len": 2
+           }
+          }
+         },
+         {
+          "op": "render",
+          "ok": true,
+          "result": {
+           "path": "{MCP}/tmp/r.png",
+           "exists": true,
+           "size": {
+            "$gte": 1
+           },
+           "width": 320,
+           "height": 240
+          }
+         },
+         {
+          "op": "render",
+          "ok": true,
+          "result": {
+           "exists": true,
+           "width": 320
+          }
+         },
+         {
+          "op": "render",
+          "ok": true,
+          "result": {
+           "exists": true
+          }
+         },
+         {
+          "op": "getDocumentInfo",
+          "ok": true,
+          "result": {
+           "time": 0,
+           "renderer": "CHEETAH"
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "hint": {
+            "$re": "blocking dialog"
+           }
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "render",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setRenderSettings",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "setRenderSettings",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.renders",
+        "equals": 3
+       },
+       {
+        "eval": "__app.lastRender.time",
+        "equals": 0
+       },
+       {
+        "eval": "__app.modal",
+        "equals": null
+       },
+       {
+        "eval": "__app.doc.rendererCount()",
+        "equals": 2
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "mock fidelity: rendering to an unsupported extension raises a blocking modal (P08)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "doc.render('{MCP}/tmp/x.bmp');"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "modal": "Fileformat .bmp is not supported",
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR",
+           "message": {
+            "$re": "MODAL"
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mock fidelity: BAKETAG on a non-polygon object raises a modal (P24)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "doc.addObject(CAMERA).addTagOfType(BAKETAG);"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "modal": "Texture baking error",
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "SCRIPT_ERROR"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

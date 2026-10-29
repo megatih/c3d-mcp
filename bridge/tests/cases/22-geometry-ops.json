@@ -1,0 +1,1556 @@
+{
+ "cases": [
+  {
+   "name": "geometry happy path: createMesh, getMesh paging, editMesh, chunked append, createSpline",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "g",
+       "ops": [
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Quad",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2,
+            3
+           ]
+          ],
+          "uvs": [
+           [
+            [
+             0,
+             0
+            ],
+            [
+             1,
+             0
+            ],
+            [
+             1,
+             1
+            ],
+            [
+             0,
+             1
+            ]
+           ]
+          ],
+          "material": {
+           "name": "Mat"
+          }
+         },
+         "as": "q"
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": "$q"
+         }
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": "$q",
+          "vertexOffset": 3,
+          "vertexLimit": 5,
+          "polygonLimit": 0
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$q",
+          "setVertices": [
+           {
+            "index": 2,
+            "position": [
+             2,
+             2,
+             0
+            ]
+           }
+          ],
+          "flipWinding": [
+           0
+          ]
+         }
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": "$q"
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Chunked",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ]
+         },
+         "as": "c"
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "append": {
+           "ref": "$c"
+          },
+          "vertices": [
+           [
+            5,
+            5,
+            5
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            2,
+            3
+           ]
+          ]
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$c",
+          "deletePolygons": [
+           0
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Dups",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            2,
+            3
+           ],
+           [
+            1,
+            2,
+            3
+           ]
+          ]
+         },
+         "as": "d"
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$d",
+          "mergeVertices": 0.001
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "name": "Path",
+          "paths": [
+           {
+            "points": [
+             {
+              "p": [
+               0,
+               0,
+               0
+              ]
+             },
+             {
+              "p": [
+               1,
+               0,
+               0
+              ],
+              "c1": [
+               0.5,
+               0,
+               0
+              ],
+              "c2": [
+               1.5,
+               0.5,
+               0
+              ]
+             },
+             {
+              "p": [
+               2,
+               1,
+               0
+              ]
+             }
+            ]
+           },
+           {
+            "points": [
+             {
+              "p": [
+               0,
+               0,
+               0
+              ]
+             },
+             {
+              "p": [
+               1,
+               1,
+               0
+              ]
+             },
+             {
+              "p": [
+               2,
+               0,
+               0
+              ]
+             }
+            ],
+            "closed": true
+           }
+          ]
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Path"
+          },
+          "include": [
+           "parameters"
+          ]
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": {
+           "path": "/Quad"
+          },
+          "include": [
+           "bbox"
+          ]
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "g": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createMesh",
+          "ok": true,
+          "result": {
+           "ref": {
+            "id": {
+             "$type": "number"
+            }
+           },
+           "name": "Quad",
+           "type": "POLYGONOBJ",
+           "vertexCount": 4,
+           "polygonCount": 1
+          }
+         },
+         {
+          "op": "getMesh",
+          "ok": true,
+          "result": {
+           "vertices": [
+            [
+             0,
+             0,
+             0
+            ],
+            [
+             1,
+             0,
+             0
+            ],
+            [
+             1,
+             1,
+             0
+            ],
+            [
+             0,
+             1,
+             0
+            ]
+           ],
+           "polygons": [
+            [
+             0,
+             1,
+             2,
+             3
+            ]
+           ],
+           "uvs": [
+            [
+             [
+              0,
+              0
+             ],
+             [
+              1,
+              0
+             ],
+             [
+              1,
+              1
+             ],
+             [
+              0,
+              1
+             ]
+            ]
+           ],
+           "vertexCount": 4,
+           "polygonCount": 1,
+           "nextVertexOffset": null,
+           "nextPolygonOffset": null
+          }
+         },
+         {
+          "op": "getMesh",
+          "ok": true,
+          "result": {
+           "vertices": [
+            [
+             0,
+             1,
+             0
+            ]
+           ],
+           "polygons": [],
+           "nextVertexOffset": null
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 4,
+           "polygonCount": 1
+          }
+         },
+         {
+          "op": "getMesh",
+          "ok": true,
+          "result": {
+           "vertices": [
+            [
+             0,
+             0,
+             0
+            ],
+            [
+             1,
+             0,
+             0
+            ],
+            [
+             2,
+             2,
+             0
+            ],
+            [
+             0,
+             1,
+             0
+            ]
+           ],
+           "polygons": [
+            [
+             3,
+             2,
+             1,
+             0
+            ]
+           ]
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 3,
+           "polygonCount": 1
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 4,
+           "polygonCount": 2,
+           "name": "Chunked"
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 4,
+           "polygonCount": 1
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 4,
+           "polygonCount": 2
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 3,
+           "polygonCount": 2
+          }
+         },
+         {
+          "op": "createSpline",
+          "ok": true,
+          "result": {
+           "name": "Path",
+           "type": "SPLINE",
+           "pathCount": 2,
+           "ref": {
+            "id": {
+             "$type": "number"
+            }
+           }
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "parameters": {
+            "$has": {
+             "name": "pointArray",
+             "value": null,
+             "unreadable": true
+            }
+           }
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "bbox": {
+            "min": {
+             "x": 0,
+             "y": 0,
+             "z": 0
+            },
+            "max": {
+             "x": 2,
+             "y": 2,
+             "z": 0
+            }
+           }
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.polyCoreMutations > 0",
+        "equals": true
+       },
+       {
+        "eval": "JSON.stringify(doc.root().childAtIndex(3).core()._ops.map(function (o) { return o[0]; }))",
+        "equals": "[\"move\",\"curve\",\"curve\",\"move\",\"line\",\"line\",\"close\"]"
+       },
+       {
+        "eval": "doc.root().childAtIndex(0).materialTags().length",
+        "equals": 1
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "js": "doc.addMaterial('Material', 'Mat');"
+   }
+  },
+  {
+   "name": "createMesh validates strictly BEFORE touching PolyCore (P13)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "v",
+       "ops": [
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2,
+            3
+           ],
+           [
+            0,
+            1,
+            9
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            -1
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            1.5
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            1
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            "x"
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            0,
+            0
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            0,
+            0
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "uvs": [
+           [
+            [
+             0,
+             0
+            ]
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "material": {
+           "name": "NoSuchMaterial"
+          }
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "append": {
+           "ref": {
+            "id": 424242
+           }
+          }
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "parent": {
+           "path": "/Nope"
+          }
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "v": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 1,
+            "index": 9,
+            "vertexCount": 4
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0,
+            "index": 1
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0
+           }
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "__stats.addVertex",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.addIndexPolygon",
+        "equals": 0
+       },
+       {
+        "eval": "__stats.polyCoreMutations",
+        "equals": 0
+       },
+       {
+        "eval": "doc.root().childCount()",
+        "equals": 0
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "mesh error paths: wrong object kinds and ranges",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "m",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "Box"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "P",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ]
+         },
+         "as": "p"
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": {
+           "path": "/Cam"
+          }
+         }
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": "$p",
+          "vertexOffset": -1
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": {
+           "path": "/Box"
+          },
+          "flipWinding": [
+           0
+          ]
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$p",
+          "setVertices": [
+           {
+            "index": 9,
+            "position": [
+             0,
+             0,
+             0
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$p",
+          "deletePolygons": [
+           5
+          ]
+         }
+        },
+        {
+         "op": "editMesh",
+         "args": {
+          "ref": "$p",
+          "mergeVertices": -1
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "append": {
+           "ref": {
+            "path": "/Box"
+           }
+          },
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "append": {
+           "ref": "$p"
+          },
+          "vertices": [
+           [
+            1,
+            1,
+            1
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            9
+           ]
+          ]
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "paths": []
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "paths": [
+           {
+            "points": []
+           }
+          ]
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "paths": [
+           {
+            "points": [
+             {
+              "p": [
+               0,
+               0
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "getMesh",
+         "args": {
+          "ref": {
+           "path": "/Box"
+          },
+          "polygonLimit": 2
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "m": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createMesh",
+          "ok": true
+         },
+         {
+          "op": "getMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "getMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "editMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT",
+           "details": {
+            "polygon": 0,
+            "index": 9,
+            "vertexCount": 5
+           }
+          }
+         },
+         {
+          "op": "createSpline",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createSpline",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createSpline",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "getMesh",
+          "ok": true,
+          "result": {
+           "vertexCount": 8,
+           "polygonCount": 6,
+           "polygons": {
+            "$len": 2
+           },
+           "nextPolygonOffset": 2
+          }
+         }
+        ]
+       }
+      },
+      "js": [
+       {
+        "eval": "doc.root().childAtIndex(2).core().vertexCount()",
+        "equals": 4
+       },
+       {
+        "eval": "__app.fatal",
+        "equals": null
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "mock fidelity: a bad polygon index inside user code is FATAL and aborts the run",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var o = doc.addObject(POLYGONOBJ); o.core().addVertex(false, new Vec3D(0, 0, 0)); o.core().addIndexPolygon(3, [0, 1, 2]); return 1;"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "fatal": "FATAL: bad vertex index"
+     }
+    }
+   ]
+  }
+ ]
+}

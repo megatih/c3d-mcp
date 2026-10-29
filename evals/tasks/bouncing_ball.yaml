@@ -1,0 +1,14 @@
+id: bouncing_ball
+title: "Bouncing ball animation (2 s)"
+profile: full
+timeout_s: 300
+fixture: fixtures/empty.jas
+tags: ["animation", "keyframes"]
+prompt: "Create a red ball that bounces: it starts at height 2, hits the floor (y = radius) at 1 second and returns to height 2 at 2 seconds. Use keyframes, 30 fps."
+assertions:
+  - {"type": "object_exists", "name_regex": "(?i)ball", "object_type": "BALL"}
+  - {"type": "keyframe_count", "object_regex": "(?i)ball", "param": "position", "min": 3}
+  - {"type": "param_at_time", "object_regex": "(?i)ball", "param": "position", "component": "y", "time": 0, "min": 1.7, "max": 2.3}
+  - {"type": "param_at_time", "object_regex": "(?i)ball", "param": "position", "component": "y", "time": 2, "min": 1.7, "max": 2.3}
+  - {"type": "param_at_time", "object_regex": "(?i)ball", "param": "position", "component": "y", "time": 1, "min": 0, "max": 0.8}
+  - {"type": "material_exists", "name_regex": ".*"}

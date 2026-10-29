@@ -1,0 +1,14 @@
+id: local_simple_scene
+title: "Local profile: simple scene"
+profile: local
+timeout_s: 600
+fixture: fixtures/empty.jas
+tags: ["local", "render", "modeling"]
+prompt: "Make a red box and a blue ball next to each other on a floor, light them and render."
+assertions:
+  - {"type": "object_count", "object_type": "BOX", "min": 1}
+  - {"type": "object_count", "object_type": "BALL", "min": 1}
+  - {"type": "object_count", "object_type": "LIGHT", "min": 1}
+  - {"type": "material_exists", "name_regex": "(?i)red"}
+  - {"type": "material_exists", "name_regex": "(?i)blue"}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}

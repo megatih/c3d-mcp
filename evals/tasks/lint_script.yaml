@@ -1,0 +1,12 @@
+id: lint_script
+title: "Lint a script"
+profile: full
+timeout_s: 120
+fixture: fixtures/empty.jas
+tags: ["lint", "script"]
+prompt: "Check this script for problems without running it and list the problems with line numbers: ```var d = doc.addObject(BOX);\nFile.mkDir(\"/tmp/x\");\nwhile(true){ d.update(); }```"
+assertions:
+  - {"type": "tool_called", "tool": "c3d_lint_script"}
+  - {"type": "tool_not_called", "tool": "c3d_run_script"}
+  - {"type": "answer_contains", "regex": "(?i)mkDir"}
+  - {"type": "scene_unchanged"}

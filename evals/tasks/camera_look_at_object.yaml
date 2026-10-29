@@ -1,0 +1,10 @@
+id: camera_look_at_object
+title: "Camera aimed at an object"
+profile: full
+timeout_s: 300
+fixture: fixtures/target_ball.jas
+tags: ["camera", "look_at"]
+prompt: "Create a camera at (5, 3, 5) and aim it at the sphere named \"Target\" so it points exactly at it. Report the residual angle."
+assertions:
+  - {"type": "camera_aims_at", "target_regex": "^Target$", "max_angle_deg": 2}
+  - {"type": "answer_contains", "regex": "(?i)residual|degree|deg"}

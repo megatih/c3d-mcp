@@ -1,0 +1,12 @@
+id: traffic_cone
+title: "Traffic cone"
+profile: full
+timeout_s: 300
+fixture: fixtures/empty.jas
+tags: ["modeling", "materials"]
+prompt: "Model a traffic cone from a CONE primitive on a square base (flat box) and give them orange and dark-gray materials. Stack them correctly (base below cone)."
+assertions:
+  - {"type": "object_exists", "name_regex": "(?i)cone", "object_type": "CONE"}
+  - {"type": "object_exists", "name_regex": "(?i)base", "object_type": "BOX"}
+  - {"type": "material_exists", "name_regex": "(?i)orange"}
+  - {"type": "material_assigned", "object_regex": "(?i)cone", "material_regex": "(?i)orange"}

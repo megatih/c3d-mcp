@@ -1,0 +1,32 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://c3dmcp.dev/contracts/state.schema.json",
+ "title": "Bridge runtime state (state.json) and .done marker",
+ "$defs": {
+  "state": {
+   "type": "object",
+   "required": ["busy", "runtimeVersion", "lastSeq"],
+   "additionalProperties": false,
+   "properties": {
+    "busy": { "type": "boolean" },
+    "reqId": { "type": ["string", "null"] },
+    "op": { "type": ["string", "null"] },
+    "startedAt": { "type": ["integer", "null"] },
+    "runtimeVersion": { "type": "string" },
+    "protocol": { "const": 1 },
+    "lastSeq": { "type": "string", "pattern": "^\\d{16}$|^0$" },
+    "document": { "type": ["string", "null"], "description": "doc.fileName() or null" },
+    "updatedAt": { "type": "integer" }
+   }
+  },
+  "done": {
+   "type": "object",
+   "required": ["bytes", "checksum"],
+   "additionalProperties": false,
+   "properties": {
+    "bytes": { "type": "integer", "minimum": 0 },
+    "checksum": { "type": "string", "description": "Adler-32 of the outbox JSON text, 8 lowercase hex digits" }
+   }
+  }
+ }
+}

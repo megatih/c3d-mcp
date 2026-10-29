@@ -1,0 +1,14 @@
+id: studio_five_lights
+title: "Five-light studio setup"
+profile: full
+timeout_s: 420
+fixture: fixtures/empty.jas
+tags: ["lights", "render"]
+prompt: "Set up a studio lighting rig with exactly five lights around a ball on a floor: key, fill, rim/back, and two accent lights. Name each light by its role, add a camera looking at the ball and render a preview."
+assertions:
+  - {"type": "object_count", "object_type": "LIGHT", "min": 5, "max": 5}
+  - {"type": "object_exists", "name_regex": "(?i)key", "object_type": "LIGHT"}
+  - {"type": "object_exists", "name_regex": "(?i)fill", "object_type": "LIGHT"}
+  - {"type": "object_exists", "name_regex": "(?i)rim|back", "object_type": "LIGHT"}
+  - {"type": "object_exists", "name_regex": ".*", "object_type": "CAMERA"}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}

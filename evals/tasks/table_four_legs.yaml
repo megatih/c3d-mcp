@@ -1,0 +1,15 @@
+id: table_four_legs
+title: "Table with four legs, wood material, render"
+profile: full
+timeout_s: 420
+fixture: fixtures/empty.jas
+tags: ["modeling", "materials", "render"]
+prompt: "Build a simple dining table: a flat top and four legs, with a wood-colored material applied to all parts, then render a picture of it from a pleasant 3/4 angle."
+assertions:
+  - {"type": "object_count", "object_type": "BOX", "min": 5}
+  - {"type": "object_exists", "name_regex": "(?i)top|plate"}
+  - {"type": "object_exists", "name_regex": "(?i)leg", "min_count": 4}
+  - {"type": "material_exists", "name_regex": "(?i)wood"}
+  - {"type": "material_assigned", "object_regex": "(?i)leg", "material_regex": "(?i)wood", "min_objects": 4}
+  - {"type": "bbox", "object": "(?i)top|plate|leg", "size_min": [0.6, 0.5, 0.6], "size_max": [4, 1.5, 4]}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}

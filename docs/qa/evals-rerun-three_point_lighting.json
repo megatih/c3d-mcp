@@ -1,0 +1,33 @@
+{
+ "model": "claude-sonnet-5-5",
+ "N": 1,
+ "spent": 0.08577180000000001,
+ "rows": [
+  {
+   "id": "three_point_lighting",
+   "rep": 1,
+   "profile": "full",
+   "tags": [
+    "lights",
+    "look_at"
+   ],
+   "cost": 0.08577180000000001,
+   "turns": 13,
+   "calls": 12,
+   "results": [
+    {
+     "type": "object_count",
+     "pass": true,
+     "detail": "3 LIGHT"
+    },
+    {
+     "type": "light_aims_at",
+     "pass": true,
+     "detail": "0.0,0.0,0.0 deg"
+    }
+   ],
+   "pass": true,
+   "score": 1
+  }
+ ]
+}

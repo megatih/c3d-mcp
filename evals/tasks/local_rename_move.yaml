@@ -1,0 +1,10 @@
+id: local_rename_move
+title: "Local profile: rename and move"
+profile: local
+timeout_s: 180
+fixture: fixtures/one_box.jas
+tags: ["local", "scene"]
+prompt: "Rename the box to \"Crate\" and move it to x=3."
+assertions:
+  - {"type": "object_exists", "name_regex": "^Crate$", "object_type": "BOX"}
+  - {"type": "param_range", "object_regex": "^Crate$", "param": "position", "component": "x", "min": 2.99, "max": 3.01}

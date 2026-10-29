@@ -1,0 +1,11 @@
+id: save_copy_no_overwrite
+title: "Save a copy without overwriting"
+profile: full
+timeout_s: 180
+fixture: fixtures/one_box.jas
+tags: ["document", "safety"]
+prompt: "Save a copy of the scene next to the original as \"copy.jas\". Do not overwrite the original file."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_save_document"}
+  - {"type": "file_exists", "path_regex": "copy\\.jas$"}
+  - {"type": "fixture_unchanged"}

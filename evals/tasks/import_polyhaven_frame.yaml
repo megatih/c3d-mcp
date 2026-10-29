@@ -1,0 +1,13 @@
+id: import_polyhaven_frame
+title: "Import a Poly Haven model and frame the camera"
+profile: full
+timeout_s: 900
+fixture: fixtures/empty.jas
+tags: ["assets", "camera", "render"]
+prompt: "Search Poly Haven for a wooden chair model, import it, add a camera framing the whole model and render it. Mention the license and author."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_import_asset"}
+  - {"type": "file_exists", "path_regex": "assets/.*/asset\\.json"}
+  - {"type": "camera_active", "name_regex": ".*"}
+  - {"type": "answer_contains", "regex": "(?i)CC0"}
+  - {"type": "render_nonblank", "min_width": 320, "min_height": 240}
