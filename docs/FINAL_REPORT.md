@@ -59,3 +59,6 @@ The user installed `c3d-mcp-0.1.0.mcpb` in Claude Desktop. Evidence from Claude 
 
 ## Claude Desktop tool call (verified 2026-10-29)
 In Claude Desktop (extension `c3d-mcp` 0.1.0 installed from the `.mcpb`), asking it to run `c3d_doctor` returned: all checks passed — Cheetah3D 8.1.3 running, bridge installed (runtime 1.0.0), helper has Accessibility and Screen Recording, ping round trip ~1.1 s, no modal dialog open. Real MCP clients exercised end-to-end: **Claude Code, Codex CLI and Claude Desktop (`.mcpb`)**.
+
+## 0.1.1 release (2026-10-29)
+Released the benchmark follow-up fixes as **v0.1.1** (GitHub release with `c3d-mcp-0.1.1.tgz`, `.mcpb`, signed helper zip, `SHA256SUMS`; Homebrew cask bumped; `brew audit --cask --strict --online` exit 0; documented `npx -y …/v0.1.1/c3d-mcp-0.1.1.tgz` install verified; 415 server tests, lint and typecheck clean from a fresh clone; live suite 22 passed). npm/registry publishing is still skipped by choice. To pick up the fixes in Claude Desktop, reinstall the 0.1.1 `.mcpb`. Open items: light `axis` mapping, crash #2 root cause, missing renderer features (see `docs/limitations.md`).
