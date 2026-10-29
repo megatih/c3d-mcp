@@ -15,6 +15,8 @@ jobs:
         run: node scripts/check-public.mjs --tree .
       - name: Agent skills validate
         run: node scripts/build-skills.mjs --check
+      - name: Build the bridge runtime (needed by the installer tests)
+        run: node scripts/build-runtime.mjs
       - name: Server lint, typecheck, tests
         working-directory: packages/server
         run: |
