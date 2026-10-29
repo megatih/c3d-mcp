@@ -69,4 +69,9 @@ for (const f of readdirSync(need(join(kb, 'dist')))) {
 for (const f of ['LICENSE', 'NOTICE.md']) if (existsSync(join(kb, f))) cpSync(join(kb, f), join(kbOut, f));
 cpSync(need(join(repo, 'research', '02-cheetah3d-js-api.md')), join(kbOut, 'research', '02-cheetah3d-js-api.md'));
 
+// Agent skills (source of truth: <repo>/skills, validated by scripts/build-skills.mjs).
+const skillsOut = join(pkg, 'skills');
+rmSync(skillsOut, { recursive: true, force: true });
+if (existsSync(join(repo, 'skills'))) cpSync(join(repo, 'skills'), skillsOut, { recursive: true });
+
 console.log(`sync-assets: wrote ${assets}`);

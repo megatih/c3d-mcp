@@ -3,6 +3,7 @@ import { createInterface } from 'node:readline/promises';
 import { parseArgs } from 'node:util';
 import { loadConfig, type RuntimeConfig } from '../config.js';
 import { PACKAGE_ROOT, packageVersion } from '../core/assets.js';
+import { SKILL_TARGETS, installSkills, listSkills, skillsSourceDir, uninstallSkills, type SkillTarget } from '../core/skillsInstall.js';
 import { CLIENTS, configSnippet, type ClientName } from '../core/configSnippets.js';
 import { doctor } from '../core/doctor.js';
 import { install, uninstall } from '../core/install.js';
@@ -29,6 +30,7 @@ Commands:
   install            Install the in-app bridge (idempotent; backs up Scripts/ first)
   uninstall          Remove what install created (never backups or your scripts)
   doctor             Check Cheetah3D, the bridge, permissions and the helper
+  skills <action>    Agent skills for Claude Code, Codex and Antigravity: install | uninstall | list (see docs/SKILLS.md)
   config <client>    Print an MCP config snippet (${CLIENTS.join(', ')})
   serve              Run the MCP server on stdio (default when started by an MCP client)
   version            Print the version
@@ -38,6 +40,9 @@ Options:
   --yes, -y          Do not ask for confirmation (uninstall)
   --brief            doctor: one line when healthy, otherwise only the failing checks (for hooks)
   --form <npx|absolute>   config: launch via "npx -y c3d-mcp serve" (default) or absolute node/bin paths
+  --target <t>       skills: claude, codex, antigravity or all (default all)
+  --project <dir>    skills: install into <dir>/.claude|.agents|.agent/skills instead of the home directory
+  --dry-run          skills: show what would change
   --raw              config: print only the snippet (no leading comment lines), e.g. c3d-mcp config codex --raw > snippet.toml
   --help, -h
 
@@ -66,7 +71,7 @@ export const defaultIO: CliIO = {
 
 const PARSE_OPTIONS = {
   allowPositionals: true,
-  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' } },
+  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' } },
 } as const;
 
 function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTIONS>> | string {
@@ -159,6 +164,41 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
         }
       }
       return report.ok ? 0 : 1;
+    }
+
+    case 'skills': {
+      const action = parsed.positionals[1];
+      const t = values.target ?? 'all';
+      if (t !== 'all' && !(SKILL_TARGETS as readonly string[]).includes(t)) {
+        io.err(`Unknown target "${t}". Use: ${SKILL_TARGETS.join(', ')}, all.\n`);
+        return 2;
+      }
+      const opts = { targets: t === 'all' ? undefined : [t as SkillTarget], project: values.project, dryRun: values['dry-run'] === true };
+      try {
+        if (action === 'list') {
+          const source = skillsSourceDir();
+          const names = source ? listSkills(source) : [];
+          if (json) emit({ source, skills: names });
+          else io.out(names.length ? `${names.join('\n')}\n` : 'No skills found.\n');
+          return names.length ? 0 : 1;
+        }
+        if (action !== 'install' && action !== 'uninstall') {
+          io.err('Usage: c3d-mcp skills <install|uninstall|list> [--target claude|codex|antigravity|all] [--project <dir>] [--dry-run]\n');
+          return 2;
+        }
+        const results = action === 'install' ? installSkills(opts) : uninstallSkills(opts);
+        if (json) emit(results);
+        else {
+          for (const r of results) io.out(`  ${r.status.padEnd(15)} ${r.target.padEnd(11)} ${r.dest}\n`);
+          if (results.length === 0) io.out('  nothing to do\n');
+          if (results.some((r) => r.status === 'skipped-foreign')) io.out('  (skipped folders exist and were not installed by c3d-mcp; they were left untouched)\n');
+          if (action === 'install' && !opts.dryRun) io.out('Restart the client (or start a new session) so it picks up the skills.\n');
+        }
+        return 0;
+      } catch (e) {
+        io.err(`${e instanceof Error ? e.message : String(e)}\n`);
+        return 1;
+      }
     }
 
     case 'config': {

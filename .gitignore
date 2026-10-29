@@ -13,3 +13,4 @@ node_modules/
 *.mcpb
 *.log
 .DS_Store
+/packages/server/skills/

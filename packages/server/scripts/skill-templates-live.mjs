@@ -1,0 +1,14 @@
+import { readFileSync } from 'node:fs';
+import { connect } from './live-driver.mjs';
+const dir = '../../skills/c3d-scripting/templates/';
+const { call, close } = await connect();
+await call('c3d_new_document', {});
+const macro = readFileSync(dir + 'macro-template.js', 'utf8') + '\nmain(doc); return 1;';
+let r = await call('c3d_run_script', { code: macro });
+console.log('macro', r.isError ? 'ERR ' + JSON.stringify(r.sc).slice(0, 400) : 'ok ' + JSON.stringify(r.sc.log));
+const bulk = readFileSync(dir + 'bulk-geometry.js', 'utf8');
+r = await call('c3d_run_script', { code: bulk.replace(/\nfunction main[\s\S]*$/, '') + '\nreturn bulkMain(doc);' });
+console.log('bulk', r.isError ? 'ERR ' + JSON.stringify(r.sc).slice(0, 400) : 'ok ' + JSON.stringify(r.sc.value));
+r = await call('c3d_get_scene_stats', {});
+console.log(JSON.stringify(r.sc));
+await close();

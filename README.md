@@ -20,7 +20,7 @@ macOS 14+ on Apple Silicon (developed on macOS 27.2), Cheetah3D 8.1.3, Node.js â
 ## Quickstart
 
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.2/c3d-mcp-0.1.2.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.1.2/c3d-mcp-0.1.2.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.3/c3d-mcp-0.1.3.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.1.3/c3d-mcp-0.1.3.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app
@@ -56,6 +56,8 @@ Per-client setup: [docs/SETUP.md](docs/SETUP.md). Something not working: [docs/T
 | Rendering | `set_render_settings`, `render_image` (returns a downscaled image + blank/luma stats), `render_sequence` + `job_status`/`job_cancel`, `capture_viewport` |
 | Assets | `search_assets`, `import_asset` (Poly Haven, CC0, no key) , `merge_file` |
 | Scripting | `run_script` (sandboxed JS), `lint_script`, `get_console`, `search_api_docs` |
+
+**Agent skills** for Claude Code, Codex CLI, Antigravity, Claude Desktop and ChatGPT ship with every release: `c3d-mcp skills install` (see [docs/SKILLS.md](docs/SKILLS.md)).
 
 Full reference with parameters: [docs/TOOLS.md](docs/TOOLS.md) (generated from the schemas). Honest list of what is unsupported or experimental: [docs/limitations.md](docs/limitations.md).
 

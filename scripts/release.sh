@@ -6,6 +6,7 @@ ROOT=$PWD
 VERSION=$(node -p "require('./packages/server/package.json').version")
 OUT=$ROOT/release; rm -rf "$OUT"; mkdir -p "$OUT"
 
+echo "==> agent skills (validate)"; node scripts/build-skills.mjs --check
 echo "==> bridge runtime"; node scripts/build-runtime.mjs >/dev/null
 echo "==> helper app"; (cd helper && ./build-app.sh >/dev/null)
 ditto -c -k --keepParent "helper/build/C3D Bridge Helper.app" helper/build/C3D-Bridge-Helper.zip
@@ -22,4 +23,6 @@ npx --yes @anthropic-ai/mcpb@2.1.2 validate "$STAGE/manifest.json"
 npx --yes @anthropic-ai/mcpb@2.1.2 pack "$STAGE" "$OUT/c3d-mcp-$VERSION.mcpb"
 rm -rf "$STAGE"
 
-echo "==> checksums"; (cd "$OUT" && shasum -a 256 * > SHA256SUMS && cat SHA256SUMS)
+echo "==> agent skills"; node scripts/build-skills.mjs --zip "$OUT"
+
+echo "==> checksums"; (cd "$OUT" && shasum -a 256 *.zip *.mcpb *.tgz skills/*.zip > SHA256SUMS && cat SHA256SUMS)

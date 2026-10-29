@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+- **Agent skills** for Claude Code, Codex CLI, Antigravity, Claude Desktop and ChatGPT: `c3d-setup`, `c3d-scene-building`, `c3d-look-dev`, `c3d-scripting` (with a standalone-macro fallback for clients without MCP), `c3d-reference-recreation`, `c3d-animation-export`. They encode the lessons of the benchmark runs.
+- `c3d-mcp skills install|uninstall|list` (targets claude, codex, antigravity; `--project`, `--dry-run`; never overwrites folders it did not create).
+- Skills ship with every release: `c3d-skills-<version>.zip` plus one zip per skill (upload format for Claude Desktop and ChatGPT), inside the npm package, and inside the Claude Code plugin. `scripts/build-skills.mjs` validates them (format, links, tool names, syntax) and runs in `npm test`.
+- See docs/SKILLS.md.
+
 ## 0.1.2
 Open issues from the 0.1.1 review resolved:
 - New tools: `c3d_get_scene_stats`, `c3d_set_background` (solid/gradient/image), `c3d_create_pipe` (swept tube with fillets, covers the torus-sweep gap), `c3d_postprocess_image` (bloom, outlines, vignette, grade, posterize via the helper; CoreImage).
