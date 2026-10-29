@@ -1,5 +1,8 @@
+import { mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { assetLocations, compareSemver, packageVersion, parseRuntimeVersion, renderMacroTemplate } from '../../src/core/assets.js';
+import { assetLocations, compareSemver, newestExisting, packageVersion, parseRuntimeVersion, renderMacroTemplate } from '../../src/core/assets.js';
 
 describe('assets helpers', () => {
   it('renders every placeholder and escapes quotes/backslashes/non-ASCII', () => {
@@ -25,5 +28,19 @@ describe('versions', () => {
     const loc = assetLocations('/pkg', '/repo');
     expect(loc.runtime).toEqual(['/pkg/assets/runtime.js', '/repo/bridge/dist/runtime.js']);
     expect(loc.macroTemplate.at(-1)).toBe('/repo/bridge/macro/C3D-MCP Bridge.js.template');
+  });
+});
+
+describe('newestExisting', () => {
+  it('prefers the most recently modified candidate over list order (stale assets/ copy vs fresh build)', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'c3d-newest-'));
+    const stale = join(dir, 'assets-runtime.js'); const fresh = join(dir, 'dist-runtime.js');
+    writeFileSync(stale, 'old'); writeFileSync(fresh, 'new');
+    utimesSync(stale, new Date('2026-01-01'), new Date('2026-01-01'));
+    utimesSync(fresh, new Date('2026-06-01'), new Date('2026-06-01'));
+    expect(newestExisting([stale, fresh])).toBe(fresh);
+    expect(newestExisting([join(dir, 'missing.js'), stale])).toBe(stale);
+    expect(newestExisting([join(dir, 'missing.js')])).toBeUndefined();
+    rmSync(dir, { recursive: true, force: true });
   });
 });

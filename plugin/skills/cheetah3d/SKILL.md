@@ -18,7 +18,7 @@ description: Work with Cheetah3D 8.1.3 through the c3d MCP tools, or write Cheet
 - glTF/GLB cannot be opened by Cheetah3D 8.1.3; FBX / OBJ / DAE / STL / 3DS / USDZ / DXF can (each opens as a new window).
 - Rotation is in degrees, default rotation order HPB. Lights are `LIGHT` with `lightType` 0–4. The active camera is the one whose `activeCamera` parameter is 1.
 - Primitives (BOX, BALL …) are parametric; use `c3d_make_editable` (experimental) or `c3d_create_mesh` for point-level edits.
-- Per-polygon materials are not supported by these tools.
+- Per-polygon materials work: `c3d_assign_material` with `polygons:[indices]` on an editable polygon object (primitives: `c3d_make_editable` first); each material group uses one of the object's 24 polygon-selection slots.
 - A dialog open in Cheetah3D blocks everything: tools return `BLOCKED_BY_MODAL` with the dialog text — ask the user to dismiss it.
 
 ## Writing Cheetah3D JavaScript (when `c3d_run_script` or a script file is needed)

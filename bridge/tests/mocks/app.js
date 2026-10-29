@@ -218,8 +218,12 @@ PolyCore.prototype.mergeVertices = function (tol) {
 PolyCore.prototype.normal = function () { return new Vec3D(0, 0, 1); };
 PolyCore.prototype.triangle = function (p, t) { var q = this._p[p]; if (!q) { __badArgs(); } return [q[0], q[t + 1], q[t + 2]]; };
 PolyCore.prototype.materialTagIndex = function () { return 0; };
-['vertexSelection', 'polygonSelection', 'edgeSelection'].forEach(function (m) { PolyCore.prototype[m] = function () { return false; }; });
-['setVertexSelection', 'setPolygonSelection', 'setEdgeSelection', 'setActivePolygonSelection', 'buildVertexBSP', 'destroyVertexBSP'].forEach(function (m) {
+['vertexSelection', 'edgeSelection'].forEach(function (m) { PolyCore.prototype[m] = function () { return false; }; });
+// 25 independent polygon selections (live probe P31): a SHADERTAG with shadeSelection N uses slot N-1; 0 = whole object.
+PolyCore.prototype.setActivePolygonSelection = function (k) { if (typeof k !== 'number' || k < 0 || k > 24) { __badArgs(); } this._active = k; };
+PolyCore.prototype.setPolygonSelection = function (p, on) { if (typeof p !== 'number' || typeof on !== 'boolean' || p < 0 || p >= this._p.length) { __badArgs(); } var k = this._active || 0; this._sel = this._sel || {}; this._sel[k] = this._sel[k] || {}; if (on) { this._sel[k][p] = true; } else { delete this._sel[k][p]; } };
+PolyCore.prototype.polygonSelection = function (p) { var k = this._active || 0; return !!(this._sel && this._sel[k] && this._sel[k][p]); };
+['setVertexSelection', 'setEdgeSelection', 'buildVertexBSP', 'destroyVertexBSP'].forEach(function (m) {
   PolyCore.prototype[m] = function () {};
 });
 

@@ -51,6 +51,8 @@ describe('c3d_set_light', () => {
     expect(l.params).toMatchObject({ lightType: 2, intensity: 1.5 });
     expect(l.params.color.r).toBeCloseTo(1);
     expect((r.structured.look_at as any).residual_deg).toBeLessThan(1e-6);
+    // Cheetah3D lights cast along their `axis` option; aiming with -Z needs axis 2 (live probe: 0=-X, 1=-Y default, >=2=-Z)
+    expect(l.params.axis).toBe(2);
   });
   it('rejects unknown light type names and wrong object types', async () => {
     const e = await expectCode(runTool(setLight, { light_type: 'laser' }, t.ctx), 'INVALID_ARGUMENT');

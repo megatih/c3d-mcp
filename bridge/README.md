@@ -26,3 +26,12 @@ Expectations are subset matches with `$any $re $type $gte $lte $len $has $prefix
 
 ## Quirks
 See `docs/PROTOCOL.md` section 2 (probe-derived facts). The mocks reproduce: non-ASCII `File.write` truncation (P05), byte-counting `read`, sorted `contentOfDir` with dotfiles, `mkDir` wiping, unique materials but not objects (P19/P20), `[object CallbackObject]` vectors, unreadable params, FATAL on bad polygon index, modal on bad render extension / BAKETAG on non-polygon (P08/P24), `selectedObject()` undefined when empty.
+
+## sceneStats
+Read-only counts, cheap (one pass over the cached tree, O(1) `PolyCore` counters, no per-polygon reads). Args: `{root?: ref}` limits objects to that subtree (root object included); materials/nodes are document-wide. The `__c3d_mcp_session_*` marker folder is excluded.
+Result: `{objectCount, byType:{BOX:n,...}, folderCount (FOLDER+SMARTFOLDER), lightCount (LIGHTFAMILY), cameraCount, splineCount (SPLINEFAMILY), polygonObjectCount (objects whose core() has >0 polygons, parametric primitives use their evaluated mesh), polygonCount, vertexCount, triangleCount, tagCount, materialCount, nodeCount (all material nodes), skipped}`. `skipped` counts objects/materials that threw while being read; they never abort the op.
+
+## Notes on write ops
+- `createMesh`/`createSpline`/`createObject`: if anything fails after `addObject`, the half-built object is removed from the parent it was attached to (falling back to the root).
+- `setParameters`, `setMaterialParams`, `setRenderSettings` report partial failure as `ok:false` with the error AND `result:{applied:[...],errors:[...]}`; the applied list survives in the response.
+- `setKeyframes` on a Vec4D parameter accepts 3 components; `w` is filled with the parameter's current value. Link parameters (via `setParameters`) accept `{ref:<ref object|id|"/path">}`, `{material}` or `null` (null clearing is unverified live). Link parameters cannot be keyframed.

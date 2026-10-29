@@ -55,16 +55,22 @@ public final class SocketServer: @unchecked Sendable {
     private let path: String
     private let router: CommandRouter
     private let log: HelperLog
+    private let expectedUID: uid_t
+    private let peerUID: @Sendable (Int32) -> uid_t?
     private let queue = DispatchQueue(label: "c3d.helper.accept")
     private var listenFD: Int32 = -1
     private var acceptSource: (any DispatchSourceRead)?
     private let lock = NSLock()
     private var connections: [ObjectIdentifier: Connection] = [:]
 
-    public init(path: String, router: CommandRouter, log: HelperLog) {
+    /// `peerUID` is injectable for tests; production reads `getpeereid` and requires the helper's own euid.
+    public init(path: String, router: CommandRouter, log: HelperLog, expectedUID: uid_t = geteuid(),
+                peerUID: @escaping @Sendable (Int32) -> uid_t? = PeerAuth.peerUID(of:)) {
         self.path = path
         self.router = router
         self.log = log
+        self.expectedUID = expectedUID
+        self.peerUID = peerUID
     }
 
     public func start() throws {
@@ -116,6 +122,11 @@ public final class SocketServer: @unchecked Sendable {
         while true {
             let fd = accept(listenFD, nil, nil)
             if fd < 0 { return }
+            guard PeerAuth.isAuthorized(fd: fd, expected: expectedUID, provider: peerUID) else {
+                log.error("dropped connection from unauthorized peer uid \(peerUID(fd).map(String.init) ?? "unknown") (expected \(expectedUID))")
+                close(fd)
+                continue
+            }
             _ = fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) & ~O_NONBLOCK)
             var on: Int32 = 1
             setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &on, socklen_t(MemoryLayout<Int32>.size))

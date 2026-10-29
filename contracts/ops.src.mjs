@@ -66,6 +66,7 @@ export const ops = {
   },
 
   // ---- scene ----
+  sceneStats: { rw: 'R', args: o({ root: ref }), summary: 'Counts: objects by type, polygon/vertex/triangle totals (via core() of every polygon-capable object), materials, tags, folders, lights, cameras. Optional root limits to a subtree.' },
   listScene: {
     rw: 'R',
     args: o({ root: ref, depth: { type: 'integer', minimum: 0, maximum: 32 }, offset: { type: 'integer', minimum: 0 }, limit: { type: 'integer', minimum: 1, maximum: 2000 }, detail: { enum: ['concise', 'detailed'] } }),
@@ -158,7 +159,7 @@ export const ops = {
   addMaterialNode: { rw: 'W', args: o({ material: matRef, type: str, params: paramMap }, ['material', 'type']), summary: 'addNodeOfType. Returns node id + io names.' },
   connectNodes: { rw: 'W', args: o({ material: matRef, fromNode: int, fromPara: str, toNode: int, toPara: str }, ['material', 'fromNode', 'fromPara', 'toNode', 'toPara']), summary: 'addConnection(fromID,fromPara,toID,toPara).' },
   getMaterialGraph: { rw: 'R', args: o({ material: matRef }, ['material']), summary: 'Nodes, params, connections.' },
-  assignMaterial: { rw: 'W', args: o({ ref, material: matRef, replaceExisting: bool }, ['ref', 'material']), summary: 'SHADERTAG + material link (whole object).' },
+  assignMaterial: { rw: 'W', args: o({ ref, material: matRef, replaceExisting: bool, polygons: { type: 'array', items: int, minItems: 1, maxItems: 200000 }, slot: { type: 'integer', minimum: 1, maximum: 24 } }, ['ref', 'material']), summary: 'SHADERTAG + material link: whole object, or only `polygons` (an editable polygon object; uses polygon-selection slot 1..24 and shadeSelection = slot+1).' },
   setTexture: { rw: 'W', args: o({ material: matRef, node: int, param: str, path }, ['material', 'param', 'path']), summary: 'setParameter(texture param, absolute path).' },
   removeMaterial: { rw: 'W', args: o({ material: matRef }, ['material']), summary: 'doc.removeMaterial.' },
 

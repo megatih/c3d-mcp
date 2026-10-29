@@ -52,6 +52,38 @@ C3D.materials = (function () {
     return index;
   }
 
+  // Per-polygon material (live probe P31, verified by render): a SHADERTAG whose shadeSelection is N applies to the polygons of
+  // polygon-selection slot N-1 (0 = whole object). Slot 0 is left to the user, so slots 1..24 (shadeSelection 2..25) are allocated here.
+  function assignPolygons(ctx, obj, mat, polys, wantedSlot) {
+    var core, n, set = {}, i, slot, p, empty, tag, t = CAP.constant('SHADERTAG');
+    try { core = obj.core(); n = core.polygonCount(); } catch (e) { n = 0; }
+    if (!n) { U.fail('UNSUPPORTED', 'per-polygon materials need an editable polygon object', undefined, 'run c3d_make_editable first or build the object with c3d_create_mesh'); }
+    if (!Array.isArray(polys) || !polys.length) { U.fail('INVALID_ARGUMENT', 'polygons must be a non-empty array of polygon indices'); }
+    for (i = 0; i < polys.length; i++) {
+      if (typeof polys[i] !== 'number' || polys[i] !== Math.floor(polys[i]) || polys[i] < 0 || polys[i] >= n) { U.fail('INVALID_ARGUMENT', 'polygon index out of range', { index: polys[i], polygonCount: n }); }
+      set[polys[i]] = true;
+    }
+    if (wantedSlot !== undefined) { slot = wantedSlot; }
+    else {
+      for (slot = 1; slot <= 24; slot++) {
+        core.setActivePolygonSelection(slot); empty = true;
+        for (p = 0; p < n && empty; p++) { if (core.polygonSelection(p)) { empty = false; } }
+        if (empty) { break; }
+      }
+      if (slot > 24) { core.setActivePolygonSelection(0); U.fail('UNSUPPORTED', 'all 24 polygon-selection slots of this object are in use'); }
+    }
+    if (typeof slot !== 'number' || slot < 1 || slot > 24 || slot !== Math.floor(slot)) { U.fail('INVALID_ARGUMENT', 'slot must be an integer 1..24'); }
+    core.setActivePolygonSelection(slot);
+    for (p = 0; p < n; p++) { core.setPolygonSelection(p, !!set[p]); }
+    core.setActivePolygonSelection(0);
+    tag = obj.addTagOfType(t);
+    tag.setParameter('material', mat);
+    tag.setParameter('shadeSelection', slot + 1);
+    tag.update();
+    obj.update();
+    return { tagIndex: obj.tagCount() - 1, slot: slot, polygons: polys.length };
+  }
+
   function def(name, rw, fn) { C3D.core.define(name, rw, fn); }
 
   def('listMaterials', 'R', function (ctx) {
@@ -124,7 +156,11 @@ C3D.materials = (function () {
   });
 
   def('assignMaterial', 'W', function (ctx, a) {
-    var e = S.notRoot(ctx, S.resolve(ctx, a.ref)), mat = resolve(ctx, a.material);
+    var e = S.notRoot(ctx, S.resolve(ctx, a.ref)), mat = resolve(ctx, a.material), r;
+    if (a.polygons !== undefined) {
+      r = assignPolygons(ctx, e.obj, mat, a.polygons, a.slot);
+      return { tagIndex: r.tagIndex, material: matName(mat), slot: r.slot, polygons: r.polygons };
+    }
     return { tagIndex: assign(ctx, e.obj, mat, a.replaceExisting !== false), material: matName(mat) };
   });
 

@@ -42,7 +42,7 @@ Palette note (quantised colour bins, building region): reference dominated by pi
 ## Tool defects / limitations found (with status)
 | # | Finding | Status |
 |---|---|---|
-| 1 | **Cheetah3D crashed** (EXC_BAD_ACCESS in `objc_release` at idle) right after a probe script that created a material with 6 nodes and called `doc.removeMaterial`; all windows were lost | root cause unproven; lint rule `remove-material` (warn) + prompt rule added; recorded in `research/08` (crash #2) |
+| 1 | **Cheetah3D crashed** (EXC_BAD_ACCESS in `objc_release` at idle) right after a probe script that created a material with 6 nodes and called `doc.removeMaterial`; all windows were lost | root cause isolated later: removing a material in the same script run that created it (guarded since 0.1.2); lint rule `remove-material` (warn) + prompt rule added; recorded in `research/08` (crash #2) |
 | 2 | `c3d_set_light` + `look_at` for **distant lights** aimed the light the wrong way; residual check reported 0° | open: lights have an `axis` parameter (default 1) that the aim math ignores; my probe of axis values was inconclusive. Workaround: set rotation by hand and verify with a render |
 | 3 | `c3d_reparent keep_world:true` into a folder → UNSUPPORTED, not mentioned in the tool description | fixed (description) |
 | 4 | **Rotation components are HPB: `x`=heading (yaw about vertical Y), `y`=pitch, `z`=bank**; undocumented, agent and I both mis-assumed `y`=yaw (the first Cornell prompt tilted its boxes) | fixed (tool descriptions); Cornell prompt corrected and reference render regenerated |

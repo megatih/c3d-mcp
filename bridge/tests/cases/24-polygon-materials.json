@@ -1,0 +1,189 @@
+{
+ "cases": [
+  {
+   "name": "assignMaterial polygons: slots are allocated, shadeSelection = slot+1, bad indices and primitives are rejected",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p",
+       "ops": [
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Strip",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            2,
+            0,
+            0
+           ],
+           [
+            0,
+            1,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ],
+           [
+            2,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            4,
+            3
+           ],
+           [
+            1,
+            2,
+            5,
+            4
+           ]
+          ]
+         },
+         "as": "s"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "PolyA"
+         },
+         "as": "a"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "PolyB"
+         },
+         "as": "b"
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$s",
+          "material": "$a",
+          "polygons": [
+           0
+          ]
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$s",
+          "material": "$b",
+          "polygons": [
+           1
+          ]
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$s",
+          "material": "$b",
+          "polygons": [
+           5
+          ]
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "Prim"
+         },
+         "as": "box"
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$box",
+          "material": "$a",
+          "polygons": [
+           0
+          ]
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "p": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createMesh",
+          "ok": true
+         },
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "assignMaterial",
+          "ok": true,
+          "result": {
+           "slot": 1,
+           "polygons": 1
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": true,
+          "result": {
+           "slot": 2,
+           "polygons": 1
+          }
+         },
+         {
+          "op": "assignMaterial",
+          "ok": false,
+          "error": {
+           "code": "INVALID_ARGUMENT"
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "assignMaterial",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -151,14 +151,20 @@ public final class CommandRouter: Sendable {
             let out = try args.absolutePath("outPath") ?? ""
             let maxDim = try args.int("maxDim", in: 16...16_384)
             let maxBytes = try args.int("maxBytes", in: 1024...1_000_000_000)
+            let overwrite = try args.bool("overwrite", default: false)
             try args.finish()
-            return try JSONValue(encoding: Imaging.downscale(path: path, outPath: out, maxDim: maxDim, maxBytes: maxBytes))
+            return try JSONValue(encoding: Imaging.downscale(path: path, outPath: out, maxDim: maxDim, maxBytes: maxBytes,
+                                                             overwrite: overwrite))
+        case .postProcessImage:
+            let request = try PostProcessRequest.parse(&args)
+            return try JSONValue(encoding: PostProcess.run(request))
         case .captureWindow:
             let title = try args.string("title")
             let out = try args.absolutePath("outPath") ?? ""
             let crop = try args.object("crop").map(Self.parseCrop)
+            let overwrite = try args.bool("overwrite", default: false)
             try args.finish()
-            return try await capture(title: title, outPath: out, crop: crop)
+            return try await capture(title: title, outPath: out, crop: crop, overwrite: overwrite)
         }
     }
 
@@ -214,19 +220,15 @@ public final class CommandRouter: Sendable {
         return .object(["dismissed": .bool(true)])
     }
 
-    private func capture(title: String?, outPath: String, crop: CropRect?) async throws -> JSONValue {
+    private func capture(title: String?, outPath: String, crop: CropRect?, overwrite: Bool) async throws -> JSONValue {
         guard ax.screenRecordingGranted() else {
             throw HelperError(.permissionMissing, "Screen Recording permission is not granted to the helper",
                               hint: "System Settings > Privacy & Security > Screen & System Audio Recording: enable C3D Bridge Helper.")
         }
         guard ax.cheetahApp() != nil else { throw HelperError(.appNotRunning, "Cheetah3D is not running") }
-        let dir = (outPath as NSString).deletingLastPathComponent
-        var isDir: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: dir, isDirectory: &isDir), isDir.boolValue else {
-            throw HelperError(.invalidArgument, "output directory does not exist: \(dir)")
-        }
+        try OutputPolicy.check(outPath: outPath, overwrite: overwrite)
         let image = try await capturer.capture(bundleID: Cheetah.bundleID, title: title, crop: crop)
-        let bytes = try Imaging.writePNG(image, to: outPath)
+        let bytes = try Imaging.writePNG(image, to: outPath, overwrite: overwrite)
         return .object(["path": .string(outPath), "width": .int(image.width), "height": .int(image.height), "bytes": .int(bytes)])
     }
 

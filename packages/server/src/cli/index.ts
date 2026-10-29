@@ -38,6 +38,7 @@ Options:
   --yes, -y          Do not ask for confirmation (uninstall)
   --brief            doctor: one line when healthy, otherwise only the failing checks (for hooks)
   --form <npx|absolute>   config: launch via "npx -y c3d-mcp serve" (default) or absolute node/bin paths
+  --raw              config: print only the snippet (no leading comment lines), e.g. c3d-mcp config codex --raw > snippet.toml
   --help, -h
 
 Environment: C3D_MCP_PROFILE=full|local|readonly, C3D_MCP_DISABLE_EXEC/ASSETS/SHELL=1, C3D_MCP_DIR, C3D_CHEETAH_SUPPORT_DIR,
@@ -65,7 +66,7 @@ export const defaultIO: CliIO = {
 
 const PARSE_OPTIONS = {
   allowPositionals: true,
-  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' } },
+  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' } },
 } as const;
 
 function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTIONS>> | string {
@@ -163,7 +164,7 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
     case 'config': {
       const client = positionals[1];
       if (!client || !(CLIENTS as readonly string[]).includes(client)) {
-        io.err(`Usage: c3d-mcp config <${CLIENTS.join('|')}> [--form npx|absolute]\n`);
+        io.err(`Usage: c3d-mcp config <${CLIENTS.join('|')}> [--form npx|absolute] [--raw]\n`);
         return 2;
       }
       const form = values.form === 'absolute' ? 'absolute' : values.form === undefined || values.form === 'npx' ? 'npx' : undefined;
@@ -174,7 +175,8 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
       const env = Object.fromEntries(Object.entries(io.env).filter(([k, v]) => k === 'C3D_MCP_PROFILE' && v !== undefined)) as Record<string, string>;
       const snippet = configSnippet(client as ClientName, { form, binPath: join(PACKAGE_ROOT, 'bin', 'c3d-mcp.js'), env });
       if (json) emit(snippet);
-      else io.out(`# ${snippet.client}: ${snippet.location}\n# ${snippet.note}\n${snippet.text}${snippet.text.endsWith('\n') ? '' : '\n'}`);
+      else if (values.raw) io.out(`${snippet.text}${snippet.text.endsWith('\n') ? '' : '\n'}`);
+      else io.out(`# ${snippet.client}:${snippet.location}\n# ${snippet.note}\n${snippet.text}${snippet.text.endsWith('\n') ? '' : '\n'}`);
       return 0;
     }
 

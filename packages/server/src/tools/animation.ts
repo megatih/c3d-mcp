@@ -73,7 +73,7 @@ function normValue(v: z.infer<typeof KeyValue>): unknown {
 export const setKeyframes = defineTool({
   name: 'c3d_set_keyframes',
   title: 'Set keyframes',
-  description: 'Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const. replace:true (default) clears existing keys of that parameter in the take first. Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.',
+  description: 'Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const. replace:true (default) clears existing keys of that parameter in the take first. Values: a number, or [x,y,z] / {x,y,z} for vectors; Vec4D parameters (colors) accept 3 components as well as 4 ([r,g,b] as well as [r,g,b,a]). Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.',
   group: 'animation',
   inputSchema: z.strictObject({
     ref: ObjectRef,

@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, statSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -27,6 +27,21 @@ export function assetLocations(root: string = PACKAGE_ROOT, repo: string = REPO_
 
 export function firstExisting(paths: string[]): string | undefined {
   return paths.find((p) => existsSync(p));
+}
+
+/**
+ * The most recently modified existing candidate. In a monorepo checkout `packages/server/assets/` is a build copy that goes stale after the
+ * bridge is rebuilt, so "first existing" would silently install an old runtime; the packaged npm tarball has a single candidate anyway.
+ */
+export function newestExisting(paths: string[]): string | undefined {
+  let best: string | undefined;
+  let bestTime = -1;
+  for (const p of paths) {
+    if (!existsSync(p)) continue;
+    const t = statSync(p).mtimeMs;
+    if (t > bestTime) { best = p; bestTime = t; }
+  }
+  return best;
 }
 
 /** Extracts the runtime's semver from its source: a `runtimeVersion`/`RUNTIME_VERSION`/`VERSION` assignment or a "runtime vX.Y.Z" header. */

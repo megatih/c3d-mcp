@@ -2,7 +2,11 @@
 import { z } from 'zod';
 import { BridgeError, defineTool, type ToolContext } from '../toolkit.js';
 import { applyLookAt, type LookAtOutcome } from '../lib/lookAtOp.js';
-import { runApply } from '../lib/ops.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { renderGradient, encodePng } from '../lib/gradientPng.js';
+import { ext, writeNewFile } from '../lib/files.js';
+import { applyText, runApply } from '../lib/ops.js';
 import { clean, ok } from '../lib/result.js';
 import { Color, Descriptor, ObjectRef, ParamMap, Vec3, normRef, toColor, toXyz } from '../lib/schemas.js';
 
@@ -73,7 +77,7 @@ export const setCamera = defineTool({
 export const setLight = defineTool({
   name: 'c3d_set_light',
   title: 'Create/configure light',
-  description: 'Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). Direction-dependent lights face -Z by default; the aim read-back reports the residual angle.',
+  description: 'Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). A new light casts along its local -Y (down) until aimed; look_at_* switches its axis option to -Z and aims it, and the read-back reports the residual angle.',
   group: 'camera-light',
   inputSchema: z.strictObject({
     ref: ObjectRef.optional().describe('Existing light; omit to create one.'),
@@ -113,4 +117,67 @@ export const setLight = defineTool({
   },
 });
 
-export const cameraLightTools = [setCamera, setLight];
+const BG_IMAGE_EXT = ['png', 'jpg', 'jpeg', 'tiff', 'tif'];
+const Stop = z.strictObject({ pos: z.number().min(0).max(1).describe('Position 0..1 along the gradient.'), color: Color });
+
+export const setBackground = defineTool({
+  name: 'c3d_set_background',
+  title: 'Set render background',
+  description:
+    'Sets the background of the ACTIVE camera (c3d_get_document_info activeCamera): kind "solid" {color} sets backgroundColor (and clears backgroundImage); "gradient" {stops (2..8 of {pos 0..1, color}), angle_deg (default 90 = top to bottom, 0 = left to right), width/height (default 1024x576, max 4096), dither (default true)} generates a PNG in <workDir>/backgrounds/ (never overwrites) and sets it as backgroundImage; "image" {path} uses an existing png/jpg/tiff. The background shows only in renders and camera views. Create a camera first.',
+  group: 'camera-light',
+  inputSchema: z.strictObject({
+    kind: z.enum(['solid', 'gradient', 'image']).describe('Background type.'),
+    color: Color.optional().describe('For solid.'),
+    stops: z.array(Stop).min(2).max(8).optional().describe('For gradient: color stops, e.g. [{pos:0,color:"#0b0f2a"},{pos:1,color:"#ff5a3c"}].'),
+    angle_deg: z.number().min(-360).max(360).optional().describe('For gradient: direction of the color change in degrees (default 90 = top to bottom; 0 = left to right).'),
+    width: z.number().int().min(2).max(4096).optional().describe('For gradient: image width in pixels (default 1024).'),
+    height: z.number().int().min(2).max(4096).optional().describe('For gradient: image height in pixels (default 576).'),
+    dither: z.boolean().optional().describe('For gradient: add +-1 level noise against banding (default true).'),
+    path: z.string().min(1).optional().describe('For image: absolute path of an existing png/jpg/tiff file.'),
+  }),
+  outputSchema: z.looseObject({ kind: z.string(), camera: z.looseObject({ id: z.number().int() }), applied: z.array(z.string()), errors: z.array(z.looseObject({ name: z.string() })), path: z.string().optional() }),
+  mutating: true,
+  idempotent: false,
+  profiles: ['full'],
+  async handler(i, ctx) {
+    const params: Record<string, unknown> = {};
+    let file: string | undefined;
+    if (i.kind === 'solid') {
+      if (i.color === undefined) throw new BridgeError('INVALID_ARGUMENT', 'kind "solid" needs color.');
+      params.backgroundColor = toColor(i.color);
+      params.backgroundImage = ''; // clear a previous background image so the flat color shows
+    } else if (i.kind === 'gradient') {
+      if (!i.stops) throw new BridgeError('INVALID_ARGUMENT', 'kind "gradient" needs stops.');
+      const width = i.width ?? 1024;
+      const height = i.height ?? 576;
+      const png = encodePng(width, height, renderGradient({ stops: i.stops.map((s) => ({ pos: s.pos, color: toColor(s.color) })), angleDeg: i.angle_deg ?? 90, width, height, dither: i.dither }));
+      const dir = path.join(ctx.config.workDir, 'backgrounds');
+      fs.mkdirSync(dir, { recursive: true });
+      for (let n = 0; ; n++) {
+        file = path.join(dir, `gradient-${Date.now()}-${n}.png`);
+        try {
+          writeNewFile(ctx, file, png);
+          break;
+        } catch (e) {
+          if ((e as NodeJS.ErrnoException).code !== 'EEXIST' || n > 1000) throw e;
+        }
+      }
+      params.backgroundImage = file;
+    } else {
+      if (!i.path) throw new BridgeError('INVALID_ARGUMENT', 'kind "image" needs path.');
+      if (!path.isAbsolute(i.path) || i.path.includes('\0')) throw new BridgeError('INVALID_ARGUMENT', 'path must be absolute.');
+      if (!BG_IMAGE_EXT.includes(ext(i.path))) throw new BridgeError('INVALID_ARGUMENT', `Background extension .${ext(i.path) || '(none)'} is not supported.`, `Use ${BG_IMAGE_EXT.join(', ')}.`);
+      if (!fs.existsSync(i.path)) throw new BridgeError('NOT_FOUND', `File not found: ${i.path}`);
+      file = i.path;
+      params.backgroundImage = file;
+    }
+    const doc = await ctx.bridge.one<Obj>('getDocumentInfo');
+    const camId = (doc.activeCamera as { id?: number } | null | undefined)?.id;
+    if (camId === undefined) throw new BridgeError('NOT_FOUND', 'The document has no active camera.', 'Create one with c3d_set_camera first.');
+    const r = await runApply(ctx, 'setParameters', { ref: { id: camId }, params });
+    return ok({ kind: i.kind, camera: { id: camId }, applied: r.applied, errors: r.errors, ...(file ? { path: file } : {}) }, `${applyText(`Background (${i.kind}) on camera #${camId}`, r)}${file ? ` Image: ${file}` : ''}`);
+  },
+});
+
+export const cameraLightTools = [setCamera, setLight, setBackground];

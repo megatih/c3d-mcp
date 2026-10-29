@@ -3,7 +3,7 @@ import { defineTool } from '../toolkit.js';
 import { assertNotScriptType } from '../lib/scriptTypes.js';
 import { applyText, runApply } from '../lib/ops.js';
 import { clean, ok } from '../lib/result.js';
-import { ObjectRef, ParamMap, normRef } from '../lib/schemas.js';
+import { ObjectRef, ParamMap, normParams, normRef } from '../lib/schemas.js';
 
 const TagList = z.array(z.looseObject({ index: z.number().int(), type: z.string() }));
 
@@ -19,7 +19,7 @@ export const addTag = defineTool({
   profiles: ['full'],
   async handler(i, ctx) {
     assertNotScriptType(i.type);
-    const r = await ctx.bridge.one<Record<string, any>>('addTag', clean({ ref: normRef(i.ref), type: i.type.toUpperCase(), params: i.params }));
+    const r = await ctx.bridge.one<Record<string, any>>('addTag', clean({ ref: normRef(i.ref), type: i.type.toUpperCase(), params: i.params === undefined ? undefined : normParams(i.params) }));
     return ok({ tagIndex: r.tagIndex, type: r.type ?? i.type, tags: r.tags ?? [] }, `Added ${r.type ?? i.type} at tag index ${r.tagIndex}.`);
   },
 });
@@ -27,7 +27,7 @@ export const addTag = defineTool({
 export const setTagParams = defineTool({
   name: 'c3d_set_tag_params',
   title: 'Set tag parameters',
-  description: 'Writes parameters on one tag of an object (tag_index from c3d_get_object tags). Same value encodings as c3d_set_parameters; partial success reported per name.',
+  description: 'Writes parameters on one tag of an object (tag_index from c3d_get_object tags). Same value encodings as c3d_set_parameters (including {ref} Link values); partial success reported per name.',
   group: 'tags',
   inputSchema: z.strictObject({ ref: ObjectRef, tag_index: z.number().int().min(0).describe('Tag index from c3d_get_object.'), params: ParamMap.describe('Tag parameters to set.') }),
   outputSchema: z.looseObject({ applied: z.array(z.string()), errors: z.array(z.looseObject({ name: z.string() })) }),
@@ -35,7 +35,7 @@ export const setTagParams = defineTool({
   idempotent: true,
   profiles: ['full'],
   async handler(i, ctx) {
-    const r = await runApply(ctx, 'setParameters', { ref: normRef(i.ref), tag: { index: i.tag_index }, params: i.params });
+    const r = await runApply(ctx, 'setParameters', { ref: normRef(i.ref), tag: { index: i.tag_index }, params: normParams(i.params) });
     return ok({ applied: r.applied, errors: r.errors }, applyText(`Tag ${i.tag_index}`, r));
   },
 });

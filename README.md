@@ -10,7 +10,7 @@ Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-
                               └──Unix socket──▶ C3D Bridge Helper.app (Swift) ─┘ presses the macro's menu item (Accessibility)
 ```
 
-* **Server** (`packages/server`): 59 `c3d_*` tools, resources and prompts; queue, safety checks, backups.
+* **Server** (`packages/server`): 63 `c3d_*` tools, resources and prompts; queue, safety checks, backups.
 * **Bridge** (`bridge/`): a tiny loader macro plus a runtime that Cheetah3D executes, draining a request inbox and writing results.
 * **Helper** (`helper/`): a small Accessibility app that activates Cheetah3D, presses the bridge menu item and reports dialogs. Optional (an `osascript` fallback exists) but recommended: ~3× faster, modal detection, screenshots.
 
@@ -20,7 +20,7 @@ macOS 14+ on Apple Silicon (developed on macOS 27.2), Cheetah3D 8.1.3, Node.js �
 ## Quickstart
 
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.1/c3d-mcp-0.1.1.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.1.1/c3d-mcp-0.1.1.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.1.2/c3d-mcp-0.1.2.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.1.2/c3d-mcp-0.1.2.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app

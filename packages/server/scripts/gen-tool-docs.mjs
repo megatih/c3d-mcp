@@ -7,9 +7,12 @@ import { z } from 'zod';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const pkg = path.resolve(here, '..');
-const dist = path.join(pkg, 'dist', 'tools', 'index.js');
+// Usage: node scripts/gen-tool-docs.mjs [--dist <dir>]  (default: dist/; e.g. a throwaway `tsc -p tsconfig.build.json --outDir .docs-build`)
+const argIdx = process.argv.indexOf('--dist');
+const distDir = argIdx > 0 ? path.resolve(process.argv[argIdx + 1] ?? '') : path.join(pkg, 'dist');
+const dist = path.join(distDir, 'tools', 'index.js');
 if (!fs.existsSync(dist)) {
-  console.error('dist/ not found: run `npm run build` in packages/server first.');
+  console.error(`${dist} not found: run \`npm run build\` in packages/server first (or pass --dist <dir>).`);
   process.exit(1);
 }
 const { allTools, allPrompts, allResources } = await import(pathToFileURL(dist).href);

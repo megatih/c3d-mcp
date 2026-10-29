@@ -21,7 +21,7 @@ The server never opens a TCP/HTTP port. Transport is stdio; stdout carries only 
 
 ## Mailbox (`~/Library/Application Support/Cheetah3D/MCP/`)
 
-* All directories are created from Node with mode `0700`; the `secret` file is `0600`. `c3d_doctor` warns when permissions drift. (Cheetah3D's JavaScript cannot create directories, so Node/Swift own that.)
+* All directories are created from Node with mode `0700`; the `secret` file is `0600`. A pre-existing directory is only tightened (chmod) when it is owned by the current user and is empty or already looks like a mailbox: a user-supplied `C3D_MCP_DIR` that points at someone else's or an unrelated directory is never chmod-ed. The server refuses to write requests into a mailbox directory owned by another user or writable by group/others (`PERMISSION_MISSING`, hint `chmod 700`). `c3d_doctor` warns when permissions drift. (Cheetah3D's JavaScript cannot create directories, so Node/Swift own that.)
 * **Secret.** 32 random bytes (hex) generated at install. Every request carries it and the runtime rejects mismatches without running any op. It stops *other users* and accidental cross-talk; it does not stop another process of the same user, which can read the file. It is never logged (log lines are scrubbed of secret-like values and keys named `secret`/`token`/`password`).
 * **Request integrity.** Requests are written to `*.json.tmp`, fsynced and renamed, so the runtime never sees a partial request. Responses are accepted only when the `.done` marker's byte length and Adler-32 match (a corruption check, not a MAC).
 * **Staleness and replay.** Each request has a uuid, a monotonic `seq`, and an absolute `deadlineAt`. The runtime skips requests it already answered or whose `seq` is not newer than `lastSeq`, answers expired requests with `TIMEOUT` without running any op, and honours `cancel/<id>` markers. A client that gives up writes the cancel marker, so a late menu press can never execute an abandoned request. Extra presses of the macro are harmless.
@@ -31,7 +31,7 @@ The server never opens a TCP/HTTP port. Transport is stdio; stdout carries only 
 ## Helper app and socket
 
 * The helper listens on `MCP/helper.sock` (mode `0600`, inside the `0700` directory) and speaks JSON lines. Any process of the same user that can open the socket can ask it to press menus, capture the Cheetah3D window, or read the Accessibility tree; the helper holds the TCC grants (Accessibility, Screen Recording), so treat socket access like access to those permissions.
-* The server only launches the helper with `open -g -a "<helper app>" --args --socket <path>` (never as a Node child process) and only from the known install locations (`MCP/helper/`, `~/Applications`, `/Applications`, or `C3D_HELPER_APP`).
+* The server only launches the helper with `open -g -a "<helper app>" --args --socket <path>` (never as a Node child process) and only from the known install locations (`MCP/helper/`, `~/Applications`, `/Applications`, or `C3D_HELPER_APP`). Before the first launch the bundle's code signature is checked with `codesign --verify --deep --strict`; a bundle that fails is not launched (error with a hint). Locally built, unsigned helpers need `C3D_HELPER_SKIP_VERIFY=1`.
 * The helper clicks buttons only in dialogs *it* created (`dismissOwnModal`). Foreign dialogs are reported as `BLOCKED_BY_MODAL`; Save / Don't Save are never clicked.
 * Without the helper the server falls back to `osascript` + System Events, which needs Accessibility for the app that launched `c3d-mcp` (your terminal or MCP client). `doctor` reports this as degraded mode.
 * Permissions are never self-granted: c3d-mcp does not touch the TCC database or run `tccutil`.
@@ -54,14 +54,14 @@ A declined or cancelled elicitation is a refusal. Note that `confirm: true` supp
 
 ## Existing files, backups and checkpoints
 
-* Tools refuse to overwrite a file that existed before the session unless it was created or opened through this server and the call is confirmed.
-* `c3d-mcp install` takes a timestamped `tar.gz` of `Scripts/` into `Cheetah3D/MCP-backups/` *before* modifying anything and aborts if the backup fails. `uninstall` removes only what the install manifest lists (`Scripts/Macro/C3D-MCP/` contents it created and the `MCP/` directory) and never touches `MCP-backups/` or your own scripts/macros; entries outside the managed directories are refused even if a manifest lists them.
+* Tools refuse to overwrite a file that existed before the session unless it was created or opened through this server and the call is confirmed. Companion files count too (the `.mtl` next to an `.obj` export); a dangling symlink counts as existing. Missing parent directories are created only inside the work directory; elsewhere the directory must already exist (`INVALID_ARGUMENT`). Files the server writes itself (gradient backgrounds) are created with exclusive `O_EXCL` creation. Files written by Cheetah3D (`saveToFile`) or the helper (post-processing) are checked beforehand but not created exclusively, so the check is not atomic.
+* `c3d-mcp install` takes a timestamped `tar.gz` of `Scripts/` into `Cheetah3D/MCP-backups/` *before* modifying anything and aborts if the backup fails. `uninstall` removes only what the install manifest lists as created by install (the loader macro only if install created it: a macro file that existed before is kept; the `MCP/` directory) and never touches `MCP-backups/` or your own scripts/macros; entries outside the managed directories are refused even if a manifest lists them.
 * Edit > Undo does not revert macro changes (probe P11); safety comes from file checkpoints, not undo.
 
 ## Network and downloads
 
 * The server itself makes no network connections except the asset tools (Poly Haven by default), which are optional (`C3D_MCP_DISABLE_ASSETS=1`).
-* Downloads: HTTPS only, size caps, extension allow-list, SHA-256 recorded next to the file, licence/attribution recorded. Downloaded files are untrusted data and are only ever opened by Cheetah3D as geometry/images, never executed.
+* Downloads: HTTPS only, size caps enforced while streaming (the transfer is aborted as soon as the cap is exceeded, with or without `Content-Length`; JSON API responses are capped at 8 MB), extension allow-list, SHA-256 recorded next to the file, licence/attribution recorded. Downloaded files are untrusted data and are only ever opened by Cheetah3D as geometry/images, never executed.
 * The optional helper download at install time must be HTTPS with a pinned SHA-256; the installer step is injectable so offline installs never touch the network. Nothing is published or uploaded by c3d-mcp.
 
 ## Logging

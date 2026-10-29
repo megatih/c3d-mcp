@@ -174,9 +174,16 @@ C3D.scene = (function () {
     var obj;
     try { obj = ctx.doc.addObject(typeId); }
     catch (e) { U.fail('UNSUPPORTED', 'doc.addObject failed for type ' + typeId + ': ' + e.message); }
-    attach(ctx, obj, parentEntry);
-    if (name !== undefined) { obj.setParameter('name', name); }
-    if (a && a.transform !== undefined) { applyTransform(ctx, obj, parentEntry, a.transform); }
+    try {
+      attach(ctx, obj, parentEntry);
+      if (name !== undefined) { obj.setParameter('name', name); }
+      if (a && a.transform !== undefined) { applyTransform(ctx, obj, parentEntry, a.transform); }
+    } catch (e) {
+      // Do not leave a half-configured object behind: remove it from its actual parent (or the root, where addObject may have put it).
+      try { parentEntry.obj.removeChild(obj); } catch (e1) { try { ctx.doc.root().removeChild(obj); } catch (e2) { C3D.core.log('cleanup after failed create failed: ' + e2.message); } }
+      invalidate(ctx);
+      throw e;
+    }
     return obj;
   }
 
@@ -217,6 +224,53 @@ C3D.scene = (function () {
       total++;
     }
     return { items: items, total: total, nextOffset: offset + items.length < total ? offset + items.length : null };
+  });
+
+  // Counts only; polygon/vertex/triangle totals use the O(1) PolyCore counters, never per-polygon reads.
+  def('sceneStats', 'R', function (ctx, a) {
+    var t = tree(ctx), rootEntry = a.root === undefined ? t.root : resolve(ctx, a.root), doc = ctx.doc, i, e, o, ty, fam, core, pc, tn, mat;
+    var FOLDER = CAP.constant('FOLDER'), SMART = CAP.constant('SMARTFOLDER'), CAMERA = CAP.constant('CAMERA');
+    var LIGHTFAM = CAP.constant('LIGHTFAMILY'), SPLINEFAM = CAP.constant('SPLINEFAMILY');
+    var s = {
+      objectCount: 0, byType: {}, folderCount: 0, lightCount: 0, cameraCount: 0, splineCount: 0, polygonObjectCount: 0, polygonCount: 0,
+      vertexCount: 0, triangleCount: 0, tagCount: 0, materialCount: 0, nodeCount: 0, skipped: 0
+    };
+    function visit(en) {
+      var name;
+      o = en.obj;
+      if (o.type() === FOLDER && U.startsWith(en.name, '__c3d_mcp_session_')) { return; }
+      ty = o.type(); fam = o.family();
+      s.objectCount++;
+      name = CAP.objectTypeName(ty);
+      s.byType[name] = (s.byType[name] || 0) + 1;
+      if (ty === FOLDER || (SMART !== null && ty === SMART)) { s.folderCount++; }
+      if (ty === CAMERA) { s.cameraCount++; }
+      if (LIGHTFAM !== null && fam === LIGHTFAM) { s.lightCount++; }
+      if (SPLINEFAM !== null && fam === SPLINEFAM) { s.splineCount++; }
+      s.tagCount += o.tagCount();
+      if (ty === FOLDER || ty === CAMERA || fam === LIGHTFAM || fam === SPLINEFAM) { return; }
+      core = o.core();
+      if (!core || typeof core.polygonCount !== 'function') { return; }
+      pc = core.polygonCount();
+      if (pc > 0) {
+        s.polygonObjectCount++;
+        s.polygonCount += pc;
+        s.vertexCount += core.vertexCount();
+        s.triangleCount += core.triangleCount();
+      }
+    }
+    for (i = 0; i < t.list.length; i++) {
+      e = t.list[i];
+      if (rootEntry !== t.root && e !== rootEntry && !isUnder(e, rootEntry)) { continue; }
+      try { visit(e); } catch (ex) { s.skipped++; }
+    }
+    try {
+      s.materialCount = doc.materialCount();
+      for (i = 0; i < s.materialCount; i++) {
+        try { mat = doc.materialAtIndex(i); tn = mat.nodeCount(); s.nodeCount += tn; } catch (ex2) { s.skipped++; }
+      }
+    } catch (ex3) { s.skipped++; }
+    return s;
   });
 
   function isUnder(e, ancestor) {

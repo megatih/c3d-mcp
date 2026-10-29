@@ -13,7 +13,7 @@ You are driving Cheetah3D 8.1.3 through the `c3d_*` MCP tools. Build the **Corne
 1. Start with `c3d_doctor`; if anything fails, stop and tell me. Then `c3d_new_document`. Work only in that document; never open, save over or modify any other document or file.
 2. Cheetah3D is **Y-up**; units are metres. Object names are NOT unique: address objects by the `id` returned when you create them (keep a name→id table in your notes).
 3. Render formats are png/jpg/tiff only. **Never export OBJ** (it can crash Cheetah3D); export FBX if you export. Use `c3d_run_script` only for the vase step. **Use a new file name for every render** (e.g. `draft_v1.png`, `draft_v2.png`, `final_v1.png`): the server refuses to overwrite existing files.
-4. Per-polygon materials are unsupported, so every surface is its own object. If a tool returns an error, read its `hint`, fix it and continue. If something is genuinely unsupported, say so — do not fake it.
+4. Materials are per object here (each surface is its own object); `c3d_assign_material polygons:[…]` can also colour parts of one editable mesh. If a tool returns an error, read its `hint`, fix it and continue. If something is genuinely unsupported, say so — do not fake it.
 5. Take `c3d_checkpoint` after phases 1, 2 and 3. If a call returns `BLOCKED_BY_MODAL`, tell me the dialog text and wait for me.
 6. Look at every image `c3d_render_image` returns (use `include_image: true`) and judge it critically against the "expected look" in Phase 4. Draft renders take about a second; the final should stay under ~60 s — if a call times out, lower the resolution or GI samples and retry.
 

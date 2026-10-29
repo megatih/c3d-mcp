@@ -114,6 +114,9 @@ C3D.params = (function () {
         if (!U.isObject(value)) { U.fail('INVALID_ARGUMENT', name + ' expects {ref}, {material} or null'); }
         if (value.material !== undefined) { return C3D.materials.resolve(ctx, value.material); }
         ref = value.ref !== undefined ? value.ref : value;
+        // {ref} may carry a bare id, a "/path" string or a full ref object.
+        if (typeof ref === 'number') { ref = { id: ref }; }
+        else if (typeof ref === 'string' && ref.charAt(0) === '/') { ref = { path: ref }; }
         return C3D.scene.resolve(ctx, ref).obj;
       default:
         return U.fail('UNSUPPORTED', name + ' has unsupported type ' + type, { type: type });

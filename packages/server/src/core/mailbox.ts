@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { BridgeError, type BridgeOp, type BridgeResponse, type ExpectDoc } from '../toolkit.js';
 import { adler32, asciiJson } from './json.js';
 import { systemClock, type Clock } from './platform.js';
-import type { McpPaths } from './paths.js';
+import { assertPrivateDir, type McpPaths } from './paths.js';
 
 export const PROTOCOL = 1;
 
@@ -77,6 +77,8 @@ export class Mailbox {
 
   /** Atomic: `.json.tmp` + fsync + rename, so the runtime never sees a partial request. */
   async writeRequest(req: BridgeRequest): Promise<string> {
+    await assertPrivateDir(this.paths.root);
+    await assertPrivateDir(this.paths.inbox);
     const final = this.requestPath(req.seq, req.id);
     const tmp = `${final}.tmp`;
     const fh = await open(tmp, 'w', 0o600);

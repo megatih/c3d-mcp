@@ -51,7 +51,7 @@ public struct Response: Codable, Sendable, Equatable {
 
 public enum Command: String, CaseIterable, Sendable {
     case ping, status, pressBridge, pressMenu, listMenus, modalState, windows, raiseWindow
-    case captureWindow, analyzeImage, downscaleImage, permissions, launchApp, newDocument, dismissOwnModal
+    case captureWindow, analyzeImage, downscaleImage, postProcessImage, permissions, launchApp, newDocument, dismissOwnModal
 }
 
 public enum ParseOutcome: Sendable {
@@ -140,7 +140,7 @@ struct ArgReader {
 
     mutating func absolutePath(_ key: String, required: Bool = true) throws -> String? {
         guard let s = try string(key, required: required) else { return nil }
-        guard s.hasPrefix("/") else { throw bad(key, "an absolute path") }
+        guard s.hasPrefix("/"), !OutputPolicy.hasParentComponent(s) else { throw bad(key, "an absolute path without `..`") }
         return s
     }
 

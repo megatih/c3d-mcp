@@ -47,15 +47,17 @@ describe('materials', () => {
     expect('params' in ((await runTool(getMaterialGraph, { material: 'G', response_format: 'detailed' }, t.ctx)).structured.nodes as any[])[0]).toBe(true);
     await expectCode(runTool(connectNodes, { material: 'G', from_node: 1, from_output: 'a', to_node: 2, to_input: 'b' }, t.ctx), 'NOT_FOUND');
   });
-  it('assigns a material and rejects per-polygon assignment as UNSUPPORTED', async () => {
+  it('assigns a material to the whole object or to selected polygons', async () => {
     await runTool(createMaterial, { name: 'M' }, t.ctx);
     const o = t.bridge.addObject('BOX', 'B');
     const r = await runTool(assignMaterial, { ref: o.id, material: 'M' }, t.ctx);
     expect(r.structured.tagIndex).toBe(0);
     await runTool(assignMaterial, { ref: o.id, material: 'M', replace_existing: true }, t.ctx);
     expect(o.tags).toHaveLength(1);
-    const e = await expectCode(runTool(assignMaterial, { ref: o.id, material: 'M', polygons: [0] }, t.ctx), 'UNSUPPORTED');
-    expect(e.message).toMatch(/per-polygon/i);
+    const pr = await runTool(assignMaterial, { ref: o.id, material: 'M', polygons: [0, 1] }, t.ctx);
+    expect(pr.structured).toMatchObject({ slot: 1, polygons: 2 });
+    expect(t.bridge.argsOf('assignMaterial').at(-1)).toMatchObject({ polygons: [0, 1] });
+    expect(() => assignMaterial.inputSchema.parse({ ref: o.id, material: 'M', polygons: [] })).toThrow();
     await expectCode(runTool(assignMaterial, { ref: o.id, material: 'Missing' }, t.ctx), 'NOT_FOUND');
   });
   it('sets textures after checking the path', async () => {

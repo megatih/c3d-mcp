@@ -204,6 +204,18 @@ describe('uninstall', () => {
     expect(existsSync(h.env.paths.macroFile)).toBe(true);
   });
 
+  it('never removes a loader macro that existed before install (manifest does not list it as created)', async () => {
+    h = fresh();
+    mkdirSync(h.env.paths.macroDir, { recursive: true });
+    writeFileSync(h.env.paths.macroFile, '// the user\'s own macro');
+    await install(h.rt, { ...sources(h.env.root), skipPing: true });
+    expect((await readManifest(h.rt))?.createdFiles).not.toContain(h.env.paths.macroFile);
+    const report = await uninstall(h.rt);
+    expect(existsSync(h.env.paths.macroFile)).toBe(true);
+    expect(report.kept).toContain(h.env.paths.macroFile);
+    expect(report.removed).not.toContain(h.env.paths.macroFile);
+  });
+
   it('refuses a manifest that belongs to a different mailbox directory', async () => {
     h = fresh();
     await install(h.rt, { ...sources(h.env.root), skipPing: true });

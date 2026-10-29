@@ -61,6 +61,16 @@
     }
   }
 
+  // Removes a half-built object from the parent it was attached to (falling back to the root, where addObject may have left it).
+  function discard(ctx, obj, parentEntry, what) {
+    var rootObj = ctx.doc.root(), removed = false;
+    try { parentEntry.obj.removeChild(obj); removed = true; } catch (e1) { /* maybe it sits under the root instead */ }
+    if (!removed) {
+      try { rootObj.removeChild(obj); removed = true; } catch (e2) { C3D.core.log('cleanup after failed ' + what + ' failed: ' + e2.message); }
+    }
+    S.invalidate(ctx);
+  }
+
   C3D.core.define('createMesh', 'W', function (ctx, a) {
     var appendTo = null, obj, core, base = 0, v, parentEntry, result, created = false;
     if (a.append) {
@@ -83,7 +93,7 @@
       core = coreOf(obj, 'mesh object');
       fill(core, v, base);
     } catch (e) {
-      if (created) { try { S.tree(ctx).root.obj.removeChild(obj); } catch (e2) { C3D.core.log('cleanup after failed createMesh failed: ' + e2.message); } }
+      if (created) { discard(ctx, obj, parentEntry, 'createMesh'); }
       throw e;
     }
     obj.update();
@@ -174,15 +184,20 @@
     validatePaths(a.paths);
     if (a.name !== undefined) { S.checkName(a.name, 'name'); }
     obj = S.create(ctx, CAP.constant('SPLINE'), a.name, parentEntry, a);
-    core = obj.core();
-    for (i = 0; i < a.paths.length; i++) {
-      pts = a.paths[i].points;
-      core.move(vec(pts[0].p));
-      for (j = 1; j < pts.length; j++) { segment(core, pts[j - 1], pts[j]); }
-      if (a.paths[i].closed) {
-        if (pts.length > 2 && (pts[pts.length - 1].c2 !== undefined || pts[0].c1 !== undefined)) { segment(core, pts[pts.length - 1], pts[0]); }
-        core.close();
+    try {
+      core = obj.core();
+      for (i = 0; i < a.paths.length; i++) {
+        pts = a.paths[i].points;
+        core.move(vec(pts[0].p));
+        for (j = 1; j < pts.length; j++) { segment(core, pts[j - 1], pts[j]); }
+        if (a.paths[i].closed) {
+          if (pts.length > 2 && (pts[pts.length - 1].c2 !== undefined || pts[0].c1 !== undefined)) { segment(core, pts[pts.length - 1], pts[0]); }
+          core.close();
+        }
       }
+    } catch (e) {
+      discard(ctx, obj, parentEntry, 'createSpline');
+      throw e;
     }
     obj.update();
     result = S.describe(ctx, obj);

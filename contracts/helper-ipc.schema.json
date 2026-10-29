@@ -9,8 +9,36 @@
    "additionalProperties": false,
    "properties": {
     "id": { "type": "string" },
-    "cmd": { "enum": ["ping", "status", "pressBridge", "pressMenu", "listMenus", "modalState", "windows", "raiseWindow", "captureWindow", "analyzeImage", "downscaleImage", "permissions", "launchApp", "newDocument", "dismissOwnModal"] },
-    "args": { "type": "object" }
+    "cmd": { "enum": ["ping", "status", "pressBridge", "pressMenu", "listMenus", "modalState", "windows", "raiseWindow", "captureWindow", "analyzeImage", "downscaleImage", "postProcessImage", "permissions", "launchApp", "newDocument", "dismissOwnModal"] },
+    "args": { "type": "object", "description": "Per-command arguments; unknown keys are rejected with INVALID_ARGUMENT. All file paths must be absolute without `..`. outPath of captureWindow/downscaleImage/postProcessImage is refused when it exists unless `overwrite:true`, and may never equal an input path. See $defs.postProcessImageArgs and $defs.postProcessImageResult." }
+   }
+  },
+  "postProcessImageArgs": {
+   "type": "object",
+   "required": ["path", "outPath"],
+   "additionalProperties": false,
+   "description": "Order of application: grade, posterize, outline, bloom, vignette. At least one effect is required. path/outPath end in .png/.jpg/.jpeg/.tif/.tiff; output is PNG, JPEG (.jpg/.jpeg) or TIFF by outPath extension. Input at most 64 megapixels.",
+   "properties": {
+    "path": { "type": "string" },
+    "outPath": { "type": "string" },
+    "overwrite": { "type": "boolean", "default": false },
+    "bloom": { "type": "object", "required": ["threshold", "radius", "intensity"], "additionalProperties": false, "properties": { "threshold": { "type": "number", "minimum": 0, "maximum": 1 }, "radius": { "type": "number", "minimum": 0, "maximum": 500, "description": "pixels" }, "intensity": { "type": "number", "minimum": 0, "maximum": 2 } } },
+    "outline": { "type": "object", "required": ["strength", "width"], "additionalProperties": false, "properties": { "strength": { "type": "number", "minimum": 0, "maximum": 1 }, "width": { "type": "number", "minimum": 0.5, "maximum": 4, "description": "pixels" }, "color": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 3, "maxItems": 3, "description": "default [0,0,0]" } } },
+    "vignette": { "type": "object", "required": ["intensity", "radius"], "additionalProperties": false, "properties": { "intensity": { "type": "number", "minimum": 0, "maximum": 1 }, "radius": { "type": "number", "minimum": 0, "maximum": 2 } } },
+    "grade": { "type": "object", "additionalProperties": false, "properties": { "saturation": { "type": "number", "minimum": 0, "maximum": 2, "default": 1 }, "contrast": { "type": "number", "minimum": 0.5, "maximum": 1.5, "default": 1 }, "exposure": { "type": "number", "minimum": -2, "maximum": 2, "default": 0, "description": "EV" }, "shadowTint": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 3, "maxItems": 3 }, "highlightTint": { "type": "array", "items": { "type": "number", "minimum": 0, "maximum": 1 }, "minItems": 3, "maxItems": 3 }, "tintAmount": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 } } },
+    "posterize": { "type": "object", "required": ["levels"], "additionalProperties": false, "properties": { "levels": { "type": "integer", "minimum": 2, "maximum": 32 } } }
+   }
+  },
+  "postProcessImageResult": {
+   "type": "object",
+   "required": ["outPath", "width", "height", "bytes", "applied"],
+   "additionalProperties": false,
+   "properties": {
+    "outPath": { "type": "string" },
+    "width": { "type": "integer" },
+    "height": { "type": "integer" },
+    "bytes": { "type": "integer" },
+    "applied": { "type": "array", "items": { "enum": ["grade", "posterize", "outline", "bloom", "vignette"] } }
    }
   },
   "response": {

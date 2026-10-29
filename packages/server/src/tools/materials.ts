@@ -144,18 +144,17 @@ export const getMaterialGraph = defineTool({
 export const assignMaterial = defineTool({
   name: 'c3d_assign_material',
   title: 'Assign material',
-  description: 'Assigns a material to the WHOLE object by adding a SHADERTAG (or replacing existing ones with replace_existing). Per-polygon assignment is UNSUPPORTED in this version: split the mesh into separate objects per material instead.',
+  description: 'Assigns a material to the whole object by adding a SHADERTAG (replace_existing swaps the previous whole-object material), or - with polygons - only to those polygon indices of an EDITABLE polygon object (use c3d_make_editable first on primitives). Per-polygon assignment uses one of the object\'s 24 polygon-selection slots per material group (returned as slot); the polygon indices come from c3d_get_mesh.',
   group: 'materials',
-  inputSchema: z.strictObject({ ref: ObjectRef, material: MaterialRef, replace_existing: z.boolean().optional().describe('Replace the existing whole-object material instead of adding another SHADERTAG (runtime default: true).'), polygons: z.array(z.number().int()).optional().describe('NOT SUPPORTED; rejected with UNSUPPORTED.') }),
-  outputSchema: z.looseObject({ tagIndex: z.number().int().optional(), material: z.any() }),
+  inputSchema: z.strictObject({ ref: ObjectRef, material: MaterialRef, replace_existing: z.boolean().optional().describe('Replace the existing whole-object material instead of adding another SHADERTAG (runtime default: true).'), polygons: z.array(z.number().int().min(0)).min(1).max(200000).optional().describe('Polygon indices (c3d_get_mesh) that get this material instead of the whole object.'), slot: z.number().int().min(1).max(24).optional().describe('Polygon-selection slot to use (default: first free).') }),
+  outputSchema: z.looseObject({ tagIndex: z.number().int().optional(), material: z.any(), slot: z.number().int().optional(), polygons: z.number().int().optional() }),
   mutating: true,
   idempotent: false,
   profiles: ['full', 'local'],
-  localDescription: 'Assign a material (by name) to a whole object.',
+  localDescription: 'Assign a material (by name) to a whole object, or to only some polygons via polygons:[indices] of an editable mesh.',
   async handler(i, ctx) {
-    if (i.polygons) throw new BridgeError('UNSUPPORTED', 'Per-polygon material assignment does not work reliably in Cheetah3D 8.1.3.', 'Split the geometry into one object per material (c3d_create_mesh) or assign one material to the whole object.');
-    const r = await ctx.bridge.one<Record<string, any>>('assignMaterial', clean({ ref: normRef(i.ref), material: normMat(i.material), replaceExisting: i.replace_existing }));
-    return ok({ tagIndex: r.tagIndex, material: r.material }, `Assigned material ${JSON.stringify(r.material)} (tag ${r.tagIndex}).`);
+    const r = await ctx.bridge.one<Record<string, any>>('assignMaterial', clean({ ref: normRef(i.ref), material: normMat(i.material), replaceExisting: i.replace_existing, polygons: i.polygons, slot: i.slot }));
+    return ok(clean({ tagIndex: r.tagIndex, material: r.material, slot: r.slot, polygons: r.polygons }), i.polygons ? `Assigned material ${JSON.stringify(r.material)} to ${r.polygons} polygon(s) via selection slot ${r.slot} (tag ${r.tagIndex}).` : `Assigned material ${JSON.stringify(r.material)} (tag ${r.tagIndex}).`);
   },
 });
 

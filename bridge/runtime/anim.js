@@ -89,21 +89,24 @@
     return v;
   }
 
-  function keyComponents(value, n, idx) {
+  function keyComponents(value, n, idx, wFill) {
     if (n === 1) {
       if (!U.isNumber(value)) { U.fail('INVALID_ARGUMENT', 'keys[' + idx + '].value must be a number'); }
       return [value];
     }
+    // Vec4D given 3 components: w is filled with the parameter's current value (not 1).
+    if (n === 4 && Array.isArray(value) && value.length === 3 && U.isNumber(wFill)) { value = value.concat([wFill]); }
     return P.numbers(value, n, 'keys[' + idx + '].value');
   }
 
   def('setKeyframes', 'W', function (ctx, a) {
     var e = S.resolve(ctx, a.ref), prm = animParam(e, a.param), take = takeFor(ctx.doc, a.take), n = componentCount(e, a.param);
-    var keys = [], i, c, fc, tn, k, comps = [], j, interp;
+    var keys = [], i, c, fc, tn, k, comps = [], j, interp, wFill = null, cur;
+    if (n === 4) { try { cur = e.obj.getParameter(a.param); wFill = cur && U.isNumber(cur.w) ? cur.w : null; } catch (ex) { wFill = null; } }
     if (!Array.isArray(a.keys) || !a.keys.length) { U.fail('INVALID_ARGUMENT', 'keys must be a non-empty array'); }
     for (i = 0; i < a.keys.length; i++) {
       if (!U.isNumber(a.keys[i].time)) { U.fail('INVALID_ARGUMENT', 'keys[' + i + '].time must be a finite number'); }
-      keys.push({ time: a.keys[i].time, values: keyComponents(a.keys[i].value, n, i), interp: interpValue(a.keys[i].interpolation) });
+      keys.push({ time: a.keys[i].time, values: keyComponents(a.keys[i].value, n, i, wFill), interp: interpValue(a.keys[i].interpolation) });
     }
     keys.sort(function (x, y) { return x.time - y.time; });
     tn = prm.takeNodeWithName(take.name) || prm.addTakeNode(take.name);

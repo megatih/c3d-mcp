@@ -86,7 +86,7 @@ describe('HelperClientImpl', () => {
     expect(client.available()).toBe(true);
     expect(client.installedApp()).toBe(app);
     expect(await client.call('ping')).toMatchObject({ pid: 4242 });
-    expect(calls).toEqual([['open', '-g', '-a', app, '--args', '--socket', sock]]);
+    expect(calls).toEqual([['codesign', '--verify', '--deep', '--strict', app], ['open', '-g', '-a', app, '--args', '--socket', sock]]);
     expect(helper).toBeDefined();
   });
 
@@ -101,6 +101,35 @@ describe('HelperClientImpl', () => {
     expect(client.available()).toBe(false);
     now += 6000;
     expect(client.available()).toBe(true);
+  });
+
+  it('verifies the code signature before launching and refuses a bundle that fails (never opens it)', async () => {
+    const { dir, sock } = sandbox();
+    const app = join(dir, 'C3D Bridge Helper.app');
+    mkdirSync(app);
+    const calls: string[][] = [];
+    const exec: Executor = (cmd, args) => { calls.push([cmd, ...args]); return Promise.resolve(cmd === 'codesign' ? { code: 3, stdout: '', stderr: 'code object is not signed at all' } : { code: 0, stdout: '', stderr: '' }); };
+    const client = new HelperClientImpl({ socketPath: sock, appPaths: [app], exec, env: {} });
+    const err: unknown = await client.call('ping').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(HelperUnavailableError);
+    expect((err as HelperUnavailableError).message).toMatch(/signature/);
+    expect((err as HelperUnavailableError).hint).toMatch(/C3D_HELPER_SKIP_VERIFY=1/);
+    expect(calls.map((c) => c[0])).toEqual(['codesign']);
+    expect(client.available()).toBe(false);
+  });
+
+  it('C3D_HELPER_SKIP_VERIFY=1 (or skipVerify) bypasses codesign; a verified bundle is checked once', async () => {
+    for (const mode of ['env', 'option', 'verified-once'] as const) {
+      const { dir, sock } = sandbox();
+      const app = join(dir, 'C3D Bridge Helper.app');
+      mkdirSync(app);
+      const calls: string[] = [];
+      let n = 0;
+      const exec: Executor = async (cmd) => { calls.push(cmd); if (cmd === 'open' && n++ === 0) await startHelper(sock); return { code: 0, stdout: '', stderr: '' }; };
+      const client = new HelperClientImpl({ socketPath: sock, appPaths: [app], exec, launchWaitMs: 2000, ...(mode === 'env' ? { env: { C3D_HELPER_SKIP_VERIFY: '1' } } : mode === 'option' ? { skipVerify: true } : { env: {} }) });
+      await client.call('ping');
+      expect(calls).toEqual(mode === 'verified-once' ? ['codesign', 'open'] : ['open']);
+    }
   });
 
   it('does not launch when autoLaunch is off', async () => {

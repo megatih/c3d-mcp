@@ -61,6 +61,23 @@ describe('cli', () => {
     expect(bad.err).toContain('C3D_MCP_PROFILE');
   });
 
+  it('config --raw prints only the snippet (no comment lines) so it can be redirected into a file', async () => {
+    const raw = harness();
+    expect(await main(['config', 'codex', '--raw'], raw.io)).toBe(0);
+    expect(raw.out.startsWith('[mcp_servers.c3d]')).toBe(true);
+    expect(raw.out).not.toMatch(/^#/m);
+    const plain = harness();
+    await main(['config', 'codex'], plain.io);
+    expect(plain.out.startsWith('# codex:')).toBe(true);
+    expect(plain.out.endsWith(raw.out)).toBe(true);
+    const cursor = harness();
+    await main(['config', 'cursor', '--raw'], cursor.io);
+    expect(JSON.parse(cursor.out)).toHaveProperty('mcpServers.c3d.command');
+    const usage = harness();
+    await main(['--help'], usage.io);
+    expect(usage.out).toContain('--raw');
+  });
+
   it('config prints a snippet and validates the client name and form', async () => {
     const c = harness();
     expect(await main(['config', 'codex'], c.io)).toBe(0);

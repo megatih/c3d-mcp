@@ -3,7 +3,7 @@ import type { RuntimeConfig } from '../config.js';
 import { createLogger, type Logger } from '../logging.js';
 import type { HelperClient, SessionState } from '../toolkit.js';
 import { createAppProbe, type AppProbe } from './appProbe.js';
-import { assetLocations, firstExisting, readRuntimeVersionFile } from './assets.js';
+import { assetLocations, newestExisting, readRuntimeVersionFile } from './assets.js';
 import { BridgeClientImpl, type BridgeClientOptions } from './bridgeClient.js';
 import { HelperClientImpl, defaultHelperAppPaths } from './helperClient.js';
 import { FileLock, RequestQueue } from './lock.js';
@@ -56,7 +56,7 @@ export function createRuntime(config: RuntimeConfig, o: RuntimeOverrides = {}): 
   const trigger = o.trigger ?? new AutoTrigger(helper, new OsascriptTrigger(exec), config.trigger);
   const probe = o.probe ?? createAppProbe(helper, exec);
   const session = o.session ?? newSession();
-  const bundledPath = firstExisting(assetLocations().runtime);
+  const bundledPath = newestExisting(assetLocations().runtime);
   const bundledRuntimeVersion = bundledPath ? readRuntimeVersionFile(bundledPath) : undefined;
   const expectedRuntimeMajor = o.expectedRuntimeMajor ?? (bundledRuntimeVersion ? Number.parseInt(bundledRuntimeVersion.split('.')[0] ?? '', 10) : undefined);
   const logger = o.logger ?? createLogger({ dir: config.logDir, redact: () => [mailbox.readSecret() ?? ''] });

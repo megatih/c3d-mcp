@@ -1,9 +1,9 @@
-import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { adler32, asciiJson } from '../../src/core/json.js';
 import { Mailbox, REQUEST_FILE_RE, type BridgeRequest } from '../../src/core/mailbox.js';
-import { ensureMcpDirs } from '../../src/core/paths.js';
+import { assertPrivateDir, ensureMcpDirs } from '../../src/core/paths.js';
 import { makeTestEnv, type TestEnv } from '../helpers/fakeApp.js';
 
 let env: TestEnv;
@@ -39,6 +39,34 @@ describe('directories and secret', () => {
     const created = await ensureMcpDirs(env.paths);
     expect(created).not.toContain(env.paths.root);
     expect(created).toContain(env.paths.inbox);
+  });
+});
+
+describe('mailbox directory safety', () => {
+  it('does not chmod a pre-existing, non-mailbox C3D_MCP_DIR; refuses it while group/world writable', async () => {
+    env = makeTestEnv();
+    mkdirSync(env.paths.root, { recursive: true });
+    writeFileSync(join(env.paths.root, 'precious.txt'), 'user data');
+    chmodSync(env.paths.root, 0o775);
+    const created = await ensureMcpDirs(env.paths);
+    expect(created).not.toContain(env.paths.root);
+    expect(statSync(env.paths.root).mode & 0o777).toBe(0o775);
+    await expect(assertPrivateDir(env.paths.root)).rejects.toMatchObject({ code: 'PERMISSION_MISSING', hint: expect.stringContaining('chmod 700') });
+    const mb = new Mailbox(env.paths);
+    await expect(mb.writeRequest(request('0000000000000001', ID))).rejects.toThrow(/writable by group or others/);
+  });
+
+  it('still tightens an existing, empty or mailbox-shaped directory it owns', async () => {
+    env = makeTestEnv();
+    mkdirSync(env.paths.root, { recursive: true });
+    chmodSync(env.paths.root, 0o755);
+    await ensureMcpDirs(env.paths);
+    expect(statSync(env.paths.root).mode & 0o777).toBe(0o700);
+    chmodSync(env.paths.inbox, 0o777);
+    await expect(assertPrivateDir(env.paths.inbox)).rejects.toThrow(/writable/);
+    await ensureMcpDirs(env.paths);
+    await expect(assertPrivateDir(env.paths.inbox)).resolves.toBeUndefined();
+    await expect(assertPrivateDir(join(env.root, 'does-not-exist'))).resolves.toBeUndefined();
   });
 });
 

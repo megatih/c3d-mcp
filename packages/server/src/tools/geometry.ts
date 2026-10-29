@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion -- loosely typed runtime data; indices are bounds-checked by construction */
 import { z } from 'zod';
 import { BridgeError, defineTool } from '../toolkit.js';
-import { planChunks, validateMesh } from '../lib/mesh.js';
+import { sendMesh } from '../lib/meshSend.js';
+import { buildPipe } from '../lib/pipe.js';
 import { clean, ok } from '../lib/result.js';
 import { Descriptor, MaterialRef, ObjectRef, Vec3, Vec3Mesh, normMat, normRef, toXyz } from '../lib/schemas.js';
 
@@ -11,7 +11,7 @@ export const createMesh = defineTool({
   name: 'c3d_create_mesh',
   title: 'Create polygon mesh',
   description:
-    'Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent counter-clockwise winding seen from outside) with optional per-corner uvs and a whole-object material. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials are not supported (P31): assign one material per object or split the mesh. Y is up.',
+    'Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent counter-clockwise winding seen from outside) with optional per-corner uvs and a whole-object material. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials: assign afterwards with c3d_assign_material polygons:[...]. For tubes/cables use c3d_create_pipe. Y is up.',
   group: 'geometry',
   inputSchema: z.strictObject({
     name: z.string().min(1).max(255).optional().describe('Object name.'),
@@ -30,28 +30,11 @@ export const createMesh = defineTool({
   profiles: ['full', 'local'],
   localDescription: 'Create a mesh. Y is UP: height goes on the y axis, e.g. a pyramid has its base on y=0 and its apex at [0,height,0]. Vertices are [x,y,z]; polygons are vertex-index lists, counter-clockwise seen from outside.',
   async handler(i, ctx) {
-    validateMesh({ vertices: i.vertices, polygons: i.polygons, uvs: i.uvs });
-    const chunks = planChunks({ vertices: i.vertices, polygons: i.polygons, uvs: i.uvs });
     const t = clean({ position: xyz(i.position), rotation: xyz(i.rotation), scale: xyz(i.scale) });
-    const first = chunks[0]!;
-    let res = await ctx.bridge.one<Record<string, any>>('createMesh', clean({ name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: Object.keys(t).length ? t : undefined, vertices: first.vertices, polygons: first.polygons, uvs: first.uvs, material: i.material === undefined ? undefined : normMat(i.material) }));
-    const ref = { id: res.ref?.id ?? res.id };
-    try {
-      for (let n = 1; n < chunks.length; n++) {
-        ctx.services.progress(`mesh chunk ${n + 1}/${chunks.length}`, (n + 1) / chunks.length);
-        const c = chunks[n]!;
-        res = await ctx.bridge.one<Record<string, any>>('createMesh', clean({ append: { ref }, vertices: c.vertices, polygons: c.polygons, uvs: c.uvs }));
-      }
-    } catch (e) {
-      try {
-        await ctx.bridge.one('deleteObjects', { refs: [{ id: ref.id }] });
-      } catch {
-        /* best effort cleanup */
-      }
-      throw e;
-    }
-    const object: Record<string, any> = { ...res, id: ref.id };
-    return ok({ object, vertexCount: res.vertexCount ?? i.vertices.length, polygonCount: res.polygonCount ?? i.polygons.length, chunks: chunks.length }, `Created mesh "${String(object.name)}" #${ref.id}: ${res.vertexCount ?? i.vertices.length} vertices, ${res.polygonCount ?? i.polygons.length} polygons (${chunks.length} request(s)).`);
+    const sent = await sendMesh(ctx, { mesh: { vertices: i.vertices, polygons: i.polygons, uvs: i.uvs }, name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
+    const res = sent.res;
+    const object: Record<string, any> = { ...res, id: sent.id };
+    return ok({ object, vertexCount: res.vertexCount ?? i.vertices.length, polygonCount: res.polygonCount ?? i.polygons.length, chunks: sent.chunks }, `Created mesh "${String(object.name)}" #${sent.id}: ${res.vertexCount ?? i.vertices.length} vertices, ${res.polygonCount ?? i.polygons.length} polygons (${sent.chunks} request(s)).`);
   },
 });
 
@@ -149,4 +132,38 @@ export const makeEditable = defineTool({
   },
 });
 
-export const geometryTools = [createMesh, getMesh, editMesh, createSpline, makeEditable];
+export const createPipe = defineTool({
+  name: 'c3d_create_pipe',
+  title: 'Create pipe / tube',
+  description:
+    'Sweeps a circular cross-section (radius, segments sides) along a 3D polyline (points [x,y,z], 2..200) and creates it as one editable polygon mesh: cables, pipes, rails, handrails, partial torus arcs (TORUS has no sweep angle). bend_radius rounds every interior corner with a circular arc (arc_steps samples; must fit: <= half the shorter adjacent segment, else INVALID_ARGUMENT); without it corners are mitered. Parallel-transport frames, so no twisting. closed:true makes a loop (needs 3+ points), caps:true closes open ends. Y is up. Optional parent/material/transform like c3d_create_mesh.',
+  group: 'geometry',
+  inputSchema: z.strictObject({
+    name: z.string().min(1).max(255).optional().describe('Object name.'),
+    parent: ObjectRef.optional().describe('Parent (default root).'),
+    position: Vec3.optional().describe('Local position of the object (points are relative to it).'),
+    rotation: Vec3.optional().describe('Degrees.'),
+    scale: Vec3.optional().describe('Local scale.'),
+    points: z.array(Vec3Mesh).min(2).max(200).describe('Polyline the pipe follows: [[x,y,z],...]. Consecutive points must differ.'),
+    radius: z.number().positive().max(100000).describe('Pipe radius (> 0).'),
+    segments: z.number().int().min(6).max(48).optional().describe('Sides of the circular cross-section (default 16).'),
+    bend_radius: z.number().positive().max(100000).optional().describe('Radius of the circular fillet at every interior corner; omit for sharp mitered corners.'),
+    arc_steps: z.number().int().min(1).max(24).optional().describe('Segments per fillet arc (default 6).'),
+    closed: z.boolean().optional().describe('Join the last point back to the first (default false).'),
+    caps: z.boolean().optional().describe('Close the open ends with flat caps (default true; ignored when closed).'),
+    material: MaterialRef.optional().describe('Material to assign to the whole object.'),
+  }),
+  outputSchema: z.looseObject({ object: Descriptor, vertexCount: z.number().int(), polygonCount: z.number().int(), ringCount: z.number().int(), chunks: z.number().int() }),
+  mutating: true,
+  idempotent: false,
+  profiles: ['full'],
+  async handler(i, ctx) {
+    const pipe = buildPipe({ points: i.points, radius: i.radius, segments: i.segments, bendRadius: i.bend_radius, arcSteps: i.arc_steps, closed: i.closed, caps: i.caps });
+    const t = clean({ position: xyz(i.position), rotation: xyz(i.rotation), scale: xyz(i.scale) });
+    const sent = await sendMesh(ctx, { mesh: { vertices: pipe.vertices, polygons: pipe.polygons }, name: i.name ?? 'Pipe', parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
+    const object: Record<string, any> = { ...sent.res, id: sent.id };
+    return ok({ object, vertexCount: pipe.vertices.length, polygonCount: pipe.polygons.length, ringCount: pipe.ringCount, chunks: sent.chunks }, `Created pipe "${String(object.name)}" #${sent.id}: ${pipe.ringCount} rings x ${pipe.segments} sides, ${pipe.vertices.length} vertices, ${pipe.polygons.length} polygons.`);
+  },
+});
+
+export const geometryTools = [createMesh, getMesh, editMesh, createSpline, makeEditable, createPipe];

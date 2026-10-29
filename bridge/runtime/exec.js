@@ -108,8 +108,33 @@
     }
   }
 
+  // Live finding (crash #2): doc.removeMaterial on a material created in the same macro run crashes Cheetah3D 8.1.3 at idle
+  // (dangling wrapper release). Removing a material from an earlier run is fine. Scripts get a doc whose removeMaterial refuses
+  // the unsafe case; every other member passes through bound to the real document.
+  function guardedDoc(realDoc) {
+    var startCount, added = false;
+    if (typeof Proxy !== 'function') { return realDoc; }
+    try { startCount = realDoc.materialCount(); } catch (e) { return realDoc; }
+    return new Proxy(realDoc, {
+      get: function (target, key) {
+        var v = target[key];
+        if (key === 'addMaterial') { return function () { added = true; return v.apply(target, arguments); }; }
+        if (key === 'removeMaterial') {
+          return function (arg) {
+            if (added && (typeof arg !== 'number' || arg >= startCount)) {
+              U.fail('UNSUPPORTED', 'doc.removeMaterial on a material created in the same script run crashes Cheetah3D 8.1.3. Create the material in one c3d call and remove it in a later one (c3d_run_script or the removeMaterial op), or leave it unused.');
+            }
+            return v.apply(target, arguments);
+          };
+        }
+        return typeof v === 'function' ? function () { return v.apply(target, arguments); } : v;
+      },
+      set: function (target, key, value) { target[key] = value; return true; }
+    });
+  }
+
   C3D.core.define('run', 'W', function (ctx, a) {
-    var lines = [], roots = [ctx.dir + 'tmp'], i, fn, body, os, file, facade, restoreCtor, value, G = U.GLOBAL, realOS = G.OS, realFile = G.File, done = false, res;
+    var lines = [], roots = [ctx.dir + 'tmp'], i, fn, body, os, file, facade, restoreCtor, value, docFacade, G = U.GLOBAL, realOS = G.OS, realFile = G.File, done = false, res;
     if (typeof a.code !== 'string') { U.fail('INVALID_ARGUMENT', 'code must be a string'); }
     if (a.allowFiles !== undefined) {
       if (!Array.isArray(a.allowFiles)) { U.fail('INVALID_ARGUMENT', 'allowFiles must be an array of absolute paths'); }
@@ -133,6 +158,7 @@
     };
     // "use strict" forbids a parameter named eval, so the strict user body lives in an inner function. The standalone parse
     // first guarantees the body cannot close the wrapper (an unbalanced "}" is a syntax error on its own).
+    docFacade = guardedDoc(ctx.doc);
     body = "'use strict';\n" + a.code;
     try {
       new RealFunction(body);
@@ -145,7 +171,7 @@
       // Live finding: in the real app OS and File are non-writable, non-configurable globals, so this shadowing is a no-op there.
       // Containment relies on the strict inner function (this === undefined), the shadowed parameters and the neutralized constructors.
       try { G.OS = os; G.File = file; } catch (e3) { /* read-only global */ }
-      value = fn.call(undefined, ctx.doc, os, file, facade, print, blocked('eval'), blocked('Function'), blocked('geval'), undefined);
+      value = fn.call(undefined, docFacade, os, file, facade, print, blocked('eval'), blocked('Function'), blocked('geval'), undefined);
       done = true;
       // Serialize while the containment is still in place: String()/JSON conversion can call user-defined code.
       res = describeResult(value);

@@ -153,3 +153,48 @@ final class SocketProtocolTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: socket))
     }
 }
+
+final class PeerAuthTests: XCTestCase {
+    func testRealPeerUIDIsOurOwn() throws {
+        var fds: [Int32] = [0, 0]
+        XCTAssertEqual(socketpair(AF_UNIX, SOCK_STREAM, 0, &fds), 0)
+        defer { close(fds[0]); close(fds[1]) }
+        XCTAssertEqual(PeerAuth.peerUID(of: fds[0]), geteuid())
+        XCTAssertTrue(PeerAuth.isAuthorized(fd: fds[0]))
+        XCTAssertNil(PeerAuth.peerUID(of: -1))
+        XCTAssertFalse(PeerAuth.isAuthorized(fd: -1))
+    }
+
+    func testProviderDecidesAuthorization() {
+        XCTAssertTrue(PeerAuth.isAuthorized(fd: 0, expected: 501) { _ in 501 })
+        XCTAssertFalse(PeerAuth.isAuthorized(fd: 0, expected: 501) { _ in 502 })
+        XCTAssertFalse(PeerAuth.isAuthorized(fd: 0, expected: 501) { _ in nil })
+    }
+
+    func testForeignUIDConnectionIsDroppedWithoutResponse() throws {
+        let dir = try tempDir()
+        defer { try? FileManager.default.removeItem(atPath: dir) }
+        let path = dir + "/p.sock"
+        let server = SocketServer(path: path, router: makeRouter(), log: .silent, expectedUID: geteuid()) { _ in geteuid() &+ 1 }
+        try server.start()
+        defer { server.stop() }
+        let fd = try connectFD(to: path)
+        defer { close(fd) }
+        let line = Array(#"{"id":"x","cmd":"ping"}"#.utf8) + [0x0A]
+        _ = line.withUnsafeBytes { write(fd, $0.baseAddress, $0.count) }
+        var tv = timeval(tv_sec: 3, tv_usec: 0)
+        setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &tv, socklen_t(MemoryLayout<timeval>.size))
+        var buf = [UInt8](repeating: 0, count: 256)
+        XCTAssertLessThanOrEqual(read(fd, &buf, buf.count), 0, "no response may be written to an unauthorized peer")
+    }
+
+    func testMatchingUIDIsServed() throws {
+        let dir = try tempDir()
+        defer { try? FileManager.default.removeItem(atPath: dir) }
+        let path = dir + "/q.sock"
+        let server = SocketServer(path: path, router: makeRouter(), log: .silent)
+        try server.start()
+        defer { server.stop() }
+        XCTAssertTrue(try SocketClient(path: path).call(.ping).ok)
+    }
+}

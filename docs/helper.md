@@ -59,7 +59,7 @@ CTL="helper/build/C3D Bridge Helper.app/Contents/MacOS/c3d-helper-ctl"
 "$CTL" --socket "$SOCK" --yes-press pressBridge   # state-changing commands need --yes-press
 ```
 
-Build / test: `cd helper && swift build && swift test` (offline, ~0.5 s). Release bundle: `helper/build-app.sh`
+Build / test: `cd helper && swift build && swift test` (offline, ~1 s). Release bundle: `helper/build-app.sh`
 (`C3D_SIGN_IDENTITY` optional). Version comes from `helper/VERSION` into the Info.plist.
 
 ## Protocol
@@ -86,9 +86,20 @@ Unknown arguments are rejected (`INVALID_ARGUMENT`), as are unknown commands and
 | `newDocument` | - | `{title}` (File > New, title of the window that appeared) |
 | `launchApp` | - | `{pid}` (waits <= 30 s for the AX menu bar) |
 | `dismissOwnModal` | `text` | `{dismissed:bool}` - presses `OK` only on a dialog that is registered as own AND contains `text` |
-| `captureWindow` | `title?`, `outPath` (abs), `crop?:{x,y,width,height}` (window points) | `{path,width,height,bytes}` PNG, ScreenCaptureKit |
+| `captureWindow` | `title?`, `outPath` (abs), `overwrite?` (false), `crop?:{x,y,width,height}` (window points) | `{path,width,height,bytes}` PNG, ScreenCaptureKit |
 | `analyzeImage` | `path` (abs) | `{width,height,blank,meanLuma (0..1),stdDev (0..1),histogram[16]}` |
-| `downscaleImage` | `path`, `outPath`, `maxDim`, `maxBytes` | `{path,width,height,bytes,format}`; PNG, else JPEG (extension rewritten to `.jpg`, use the returned `path`) |
+| `downscaleImage` | `path`, `outPath`, `maxDim`, `maxBytes`, `overwrite?` (false) | `{path,width,height,bytes,format}`; PNG, else JPEG (extension rewritten to `.jpg`, use the returned `path`) |
+| `postProcessImage` | `path`, `outPath`, `overwrite?` (false), `bloom?:{threshold 0..1, radius px 0..500, intensity 0..2}`, `outline?:{strength 0..1, width px 0.5..4, color?:[r,g,b] 0..1 (black)}`, `vignette?:{intensity 0..1, radius 0..2}`, `grade?:{saturation 0..2 (1), contrast 0.5..1.5 (1), exposure -2..2 EV (0), shadowTint?, highlightTint?:[r,g,b] 0..1, tintAmount 0..1 (0.5)}`, `posterize?:{levels 2..32}` | `{outPath,width,height,bytes,applied:[...]}` |
+
+`postProcessImage` (CoreImage, Metal with software fallback) applies, in this fixed order, `grade -> posterize -> outline -> bloom -> vignette`;
+`applied` lists the requested ones in that order and at least one effect is required. `path`/`outPath` must end in png/jpg/jpeg/tif/tiff;
+the output encoding follows the `outPath` extension (PNG, JPEG q0.92, TIFF). Input is capped at 64 megapixels; output keeps the input size.
+Outline = Sobel-style edge detection on luma, widened by `width`, drawn as ink in `color`. Bloom = soft threshold, gaussian blur, additive.
+Split-toning blends a soft-light tint into the shadows / highlights weighted by luma and `tintAmount`.
+
+**Output path rules** (`captureWindow`, `downscaleImage`, `postProcessImage`): every path argument must be absolute and contain no `..`
+component (`INVALID_ARGUMENT`); the parent directory must exist; `outPath` may never equal the input; an existing `outPath` is refused
+unless `overwrite:true` (new files are created exclusively, `O_EXCL|O_NOFOLLOW`, so a racing file or symlink is not clobbered; overwriting only replaces regular files).
 
 `busy:true` means the press ended in `kAXErrorCannotComplete` (dispatched, Cheetah3D busy running the macro).
 `blank` = luma spread (max-min) <= 2/255 of the analysed raster (<= 1024 px thumbnail; width/height are the real size).
@@ -113,6 +124,13 @@ The helper's own dialogs (e.g. the Import dialog opened by a menu command) must 
 `pressMenu {ownModalText:"Import"}` registers that text after a successful press; any dialog whose title/text contains it
 is `own:true` for 120 s and ignored by the pre-flight check. `dismissOwnModal {text}` clicks OK on such a dialog and
 unregisters it. The v1 auto-click allow-list for foreign dialogs is empty.
+
+## Peer authentication
+
+The socket is mode 0600, and additionally every accepted connection is checked with `getpeereid`: if the peer's effective uid is not the
+helper's own `geteuid()` (or cannot be read) the connection is closed immediately, nothing is written, and a line is logged
+(`dropped connection from unauthorized peer uid ...`). `SocketServer` takes an injectable `peerUID` provider so the check is unit-tested
+without a second user (`PeerAuthTests`).
 
 ## Permissions and TCC
 

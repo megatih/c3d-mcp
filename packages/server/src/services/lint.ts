@@ -164,7 +164,7 @@ export function lintScript(code: string): LintFinding[] {
   // ---- server safety rules ----
   for (const m of src.matchAll(/\bFile\s*\.\s*mkDir\b|\.mkDir\s*\(/g)) add('error', 'file-mkdir', m.index, 'File.mkDir is banned: it wipes the target directory.');
   for (const m of src.matchAll(/\bOS\s*\.\s*system\b/g)) add('warn', 'os-system', m.index, 'OS.system runs a shell command synchronously; requires confirmation.');
-  for (const m of src.matchAll(/\.\s*removeMaterial\s*\(/g)) add('warn', 'remove-material', m.index, 'doc.removeMaterial in a script is suspected to crash Cheetah3D 8.1.3 (a dangling reference was released at idle right after a script that created a material with nodes and removed it). Do not create-and-remove probe materials; leave unused materials in place.');
+  for (const m of src.matchAll(/\.\s*removeMaterial\s*\(/g)) add('warn', 'remove-material', m.index, 'doc.removeMaterial on a material created in the same script run crashes Cheetah3D 8.1.3 at idle (the runtime refuses it). Remove materials in a later call, or leave unused materials in place.');
   for (const m of src.matchAll(/\bOS\s*\[|\bglobalThis\s*\[|\bthis\s*\[\s*["'`]OS|\bwindow\s*\[/g)) add('error', 'computed-os-access', m.index, 'Computed access to OS/globals (e.g. OS["sys"+"tem"]) is not allowed.');
   for (const m of src.matchAll(/(?<![\w.])eval\s*\(|\bnew\s+Function\s*\(|(?<![\w.])Function\s*\(/g)) add('warn', 'eval', m.index, 'eval/Function executes dynamic code and bypasses linting.');
   for (const m of src.matchAll(LOOP_HEAD)) {

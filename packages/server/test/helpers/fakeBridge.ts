@@ -230,7 +230,7 @@ export class FakeBridge implements BridgeClient {
       case 'addMaterialNode': { const m = this.mat(a.material); const n = { id: this.nextNode++, type: a.type, params: {} }; m.nodes.push(n); return { nodeId: n.id, type: a.type, inputs: ['in1'], outputs: ['color'] }; }
       case 'connectNodes': { const m = this.mat(a.material); if (!m.nodes.some((n) => n.id === a.fromNode) || !m.nodes.some((n) => n.id === a.toNode)) throw new BridgeError('NOT_FOUND', 'node'); m.connections.push(a); return { connected: true }; }
       case 'getMaterialGraph': { const m = this.mat(a.material); return { name: m.name, nodes: m.nodes.map((n) => ({ ...n, params: Object.entries(n.params).map(([name, value]) => ({ name, value })), inputs: [], outputs: [] })), connections: m.connections }; }
-      case 'assignMaterial': { const o = this.resolve(a.ref); const m = this.mat(a.material); if (a.replaceExisting) o.tags = o.tags.filter((t) => t.type !== 'SHADERTAG'); o.tags.push({ type: 'SHADERTAG', params: { material: m.name } }); return { tagIndex: o.tags.length - 1, material: { name: m.name } }; }
+      case 'assignMaterial': { const o = this.resolve(a.ref); const m = this.mat(a.material); if (a.polygons) { const slot = a.slot ?? o.tags.filter((t) => t.params?.shadeSelection).length + 1; o.tags.push({ type: 'SHADERTAG', params: { material: m.name, shadeSelection: slot + 1, polygons: a.polygons } }); return { tagIndex: o.tags.length - 1, material: { name: m.name }, slot, polygons: a.polygons.length }; } if (a.replaceExisting) o.tags = o.tags.filter((t) => t.type !== 'SHADERTAG'); o.tags.push({ type: 'SHADERTAG', params: { material: m.name } }); return { tagIndex: o.tags.length - 1, material: { name: m.name } }; }
       case 'setTexture': { const m = this.mat(a.material); const node = a.node == null ? m.nodes[0]! : m.nodes.find((n) => n.id === a.node); if (!node) throw new BridgeError('NOT_FOUND', 'node'); node.params[a.param] = a.path; return { path: a.path }; }
       case 'setActiveCamera': { const o = this.resolve(a.ref); if (o.type !== 'CAMERA') throw new BridgeError('INVALID_ARGUMENT', 'not a camera'); this.doc.activeCamera = o.id; return { activeCamera: { id: o.id, name: o.name } }; }
       case 'setKeyframes': {
@@ -249,6 +249,22 @@ export class FakeBridge implements BridgeClient {
         fs.mkdirSync(path.dirname(a.path), { recursive: true });
         fs.writeFileSync(a.path, makePng(64, 48, this.blankRender ? () => [10, 10, 10] : (x, y) => [x * 4, y * 5, 128]));
         return { path: a.path, exists: true, size: fs.statSync(a.path).size, width: 64, height: 48 };
+      }
+      case 'sceneStats': {
+        const root = a.root ? this.resolve(a.root) : null;
+        const list = root ? [root, ...this.walk(root, 99)] : this.walk(null, 99);
+        const byType: Record<string, number> = {};
+        const st = { objectCount: list.length, byType, folderCount: 0, lightCount: 0, cameraCount: 0, splineCount: 0, polygonObjectCount: 0, polygonCount: 0, vertexCount: 0, triangleCount: 0, tagCount: 0, materialCount: this.materials.length, nodeCount: this.materials.reduce((n, m) => n + m.nodes.length, 0) };
+        for (const o of list) {
+          byType[o.type] = (byType[o.type] ?? 0) + 1;
+          st.tagCount += o.tags.length;
+          if (o.type === 'FOLDER') st.folderCount++;
+          if (o.type === 'LIGHT') st.lightCount++;
+          if (o.type === 'CAMERA') st.cameraCount++;
+          if (o.type === 'SPLINE') st.splineCount++;
+          if (o.mesh) { st.polygonObjectCount++; st.polygonCount += o.mesh.polygons.length; st.vertexCount += o.mesh.vertices.length; st.triangleCount += o.mesh.polygons.reduce((n, p) => n + p.length - 2, 0); }
+        }
+        return st;
       }
       case 'run': return { value: a.code.includes('boom') ? undefined : 42, log: ['hello'], returned: 42 };
       default: throw new BridgeError('INTERNAL', `FakeBridge: unhandled op ${op}`);

@@ -2,7 +2,7 @@ import { mkdir, readFile, readdir, rename, rm, rmdir, stat, writeFile } from 'no
 import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, dirname, join, resolve, sep } from 'node:path';
-import { assetLocations, compareSemver, firstExisting, packageVersion, parseRuntimeVersion, readRuntimeVersionFile, renderMacroTemplate } from './assets.js';
+import { assetLocations, compareSemver, newestExisting, packageVersion, parseRuntimeVersion, readRuntimeVersionFile, renderMacroTemplate } from './assets.js';
 import { HELPER_APP_NAME } from './helperClient.js';
 import { ensureMcpDirs } from './paths.js';
 import type { MenuState } from './trigger.js';
@@ -103,8 +103,8 @@ export async function install(rt: Runtime, opts: InstallOptions = {}): Promise<I
     return fail(`Cheetah3D support directory not found: ${paths.supportDir}. Launch Cheetah3D once so it creates it (or set C3D_CHEETAH_SUPPORT_DIR).`);
   }
   const loc = assetLocations();
-  const runtimeSource = opts.runtimeSource ?? firstExisting(loc.runtime);
-  const templateSource = opts.templateSource ?? firstExisting(loc.macroTemplate);
+  const runtimeSource = opts.runtimeSource ?? newestExisting(loc.runtime);
+  const templateSource = opts.templateSource ?? newestExisting(loc.macroTemplate);
   if (!runtimeSource || !templateSource || !existsSync(runtimeSource) || !existsSync(templateSource)) {
     return fail(`Bundled bridge assets are missing (${!runtimeSource || !existsSync(runtimeSource) ? 'runtime.js' : 'macro template'}). Reinstall the c3d-mcp package or build the bridge (bridge/dist/runtime.js).`);
   }
@@ -253,8 +253,12 @@ export async function uninstall(rt: Runtime): Promise<UninstallReport> {
     return report;
   }
 
-  // Files first (macro file is always ours when listed or when its recorded path matches).
-  for (const file of new Set([...manifest.createdFiles, manifest.macroFile])) {
+  // Files first. Only files install itself created are removed: a macro file that existed before install is never deleted.
+  if (!manifest.createdFiles.includes(manifest.macroFile) && (await exists(manifest.macroFile))) {
+    report.kept.push(manifest.macroFile);
+    report.notes.push(`Kept ${manifest.macroFile}: it existed before install (the install manifest does not list it as created).`);
+  }
+  for (const file of new Set(manifest.createdFiles)) {
     if (protectedPaths.some((p) => inside(file, p))) continue;
     if (!inside(file, paths.root) && !inside(file, paths.macroDir)) {
       report.kept.push(file);

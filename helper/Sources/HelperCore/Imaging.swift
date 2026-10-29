@@ -100,38 +100,40 @@ public enum Imaging {
         return data as Data
     }
 
-    public static func writePNG(_ img: CGImage, to path: String) throws -> Int {
+    public static func writePNG(_ img: CGImage, to path: String, overwrite: Bool = true) throws -> Int {
         let data = try encode(img, type: .png, quality: nil)
-        try data.write(to: URL(fileURLWithPath: path), options: .atomic)
+        try OutputPolicy.write(data, to: path, overwrite: overwrite)
         return data.count
     }
 
     /// Fits the image into `maxDim` and `maxBytes`: PNG first, then JPEG with falling quality,
     /// shrinking by 20 % per round when even the lowest quality is too large.
-    public static func downscale(path: String, outPath: String, maxDim: Int, maxBytes: Int) throws -> DownscaleResult {
+    public static func downscale(path: String, outPath: String, maxDim: Int, maxBytes: Int,
+                                 overwrite: Bool = false) throws -> DownscaleResult {
         let src = try source(at: path)
+        try OutputPolicy.check(outPath: outPath, overwrite: overwrite, inputs: [path])
         var dim = maxDim
         while dim >= 16 {
             let img = try thumbnail(src, maxDim: dim)
             let png = try encode(img, type: .png, quality: nil)
             if png.count <= maxBytes {
-                return try finish(png, img, outPath, ext: "png", format: "png")
+                return try finish(png, img, outPath, input: path, overwrite: overwrite, ext: "png", format: "png")
             }
             for q in stride(from: 0.9, through: 0.3, by: -0.2) {
                 let jpg = try encode(img, type: .jpeg, quality: q)
-                if jpg.count <= maxBytes { return try finish(jpg, img, outPath, ext: "jpg", format: "jpeg") }
+                if jpg.count <= maxBytes { return try finish(jpg, img, outPath, input: path, overwrite: overwrite, ext: "jpg", format: "jpeg") }
             }
             dim = Int(Double(max(img.width, img.height)) * 0.8)
         }
         throw HelperError(.invalidArgument, "cannot fit image into \(maxBytes) bytes")
     }
 
-    private static func finish(_ data: Data, _ img: CGImage, _ outPath: String, ext: String, format: String) throws -> DownscaleResult {
+    private static func finish(_ data: Data, _ img: CGImage, _ outPath: String, input: String, overwrite: Bool,
+                               ext: String, format: String) throws -> DownscaleResult {
         let url = URL(fileURLWithPath: outPath)
         let target = url.pathExtension.lowercased() == ext ? url : url.deletingPathExtension().appendingPathExtension(ext)
-        do { try data.write(to: target, options: .atomic) } catch {
-            throw HelperError(.invalidArgument, "cannot write \(target.path): \(error.localizedDescription)")
-        }
+        try OutputPolicy.check(outPath: target.path, overwrite: overwrite, inputs: [input])
+        try OutputPolicy.write(data, to: target.path, overwrite: overwrite)
         return DownscaleResult(path: target.path, width: img.width, height: img.height, bytes: data.count, format: format)
     }
 }

@@ -6,7 +6,7 @@ import { applyLookAt } from '../lib/lookAtOp.js';
 import { applyText, runApply } from '../lib/ops.js';
 import { assertNotScriptType } from '../lib/scriptTypes.js';
 import { clean, ok } from '../lib/result.js';
-import { AnyObject, Confirm, Descriptor, Limit, ObjectRef, Offset, ParamMap, ResponseFormat, Vec3, normRef, toXyz } from '../lib/schemas.js';
+import { AnyObject, Confirm, Descriptor, Limit, ObjectRef, Offset, ParamMap, ResponseFormat, Vec3, normParams, normRef, toXyz } from '../lib/schemas.js';
 
 const Include = z.enum(['parameters', 'tags', 'children', 'bbox', 'worldMatrix', 'materials']);
 const xyz = (v: z.infer<typeof Vec3> | undefined): { x: number; y: number; z: number } | undefined => (v ? toXyz(v) : undefined);
@@ -90,7 +90,7 @@ export const createObject = defineTool({
     assertNotScriptType(i.type);
     const type = i.type.toUpperCase();
     if (BAD_LIGHTS[type]) throw new BridgeError('INVALID_ARGUMENT', `${type} does not exist in Cheetah3D 8.1.3.`, 'Use type "LIGHT" with light_type 0..4, or c3d_set_light.');
-    const object = await ctx.bridge.one<Record<string, any>>('createObject', clean({ type, name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: Object.keys(transformArgs(i)).length ? transformArgs(i) : undefined, params: i.params, lightType: i.light_type, select: i.select }));
+    const object = await ctx.bridge.one<Record<string, any>>('createObject', clean({ type, name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: Object.keys(transformArgs(i)).length ? transformArgs(i) : undefined, params: i.params === undefined ? undefined : normParams(i.params), lightType: i.light_type, select: i.select }));
     return ok({ object }, `Created ${object.type ?? type} "${object.name}" #${object.id}.`);
   },
 });
@@ -290,7 +290,7 @@ export const getParameters = defineTool({
 export const setParameters = defineTool({
   name: 'c3d_set_parameters',
   title: 'Set parameters',
-  description: 'Writes typed parameters on an object, or on one of its tags when tag_index is given. Values: numbers, booleans, strings, [x,y,z] / {x,y,z} vectors, {r,g,b,a} colors (0..1), texture paths, {ref} links. Partial success is reported per name (unknown names are listed in errors). Use c3d_get_parameters first to see names.',
+  description: 'Writes typed parameters on an object, or on one of its tags when tag_index is given. Values: numbers, booleans, strings, [x,y,z] / {x,y,z} vectors, {r,g,b,a} colors (0..1), texture paths, {ref: id|"/path"|object ref} links (null clears). Partial success is reported per name (unknown names are listed in errors). Use c3d_get_parameters first to see names.',
   group: 'scene',
   inputSchema: z.strictObject({ ref: ObjectRef, params: ParamMap.describe('Map of parameter name to value.'), tag_index: z.number().int().min(0).optional().describe('Write to this tag of the object instead.') }),
   outputSchema: z.looseObject({ applied: z.array(z.string()), errors: z.array(z.looseObject({ name: z.string() })) }),
@@ -300,7 +300,7 @@ export const setParameters = defineTool({
   localDescription: 'Set object parameters (name->value).',
   async handler(i, ctx) {
     if (!Object.keys(i.params).length) throw new BridgeError('INVALID_ARGUMENT', 'params is empty.');
-    const r = await runApply(ctx, 'setParameters', clean({ ref: normRef(i.ref), tag: i.tag_index === undefined ? undefined : { index: i.tag_index }, params: i.params }));
+    const r = await runApply(ctx, 'setParameters', clean({ ref: normRef(i.ref), tag: i.tag_index === undefined ? undefined : { index: i.tag_index }, params: normParams(i.params) }));
     return ok({ applied: r.applied, errors: r.errors }, applyText('Parameters', r));
   },
 });
@@ -346,4 +346,24 @@ export const lookAt = defineTool({
   },
 });
 
-export const sceneTools = [listScene, getObject, createObject, deleteObjects, reparent, rename, duplicate, setTransform, getParameters, setParameters, select, lookAt];
+const StatsOut = z.looseObject({ objectCount: z.number().int(), byType: z.record(z.string(), z.number()), polygonCount: z.number().int().optional(), vertexCount: z.number().int().optional(), triangleCount: z.number().int().optional() });
+
+export const getSceneStats = defineTool({
+  name: 'c3d_get_scene_stats',
+  title: 'Scene statistics',
+  description: 'Counts for the whole scene or a subtree: objects (total and by type), folders, lights, cameras, splines, polygon objects, polygons, vertices, triangles, tags, materials and material nodes. Cheap (no per-polygon reads): use it to budget scene complexity, verify that a build produced what you intended or compare before/after. skipped>0 means some objects could not be counted.',
+  group: 'scene',
+  inputSchema: z.strictObject({ root: ObjectRef.optional().describe('Count only this object and its descendants (default: whole scene).') }),
+  outputSchema: StatsOut,
+  mutating: false,
+  idempotent: true,
+  profiles: ['full', 'local', 'readonly'],
+  localDescription: 'Count objects, polygons, vertices, lights, cameras, materials in the scene.',
+  async handler(i, ctx) {
+    const r = await ctx.bridge.one<Record<string, any>>('sceneStats', clean({ root: i.root === undefined ? undefined : normRef(i.root) }));
+    const bt = Object.entries((r.byType ?? {}) as Record<string, number>).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ');
+    return ok({ ...r, objectCount: r.objectCount ?? 0, byType: r.byType ?? {} }, `${r.objectCount} objects (${bt || 'none'}); ${r.polygonCount ?? 0} polygons, ${r.vertexCount ?? 0} vertices, ${r.triangleCount ?? 0} triangles; ${r.lightCount ?? 0} lights, ${r.cameraCount ?? 0} cameras, ${r.materialCount ?? 0} materials, ${r.tagCount ?? 0} tags${r.skipped ? `; ${String(r.skipped)} skipped` : ''}.`);
+  },
+});
+
+export const sceneTools = [listScene, getObject, createObject, deleteObjects, reparent, rename, duplicate, setTransform, getParameters, setParameters, select, lookAt, getSceneStats];

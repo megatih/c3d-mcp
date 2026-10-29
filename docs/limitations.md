@@ -6,7 +6,6 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 
 | Area | Limitation | Probe | Alternative |
 |---|---|---|---|
-| Materials | Per-polygon material assignment (`c3d_assign_material polygons`, per-polygon `material` in `c3d_create_mesh`) | P31 | One material per object; split the mesh into several objects |
 | Files | `.glb` / `.gltf` cannot be opened or merged (Cheetah3D shows a blocking dialog) | P09 | Use FBX/OBJ; `c3d_import_asset` downloads the FBX variant |
 | Render | Only `.png`, `.jpg`, `.tiff` outputs; other extensions open a modal dialog, so they are rejected client-side | P08 | Convert externally |
 | Parameters | Gradient and float-array parameters can be listed (`{unsupported:true}`) but not written | P16 | none |
@@ -28,6 +27,15 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 | `c3d_restore_checkpoint` | reopens the checkpoint as a NEW window (extra window stays) | the original window is not touched | close the extra window manually |
 | `c3d_new_document` / `c3d_open_document` | helper `newDocument` / `open -a` + window adoption by title | window title heuristics | `c3d_use_document` |
 
+## Newly possible (since the benchmark runs)
+
+* **Per-polygon materials** work: `c3d_assign_material` with `polygons` (24 polygon-selection slots per object).
+* **Gradient / image background:** `c3d_set_background` (solid, gradient generated as PNG, image) on the active camera. Experimental until verified in a live render: the exact parameter behaviour (`backgroundImage` / `backgroundColor`) is set through the generic parameter path.
+* **Post-processing (bloom, outlines, vignette, grade, posterize):** `c3d_postprocess_image` on an existing render, via the helper app (`UNSUPPORTED` with an install hint when the helper is missing or too old).
+* **Pipes, cables, partial torus arcs:** `c3d_create_pipe`.
+* **Scene statistics:** `c3d_get_scene_stats`.
+* **Partial render-setting failures** are reported (`applied` plus per-key `errors`) instead of discarded.
+
 ## Behavioural caveats
 
 * **Object names are not unique** (P20). Always use ids; path references that match several objects return `AMBIGUOUS` with candidates. Materials are uniquified (`Name.2`).
@@ -46,17 +54,17 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 ## Known security limitations (from the independent review, docs/qa/review-security.md)
 - `c3d_run_script` containment is best-effort, not a boundary. A script with an endless loop freezes Cheetah3D (the deadline is only checked before a run); lint blocks the obvious `while(true)` forms.
 - Script objects/tags (`SCRIPTTAG`, `SCRIPTPOLY`, …) cannot be created through the tools because they execute unsandboxed JavaScript.
-- `c3d_export` also writes sibling files (`.mtl`) and creates missing parent directories; the overwrite guard checks the main path only and is not atomic.
-- The helper socket is protected by file mode (0600) only; any process of the same user can use it.
-- Downloads are capped at 100 MB but the body is buffered before the cap is enforced.
+- `c3d_export` / `c3d_save_document`: the overwrite guard now also checks sibling files (`.mtl`), treats dangling symlinks as existing and creates parent directories only inside the work directory, but the actual write is done by Cheetah3D, so check-then-write is still not atomic.
+- The helper socket is protected by file mode (0600) only; any process of the same user can use it. The helper bundle's code signature is verified before auto-launch (`C3D_HELPER_SKIP_VERIFY=1` for unsigned dev builds).
+- Downloads are capped at 100 MB (enforced while streaming) and JSON API responses at 8 MB.
 
 
 ## Found by the benchmark runs (docs/benchmark/)
-- **Rendering features Cheetah3D does not offer through c3d:** no outlines / Freestyle-style line work, no bloom or glow, no compositor or render passes, no gradient background (camera/BACKGROUND take a flat colour or an image; scripts cannot write image files), so an anime/NPR finish like the Blender result is not reachable.
+- **Rendering features Cheetah3D itself does not offer:** no outlines / Freestyle-style line work, no bloom or glow, no compositor or render passes. These are now available as image post-processing: render with `c3d_render_image`, then run `c3d_postprocess_image` (bloom, edge outlines, vignette, colour grade, posterize; needs the helper app, `c3d-mcp install` updates it). They are applied to the finished 2D image, so they cannot use depth/object IDs (no per-object outlines, no glow that is occluded correctly) and the unprocessed render has no glow to lights. **Gradient backgrounds** are supported by `c3d_set_background` (the tool generates a PNG and assigns it as the active camera's background image; sizes up to 4096 px; not visible in the editor viewport).
 - **Materials:** the `Toon` root only accepts `color` (its lit/shaded ramp cannot be set); only `Material`, `Material (PBR)`, `Toon` and `Glass` roots are created by `c3d_create_material`.
-- **Geometry:** `TORUS` has no sweep angle (no quarter-turn pipe elbows); parametric primitives have no polygon/vertex statistics tool.
-- **Lights:** `c3d_set_light`/`c3d_look_at` assume a light casts along its local -Z, but Cheetah3D lights also have an `axis` parameter (default 1) and a distant light aimed this way can face the opposite direction (the residual check cannot catch it). Verify distant-light direction with a test render or set `rotation` by hand. The axis values 0–5 are not yet mapped.
+- **Geometry:** `TORUS` has no sweep angle; use `c3d_create_pipe` for bent pipes, cables and partial torus arcs (circular cross-section only, fillets are polylines sampled at `arc_steps`). Scene totals (objects by type, polygons, vertices, triangles, materials) come from `c3d_get_scene_stats`; per-object statistics are not offered.
+- **Lights:** a new light casts along its local -Y (its `axis` option defaults to 1; 0 = -X, 1 = -Y, >=2 = -Z). `look_at` on a light now switches the axis to -Z before aiming (verified by render).
 - **Rotation:** `rotation` components are x=heading, y=pitch, z=bank (default HPB order), not x/y/z axis rotations.
 - **Reparenting:** `keep_world` only works between root-level parents.
-- **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and creating then removing a material (`doc.removeMaterial`) crashed Cheetah3D once (crash #2 in research/08, cause unproven).
+- **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and removing a material (`doc.removeMaterial`) in the same script run that created it crashes Cheetah3D at idle (crash #2, root cause isolated by bisect in research/08). Since 0.1.2 the script `doc` refuses that case with UNSUPPORTED; removing a material created in an earlier call is safe.
 - **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1`.

@@ -1,0 +1,13 @@
+import { connect } from './live-driver.mjs';
+const { call, close } = await connect();
+const show = (n, r) => console.log(n, r.isError ? 'ERR ' + JSON.stringify(r.sc).slice(0, 400) : 'ok ' + JSON.stringify(r.sc).slice(0, 300));
+await call('c3d_new_document', {});
+show('pipe', await call('c3d_create_pipe', { name: 'P', points: [[0,0,0],[2,0,0],[2,2,0],[2,2,2]], radius: 0.1, bend_radius: 0.4 }));
+show('stats', await call('c3d_get_scene_stats', {}));
+show('bg-solid', await call('c3d_set_background', { kind: 'solid', color: [0.2, 0.1, 0.3, 1] }));
+show('bg-grad', await call('c3d_set_background', { kind: 'gradient', stops: [{ pos: 0, color: [0.1, 0.1, 0.4, 1] }, { pos: 1, color: [0.9, 0.5, 0.6, 1] }] }));
+show('light', await call('c3d_run_script', { code: "var m = doc.addMaterial('Material','Tmp'); try { doc.removeMaterial(m); return 'removed'; } catch (e) { return 'blocked: ' + e.message.slice(0,60); }" }));
+const r = await call('c3d_render_image', { path: 'newtools_bg.png', width: 320, height: 180, include_image: false });
+show('render', r);
+show('post', await call('c3d_postprocess_image', { path: 'newtools_bg.png', vignette: { intensity: 0.5, radius: 1 } }));
+await close();

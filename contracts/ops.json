@@ -178,6 +178,77 @@
     "additionalProperties": false
    }
   },
+  "sceneStats": {
+   "rw": "R",
+   "summary": "Counts: objects by type, polygon/vertex/triangle totals (via core() of every polygon-capable object), materials, tags, folders, lights, cameras. Optional root limits to a subtree.",
+   "args": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+     "root": {
+      "oneOf": [
+       {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         }
+        },
+        "required": [
+         "id"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "path": {
+          "type": "string"
+         }
+        },
+        "required": [
+         "path"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "indexPath": {
+          "type": "array",
+          "items": {
+           "type": "integer"
+          }
+         }
+        },
+        "required": [
+         "indexPath"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "object",
+        "properties": {
+         "selected": {
+          "const": true
+         }
+        },
+        "required": [
+         "selected"
+        ],
+        "additionalProperties": false
+       },
+       {
+        "type": "string",
+        "pattern": "^\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_.]+)?$"
+       }
+      ]
+     }
+    },
+    "required": [],
+    "additionalProperties": false
+   }
+  },
   "listScene": {
    "rw": "R",
    "summary": "Paged depth-first tree walk. Returns {items:[descriptor...], total, nextOffset|null}.",
@@ -2593,7 +2664,7 @@
   },
   "assignMaterial": {
    "rw": "W",
-   "summary": "SHADERTAG + material link (whole object).",
+   "summary": "SHADERTAG + material link: whole object, or only `polygons` (an editable polygon object; uses polygon-selection slot 1..24 and shadeSelection = slot+1).",
    "args": {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
@@ -2691,6 +2762,19 @@
      },
      "replaceExisting": {
       "type": "boolean"
+     },
+     "polygons": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      },
+      "minItems": 1,
+      "maxItems": 200000
+     },
+     "slot": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 24
      }
     },
     "required": [

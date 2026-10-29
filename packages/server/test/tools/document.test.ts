@@ -110,6 +110,24 @@ describe('c3d_save_document / c3d_export', () => {
   it('validates the extension', async () => {
     await expectCode(runTool(saveDocument, { path: 'a.obj' }, t.ctx), 'INVALID_ARGUMENT');
   });
+  it('export also guards the sibling .mtl and never creates directories outside the work dir', async () => {
+    const out = path.join(t.dir, 'exports-here');
+    fs.mkdirSync(out);
+    fs.writeFileSync(path.join(out, 'scene.mtl'), 'user material');
+    const e = await expectCode(runTool(exportDocument, { path: path.join(out, 'scene.obj') }, t.ctx), 'INVALID_ARGUMENT');
+    expect(e.message).toMatch(/scene\.mtl/);
+    expect(t.bridge.opNames()).not.toContain('saveTo');
+    await expectCode(runTool(exportDocument, { path: path.join(t.dir, 'nodir', 'sub', 'a.fbx') }, t.ctx), 'INVALID_ARGUMENT');
+    await expectCode(runTool(saveDocument, { path: path.join(t.dir, 'nodir2', 'a.jas') }, t.ctx), 'INVALID_ARGUMENT');
+    expect(fs.existsSync(path.join(t.dir, 'nodir'))).toBe(false);
+    await runTool(exportDocument, { path: 'deep/er/a.fbx' }, t.ctx); // inside the work dir: created
+    expect(fs.existsSync(path.join(t.ctx.config.workDir, 'exports', 'deep', 'er', 'a.fbx'))).toBe(true);
+  });
+  it('treats a dangling symlink as an existing file', async () => {
+    const link = path.join(t.dir, 'link.jas');
+    fs.symlinkSync(path.join(t.dir, 'nowhere.jas'), link);
+    await expectCode(runTool(saveDocument, { path: link }, t.ctx), 'INVALID_ARGUMENT');
+  });
   it('exports with the format from the extension or argument', async () => {
     await runTool(exportDocument, { path: 'm.obj' }, t.ctx);
     await runTool(exportDocument, { path: 'm2.dat', format: 'fbx' }, t.ctx);

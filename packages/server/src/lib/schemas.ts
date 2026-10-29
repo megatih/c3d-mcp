@@ -45,6 +45,20 @@ export const ParamValue = z
   .describe('number | string | boolean | [numbers] | {x,y[,z[,w]]} | {r,g,b,a} | {path} (Texture) | {ref}/null (Link)');
 export const ParamMap = z.record(z.string(), ParamValue);
 
+/** Normalises Link values: {ref: 5} / {ref: "/Path"} / {ref: {...}} -> {ref: <runtime object ref>}; everything else passes through. */
+export function normParams(params: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== null && typeof v === 'object' && !Array.isArray(v) && 'ref' in v && Object.keys(v).length === 1) {
+      const r: unknown = v.ref;
+      if (typeof r === 'number' && Number.isInteger(r)) out[k] = { ref: normRef(r) };
+      else if (typeof r === 'string' && r.length > 0) out[k] = { ref: normRef(r) };
+      else out[k] = v;
+    } else out[k] = v;
+  }
+  return out;
+}
+
 export const ResponseFormat = z
   .enum(['concise', 'detailed'])
   .optional()

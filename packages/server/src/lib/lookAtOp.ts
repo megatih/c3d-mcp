@@ -26,6 +26,8 @@ export async function applyLookAt(ctx: ToolContext, ref: ObjectRefInput, target:
     throw new BridgeError('INVALID_ARGUMENT', 'The target is at the same position as the object; direction is undefined.', 'Choose a different target point.');
   const forward = opts.forward ?? '-z';
   const sol = lookAtEuler(me.position, to, { ...opts, forward, parentRotation });
+  // Cheetah3D lights cast along their `axis` option (live probe: 0 = -X, 1 = -Y (the default), >=2 = -Z), so aiming with -Z needs axis 2.
+  if (me.desc.type === 'LIGHT' && forward === '-z') await ctx.bridge.one('setParameters', { ref: normRef(ref), params: { axis: 2 } });
   await ctx.bridge.one('setTransform', { ref: normRef(ref), rotation: sol.rotation });
   let residual: number | null = null;
   let warning: string | undefined;

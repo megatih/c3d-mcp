@@ -2263,6 +2263,95 @@
      }
     }
    ]
+  },
+  {
+   "name": "sandbox: removeMaterial of a material created in the same run is refused (crash #2), earlier ones are allowed",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "a",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "doc.addMaterial('Material','Keep'); return doc.materialCount();"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "a": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": 1,
+           "log": [],
+           "returned": "json-able"
+          }
+         }
+        ]
+       }
+      }
+     }
+    },
+    {
+     "requests": [
+      {
+       "label": "b",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "doc.addMaterial('Material','Tmp'); doc.removeMaterial(doc.materialAtIndex(doc.materialCount() - 1)); return 1;"
+         }
+        },
+        {
+         "op": "run",
+         "args": {
+          "code": "doc.removeMaterial(doc.materialAtIndex(0)); return doc.materialCount();"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "b": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED",
+           "message": {
+            "$type": "string"
+           }
+          }
+         },
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": 1,
+           "log": [],
+           "returned": "json-able"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
   }
  ]
 }

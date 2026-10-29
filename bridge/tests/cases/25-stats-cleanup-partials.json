@@ -1,0 +1,865 @@
+{
+ "cases": [
+  {
+   "name": "sceneStats: totals, subtree root, marker excluded",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "sceneStats"
+        },
+        {
+         "op": "setMarker",
+         "args": {
+          "uuid": "12345678-1234-1234-1234-123456789abc"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "F"
+         },
+         "as": "f"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "B",
+          "parent": "$f"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BALL",
+          "name": "Ball"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "LIGHT",
+          "name": "L"
+         }
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Tri",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "parent": "$f"
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "name": "Sp",
+          "paths": [
+           {
+            "points": [
+             {
+              "p": [
+               0,
+               0,
+               0
+              ]
+             },
+             {
+              "p": [
+               1,
+               0,
+               0
+              ]
+             }
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": {
+           "path": "/Ball"
+          },
+          "type": "MODETAG"
+         }
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "M"
+         }
+        },
+        {
+         "op": "sceneStats"
+        },
+        {
+         "op": "sceneStats",
+         "args": {
+          "root": "$f"
+         }
+        },
+        {
+         "op": "sceneStats",
+         "args": {
+          "root": {
+           "path": "/Cam"
+          }
+         }
+        },
+        {
+         "op": "sceneStats",
+         "args": {
+          "root": {
+           "path": "/nope"
+          }
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "sceneStats",
+          "ok": true,
+          "result": {
+           "objectCount": 0,
+           "byType": {},
+           "folderCount": 0,
+           "polygonCount": 0,
+           "vertexCount": 0,
+           "triangleCount": 0,
+           "tagCount": 0,
+           "materialCount": 0,
+           "nodeCount": 0,
+           "skipped": 0
+          }
+         },
+         {
+          "op": "setMarker",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createMesh",
+          "ok": true
+         },
+         {
+          "op": "createSpline",
+          "ok": true
+         },
+         {
+          "op": "addTag",
+          "ok": true
+         },
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "sceneStats",
+          "ok": true,
+          "result": {
+           "objectCount": 7,
+           "byType": {
+            "FOLDER": 1,
+            "BOX": 1,
+            "BALL": 1,
+            "CAMERA": 1,
+            "LIGHT": 1,
+            "POLYGONOBJ": 1,
+            "SPLINE": 1
+           },
+           "folderCount": 1,
+           "lightCount": 1,
+           "cameraCount": 1,
+           "splineCount": 1,
+           "polygonObjectCount": 3,
+           "polygonCount": 13,
+           "vertexCount": 19,
+           "triangleCount": 25,
+           "tagCount": 1,
+           "materialCount": 1,
+           "skipped": 0
+          }
+         },
+         {
+          "op": "sceneStats",
+          "ok": true,
+          "result": {
+           "objectCount": 3,
+           "byType": {
+            "FOLDER": 1,
+            "BOX": 1,
+            "POLYGONOBJ": 1
+           },
+           "folderCount": 1,
+           "polygonObjectCount": 2,
+           "polygonCount": 7,
+           "vertexCount": 11,
+           "triangleCount": 13,
+           "tagCount": 0,
+           "cameraCount": 0
+          }
+         },
+         {
+          "op": "sceneStats",
+          "ok": true,
+          "result": {
+           "objectCount": 1,
+           "byType": {
+            "CAMERA": 1
+           },
+           "cameraCount": 1,
+           "polygonCount": 0
+          }
+         },
+         {
+          "op": "sceneStats",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "failed create after addObject is removed from its actual (non-root) parent",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "FOLDER",
+          "name": "P"
+         },
+         "as": "p"
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Bad",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "parent": "$p",
+          "transform": {
+           "space": "world",
+           "position": [
+            1,
+            2,
+            3
+           ]
+          }
+         }
+        },
+        {
+         "op": "createSpline",
+         "args": {
+          "name": "BadS",
+          "parent": "$p",
+          "paths": [
+           {
+            "points": [
+             {
+              "p": [
+               0,
+               0,
+               0
+              ]
+             },
+             {
+              "p": [
+               1,
+               0,
+               0
+              ]
+             }
+            ]
+           }
+          ],
+          "transform": {
+           "space": "world",
+           "position": [
+            1,
+            2,
+            3
+           ]
+          }
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": "$p",
+          "include": [
+           "children"
+          ]
+         }
+        },
+        {
+         "op": "listScene"
+        },
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Good",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ],
+          "parent": "$p"
+         }
+        },
+        {
+         "op": "getObject",
+         "args": {
+          "ref": "$p"
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createMesh",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         },
+         {
+          "op": "createSpline",
+          "ok": false,
+          "error": {
+           "code": "UNSUPPORTED"
+          }
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "childCount": 0,
+           "children": []
+          }
+         },
+         {
+          "op": "listScene",
+          "ok": true,
+          "result": {
+           "total": 1
+          }
+         },
+         {
+          "op": "createMesh",
+          "ok": true
+         },
+         {
+          "op": "getObject",
+          "ok": true,
+          "result": {
+           "childCount": 1
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "partial results: applied is returned alongside the error",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "setRenderSettings",
+         "args": {
+          "width": 200,
+          "params": {
+           "gamma": 2.0,
+           "bogus": 1
+          }
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "X"
+         },
+         "as": "x"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$x",
+          "params": {
+           "name": "X2",
+           "nope": 1
+          }
+         }
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "Mat"
+         }
+        },
+        {
+         "op": "setMaterialParams",
+         "args": {
+          "material": {
+           "name": "Mat"
+          },
+          "params": {
+           "nope": 1
+          }
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "setRenderSettings",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          },
+          "result": {
+           "applied": [
+            "resolution",
+            "gamma"
+           ],
+           "errors": {
+            "$len": 1
+           }
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": false,
+          "error": {
+           "code": "NOT_FOUND"
+          },
+          "result": {
+           "applied": [
+            "name"
+           ],
+           "errors": [
+            {
+             "name": "nope",
+             "code": "NOT_FOUND"
+            }
+           ]
+          }
+         },
+         {
+          "op": "createMaterial",
+          "ok": true
+         },
+         {
+          "op": "setMaterialParams",
+          "ok": false,
+          "result": {
+           "applied": [],
+           "errors": {
+            "$len": 1
+           }
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "setKeyframes Vec4D with 3 components keeps current w; Link {ref} forms resolve",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "x",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "LIGHT",
+          "name": "L"
+         },
+         "as": "l"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$l",
+          "params": {
+           "color": [
+            0.1,
+            0.2,
+            0.3,
+            0.5
+           ]
+          }
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color",
+          "keys": [
+           {
+            "time": 0,
+            "value": [
+             1,
+             0,
+             0
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color"
+         }
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "BOX",
+          "name": "T"
+         },
+         "as": "t"
+        },
+        {
+         "op": "createObject",
+         "args": {
+          "type": "CAMERA",
+          "name": "Cam"
+         },
+         "as": "cam"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "focusOnObject": {
+            "ref": "$t"
+           }
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$cam",
+          "names": [
+           "focusOnObject"
+          ]
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "focusOnObject": null
+          }
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "focusOnObject": {
+            "ref": "/T"
+           }
+          }
+         }
+        },
+        {
+         "op": "getParameters",
+         "args": {
+          "ref": "$cam",
+          "names": [
+           "focusOnObject"
+          ]
+         }
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$cam",
+          "params": {
+           "focusOnObject": {
+            "ref": "/Missing"
+           }
+          }
+         }
+        }
+       ],
+       "argsSchema": false
+      }
+     ],
+     "expect": {
+      "responses": {
+       "x": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true,
+          "result": {
+           "components": {
+            "$len": 4
+           }
+          }
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "keys": [
+              {
+               "value": 1
+              }
+             ]
+            },
+            {
+             "keys": [
+              {
+               "value": 0
+              }
+             ]
+            },
+            {
+             "keys": [
+              {
+               "value": 0
+              }
+             ]
+            },
+            {
+             "keys": [
+              {
+               "value": 0.5
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "value": {
+              "name": "T"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true
+         },
+         {
+          "op": "getParameters",
+          "ok": true,
+          "result": {
+           "parameters": [
+            {
+             "value": {
+              "name": "T"
+             }
+            }
+           ]
+          }
+         },
+         {
+          "op": "setParameters",
+          "ok": false
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

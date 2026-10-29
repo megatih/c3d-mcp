@@ -11,6 +11,7 @@ const PRD_TOOLS = [
   'c3d_add_tag', 'c3d_set_tag_params', 'c3d_remove_tag', 'c3d_set_camera', 'c3d_set_light',
   'c3d_set_time', 'c3d_set_fps', 'c3d_takes', 'c3d_set_keyframes', 'c3d_get_keyframes',
   'c3d_set_render_settings', 'c3d_render_image', 'c3d_render_sequence', 'c3d_job_status', 'c3d_job_cancel', 'c3d_capture_viewport',
+  'c3d_get_scene_stats', 'c3d_set_background', 'c3d_create_pipe', 'c3d_postprocess_image',
   'c3d_search_assets', 'c3d_import_asset', 'c3d_merge_file', 'c3d_run_script', 'c3d_lint_script', 'c3d_get_console',
 ];
 
@@ -41,7 +42,7 @@ describe('tool registry', () => {
 
   it('keeps the local profile small and free of exec/assets', () => {
     const local = allTools.filter((t) => t.profiles.includes('local'));
-    expect(local.length).toBeLessThanOrEqual(22);
+    expect(local.length).toBeLessThanOrEqual(23);
     for (const t of local) expect(['exec', 'assets', 'files']).not.toContain(t.group);
   });
 

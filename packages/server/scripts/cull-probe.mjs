@@ -1,0 +1,13 @@
+import { connect } from './live-driver.mjs';
+import { mkdirSync } from 'node:fs';
+const { call, close } = await connect();
+const out = '/tmp/cull/' + Date.now(); mkdirSync(out, { recursive: true });
+const must = async (l, n, a) => { const r = await call(n, a); if (r.isError) { console.log('FAIL', l, JSON.stringify(r.sc).slice(0, 300)); throw new Error(l); } return r; };
+await must('new', 'c3d_new_document', {});
+await must('m', 'c3d_create_material', { name: 'Em', color: [1, 0.3, 0.1, 1] }); await must('e', 'c3d_set_material_params', { material: { name: 'Em' }, params: { emisColor: [1, 0.3, 0.1, 1] } });
+const mk = async (name, x, flip) => { const id = (await must(name, 'c3d_create_mesh', { name, position: [x, 0, 0], vertices: [[-1, -1, 0], [1, -1, 0], [1, 1, 0], [-1, 1, 0]], polygons: [[0, 1, 2, 3]] })).sc.object.id; await must('as', 'c3d_assign_material', { ref: { id }, material: { name: 'Em' } }); if (flip) await must('flip', 'c3d_edit_mesh', { ref: { id }, flip_winding: [0] }); return id; };
+await mk('Normal', -1.5, false); await mk('Flipped', 1.5, true);
+await must('cam', 'c3d_set_camera', { name: 'Cam', position: [0, 0, 8], look_at_point: [0, 0, 0], fov: 35, active: true, params: { backgroundColor: [0.1, 0.1, 0.15, 1], cameraLightOnOff: 0 } });
+await must('rs', 'c3d_set_render_settings', { width: 300, height: 150, params: { giOn: false } });
+await must('r', 'c3d_render_image', { path: `${out}/cull.png` }); console.log('OUT', out);
+await close();

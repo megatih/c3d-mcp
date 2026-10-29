@@ -2,8 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
-import { BridgeError, defineTool, type ToolContext, type ToolImage } from '../toolkit.js';
-import { ext, ensureDir, guardWrite, resolveOut } from '../lib/files.js';
+import { BridgeError, defineTool, type ErrorCode, type ToolContext, type ToolImage } from '../toolkit.js';
+import { ext, ensureDir, guardWrite, resolveOut, uniquePath } from '../lib/files.js';
 import { cancelJob, createJob, finish, getJob, listJobs, view } from '../lib/jobs.js';
 import { clean, ok } from '../lib/result.js';
 import { AnyObject, Confirm, ParamMap } from '../lib/schemas.js';
@@ -39,9 +39,23 @@ export const setRenderSettings = defineTool({
   idempotent: true,
   profiles: ['full'],
   async handler(i, ctx) {
-    const r = await applyResolution(ctx, i);
-    if (!r) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to set: give renderer, width+height or params.');
-    return ok({ ...r }, `Renderer ${String(r.renderer)} at ${JSON.stringify(r.resolution)}.`);
+    if (i.width === undefined && i.height === undefined && !i.renderer && !i.params) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to set: give renderer, width+height or params.');
+    if ((i.width === undefined) !== (i.height === undefined)) throw new BridgeError('INVALID_ARGUMENT', 'Give width and height together.');
+    const resp = (await ctx.bridge.run([{ op: 'setRenderSettings', args: clean({ renderer: i.renderer, width: i.width, height: i.height, params: i.params }) }])).results[0];
+    if (!resp) throw new BridgeError('INTERNAL', 'No result for setRenderSettings.');
+    const r = (resp.result ?? {}) as Record<string, any>;
+    const errors = (r.errors ?? []) as Array<{ name?: string; code?: string; message?: string }>;
+    const applied = (r.applied ?? []) as string[];
+    if (!resp.ok) {
+      // Partial success: surface what was applied together with the per-key errors instead of failing outright.
+      const partial = applied.length > 0 || r.resolution !== undefined;
+      if (!partial) {
+        const first = errors[0];
+        throw new BridgeError(((first?.code ?? resp.error?.code) as ErrorCode | undefined) ?? 'INVALID_ARGUMENT', first ? `${String(first.name)}: ${first.message ?? 'rejected'}` : (resp.error?.message ?? 'setRenderSettings failed'), resp.error?.hint ?? 'Check parameter names with c3d_get_parameters on the renderer.', { errors });
+      }
+    }
+    const rejected = errors.length ? ` ${errors.length} parameter(s) rejected: ${errors.map((e) => `${String(e.name)} (${e.message ?? e.code ?? 'rejected'})`).join(', ')}.` : '';
+    return ok({ ...r, applied, errors }, `Renderer ${String(r.renderer)} at ${JSON.stringify(r.resolution)}; applied ${applied.length}.${rejected}`);
   },
 });
 
@@ -222,4 +236,78 @@ export const captureViewport = defineTool({
   },
 });
 
-export const renderTools = [setRenderSettings, renderImage, renderSequence, jobStatus, jobCancel, captureViewport];
+const Rgb = z.tuple([z.number().min(0).max(1), z.number().min(0).max(1), z.number().min(0).max(1)]);
+
+export const postprocessImage = defineTool({
+  name: 'c3d_postprocess_image',
+  title: 'Post-process rendered image',
+  description:
+    'POST-PROCESSES an existing image file (normally a c3d_render_image result) with the helper app: bloom {threshold 0..1, radius px, intensity 0..2}, outline {strength 0..1, width 0.5..4, color [r,g,b]} edge lines from luminance, vignette {intensity 0..1, radius 0..2}, grade {saturation 0..2, contrast 0.5..1.5, exposure -2..2, shadow_tint, highlight_tint [r,g,b], tint_amount 0..1}, posterize {levels 2..32}. Cheetah3D itself has NO outlines or bloom: chain it after c3d_render_image(path) and pass that path here. Writes <workDir>/post/<name>_post_<n>.png (never overwrites) and returns a preview. Needs the helper (UNSUPPORTED otherwise: run `c3d-mcp install`).',
+  group: 'render',
+  inputSchema: z.strictObject({
+    path: z.string().min(1).describe('Existing image to process (e.g. the path returned by c3d_render_image). Relative paths resolve inside <workDir>/renders.'),
+    out_path: z.string().optional().describe('Output .png (default <workDir>/post/<name>_post_<n>.png). Existing files are never overwritten.'),
+    bloom: z.strictObject({ threshold: z.number().min(0).max(1).optional(), radius: z.number().min(1).max(256).optional(), intensity: z.number().min(0).max(2).optional() }).optional().describe('Glow around bright areas: threshold 0..1 (default 0.7), radius in px, intensity 0..2.'),
+    outline: z.strictObject({ strength: z.number().min(0).max(1).optional(), width: z.number().min(0.5).max(4).optional(), color: Rgb.optional() }).optional().describe('Edge/outline overlay: strength 0..1, width 0.5..4 px, color [r,g,b] 0..1.'),
+    vignette: z.strictObject({ intensity: z.number().min(0).max(1).optional(), radius: z.number().min(0).max(2).optional() }).optional().describe('Darkened corners: intensity 0..1, radius 0..2.'),
+    grade: z.strictObject({ saturation: z.number().min(0).max(2).optional(), contrast: z.number().min(0.5).max(1.5).optional(), exposure: z.number().min(-2).max(2).optional(), shadow_tint: Rgb.optional(), highlight_tint: Rgb.optional(), tint_amount: z.number().min(0).max(1).optional() }).optional().describe('Color grade: saturation 0..2, contrast 0.5..1.5, exposure -2..2 stops, split-toning tints [r,g,b] and tint_amount 0..1.'),
+    posterize: z.strictObject({ levels: z.number().int().min(2).max(32) }).optional().describe('Reduce each channel to this many levels (2..32).'),
+    include_image: z.boolean().optional().describe('Return the preview image (default true).'),
+    confirm: Confirm,
+  }),
+  outputSchema: z.looseObject({ path: z.string(), source: z.string(), width: z.number().int(), height: z.number().int(), applied: z.array(z.string()), blank: z.boolean(), meanLuma: z.number(), preview: AnyObject.optional() }),
+  mutating: true,
+  idempotent: false,
+  profiles: ['full'],
+  async handler(i, ctx) {
+    const effects = { bloom: i.bloom, outline: i.outline, vignette: i.vignette, grade: i.grade, posterize: i.posterize };
+    if (!Object.values(effects).some((v) => v !== undefined)) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to do: give at least one of bloom, outline, vignette, grade, posterize.');
+    if (!ctx.helper.available()) throw new BridgeError('UNSUPPORTED', 'Image post-processing needs the helper app.', 'Run `c3d-mcp install` to install or update the helper, then c3d_doctor.');
+    const src = resolveOut(ctx, i.path, 'renders');
+    if (!fs.existsSync(src)) throw new BridgeError('NOT_FOUND', `Image not found: ${src}`, 'Render first with c3d_render_image and pass its path.');
+    let out: string;
+    if (i.out_path) {
+      out = resolveOut(ctx, i.out_path, 'post');
+      if (ext(out) !== 'png') throw new BridgeError('INVALID_ARGUMENT', 'out_path must end in .png.');
+      await guardWrite(ctx, out, i.confirm, 'post-processing');
+    } else {
+      const dir = path.join(ctx.config.workDir, 'post');
+      ensureDir(dir);
+      out = uniquePath(dir, `${path.basename(src, path.extname(src))}_post`, '.png');
+      ctx.session.ownedPaths.add(out);
+    }
+    const g = i.grade;
+    const args = clean({
+      path: src,
+      outPath: out,
+      bloom: i.bloom,
+      outline: i.outline,
+      vignette: i.vignette,
+      grade: g ? clean({ saturation: g.saturation, contrast: g.contrast, exposure: g.exposure, shadowTint: g.shadow_tint, highlightTint: g.highlight_tint, tintAmount: g.tint_amount }) : undefined,
+      posterize: i.posterize,
+    });
+    ctx.services.progress('post-processing');
+    let r: Record<string, any>;
+    try {
+      r = await ctx.helper.call<Record<string, any>>('postProcessImage', args, 120_000);
+    } catch (e) {
+      if (e instanceof BridgeError && (e.name === 'HelperUnavailableError' || /unknown (command|cmd)|unsupported command|not implemented|invalid command/i.test(e.message)))
+        throw new BridgeError('UNSUPPORTED', 'The installed helper app cannot post-process images.', 'Run `c3d-mcp install` to update the helper app, then retry.', { cause: e.message });
+      throw e;
+    }
+    const outFile = String(r.outPath ?? out);
+    if (!fs.existsSync(outFile)) throw new BridgeError('INTERNAL', `The helper reported success but ${outFile} does not exist.`, 'Run c3d_doctor.');
+    ctx.session.ownedPaths.add(outFile);
+    const stats = await ctx.services.imageTools.analyze(outFile);
+    const small = await ctx.services.imageTools.downscale(outFile, { maxDim: MAX_DIM, maxBytes: MAX_BYTES });
+    const images: ToolImage[] = i.include_image === false ? [] : [{ data: fs.readFileSync(small.path).toString('base64'), mimeType: small.mime }];
+    const applied = Array.isArray(r.applied) ? (r.applied as string[]) : Object.entries(effects).filter(([, v]) => v !== undefined).map(([k]) => k);
+    return {
+      structured: { path: outFile, source: src, width: Number(r.width ?? stats.width), height: Number(r.height ?? stats.height), bytes: r.bytes, applied, blank: stats.blank, meanLuma: stats.meanLuma, preview: { path: small.path, width: small.width, height: small.height, bytes: small.bytes, mime: small.mime } },
+      text: `Post-processed ${path.basename(src)} (${applied.join(', ')}) -> ${outFile} (${stats.width}x${stats.height}).${stats.blank ? ' WARNING: result is blank.' : ''}`,
+      images,
+    };
+  },
+});
+
+export const renderTools = [setRenderSettings, renderImage, renderSequence, jobStatus, jobCancel, captureViewport, postprocessImage];

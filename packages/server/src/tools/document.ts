@@ -103,7 +103,7 @@ export const saveDocument = defineTool({
   name: 'c3d_save_document',
   title: 'Save document copy',
   description:
-    'Saves the scene as a .jas file via saveToFile. Copy semantics: the open document is NOT re-pointed to the new path and keeps its title/dirty state. Relative paths go to <workDir>/saves. Never overwrites a file that existed before this session; a file written earlier by this server needs confirmation.',
+    'Saves the scene as a .jas file via saveToFile. Copy semantics: the open document is NOT re-pointed to the new path and keeps its title/dirty state. Relative paths go to <workDir>/saves. Never overwrites a file that existed before this session; a file written earlier by this server needs confirmation. The target directory must exist unless it is inside the work directory.',
   group: 'document',
   inputSchema: z.strictObject({ path: z.string().min(1).describe('Target .jas path (absolute, or relative to the work directory).'), confirm: Confirm }),
   outputSchema: SaveOut,
@@ -123,7 +123,7 @@ export const saveDocument = defineTool({
 export const exportDocument = defineTool({
   name: 'c3d_export',
   title: 'Export scene',
-  description: `Exports the scene to ${EXPORT_TYPES.join('/')} (obj also writes a sibling .mtl). Other formats are not produced. Does not change the open document. Relative paths go to <workDir>/exports. Never overwrites files that predate the session. WARNING: obj export crashed Cheetah3D 8.1.3 once on a scene with nested folders (probe notes, crash #1); prefer fbx/dae/stl/usdz/3ds/dxf. A checkpoint is taken automatically before an obj export.`,
+  description: `Exports the scene to ${EXPORT_TYPES.join('/')} (obj also writes a sibling .mtl). Other formats are not produced. Does not change the open document. Relative paths go to <workDir>/exports. Never overwrites files that predate the session (sibling .mtl included); missing directories are only created inside the work directory. WARNING: obj export crashed Cheetah3D 8.1.3 once on a scene with nested folders (probe notes, crash #1); prefer fbx/dae/stl/usdz/3ds/dxf. A checkpoint is taken automatically before an obj export.`,
   group: 'document',
   inputSchema: z.strictObject({
     path: z.string().min(1).describe('Target file; extension decides the format unless format is given.'),
@@ -138,7 +138,8 @@ export const exportDocument = defineTool({
     const type = input.format ?? ext(input.path);
     if (!(EXPORT_TYPES as readonly string[]).includes(type)) throw new BridgeError('INVALID_ARGUMENT', `Cannot export format "${type}".`, `Allowed: ${EXPORT_TYPES.join(', ')}.`);
     const abs = resolveOut(ctx, input.path, 'exports');
-    await guardWrite(ctx, abs, input.confirm, 'export');
+    const siblings = type === 'obj' ? [path.join(path.dirname(abs), `${path.basename(abs, path.extname(abs))}.mtl`)] : [];
+    await guardWrite(ctx, abs, input.confirm, 'export', siblings);
     const guard = type === 'obj' ? await autoCheckpoint(ctx, 'before-obj-export') : {};
     const r = await ctx.bridge.one<Record<string, unknown>>('saveTo', { path: abs, type });
     return ok({ path: abs, type, ...r, ...(guard.checkpoint ? { checkpoint: guard.checkpoint.id } : {}), ...(guard.warning ? { warning: guard.warning } : {}) }, `Exported ${type} to ${abs}.`);
