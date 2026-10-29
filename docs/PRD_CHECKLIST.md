@@ -26,3 +26,6 @@ GitHub repo + v0.1.0 release + Homebrew tap published; helper signed with your A
 
 ## Claude Desktop
 `.mcpb` installed and the server answered list requests in Claude Desktop (see FINAL_REPORT); tool call from a chat not yet evidenced.
+
+## Claude Desktop tool call
+`c3d_doctor` run from Claude Desktop (installed from the .mcpb) passed all checks. Real clients exercised: Claude Code, Codex CLI, Claude Desktop.

@@ -56,3 +56,6 @@ All answered in `research/08-open-questions-and-probes.md` (P21/P22 not needed, 
 
 ## Claude Desktop `.mcpb` install (verified 2026-10-29, installed by the user)
 The user installed `c3d-mcp-0.1.0.mcpb` in Claude Desktop. Evidence from Claude Desktop's own files: extension `local.mcpb.megatih.c3d-mcp` present under `Claude Extensions/` (manifest `c3d-mcp` 0.1.0 + bundled `server/`), and `~/Library/Logs/Claude/mcp-server-Cheetah3D.log` shows the server started without errors and answered `tools/list`, `prompts/list` and `resources/list`. **Not yet evidenced:** an actual tool call from a Claude Desktop chat (the log contains no `tools/call`); the user can try "run c3d_doctor" in Claude Desktop to complete that check.
+
+## Claude Desktop tool call (verified 2026-10-29)
+In Claude Desktop (extension `c3d-mcp` 0.1.0 installed from the `.mcpb`), asking it to run `c3d_doctor` returned: all checks passed — Cheetah3D 8.1.3 running, bridge installed (runtime 1.0.0), helper has Accessibility and Screen Recording, ping round trip ~1.1 s, no modal dialog open. Real MCP clients exercised end-to-end: **Claude Code, Codex CLI and Claude Desktop (`.mcpb`)**.
