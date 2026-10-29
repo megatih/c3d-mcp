@@ -24,6 +24,13 @@ Draft render -> read `meanLuma` -> scale intensity by (target / measured) -> rep
 | final | 1024-1456 px | `giSamples:600` (up to ~1200 if comfortably < 60 s), `rayDepth:10, antialiasingMaxSamples:4` |
 Rendering is synchronous and blocks Cheetah3D; if a call times out, lower resolution or samples. `renderer` is `CHEETAH` or `FALCON`.
 
+## Falcon renderer (path tracer)
+`c3d_set_render_settings {renderer:"FALCON", params:{...}}` switches the engine for the open document; Falcon has its own parameters, not the classic `giOn/giSamples/rayDepth`: `samples`, `shadowSamples`, `adaptiveSampling`, `totalBounces`, `diffuseBounces`, `glossyBounces`, `specularBounces`, `transparencyDepth`, `causticsReflection`, `causticsRefraction`, `causticsFilter`, `clampSample`, `lightThreshold`, plus the shared `exposure`, `gamma`, `filmic`. It needs no GI switch: global illumination and colour bleeding come from the path tracing itself.
+- Cornell-style scene (area light, chrome, glass, gold, wood, marble): `causticsReflection:true, causticsRefraction:true, causticsFilter:4, totalBounces:12, diffuseBounces:6, glossyBounces:6, specularBounces:8, transparencyDepth:8`. A low `causticsFilter` (0.5) leaves visible grain on walls and ceiling; 4 is smooth.
+- Cost: 320 px with default samples about 2 s (noisy); 512 px at 512 samples about 28 s; 1024 px at 768 samples a few minutes. Caustics are subtle with a large area light: light refracted through the glass ball shows inside its shadow.
+- A very long render can exceed an MCP client's own tool timeout (60 s in some clients) while Cheetah3D keeps rendering and still writes the file: check the file instead of re-rendering, and use a smaller size or fewer samples for drafts.
+
+
 ## Reading stats
 `c3d_render_image` returns `{width,height,blank,meanLuma}`. `blank:true` -> check light, camera position (not inside geometry) and that the camera is active. Always view the returned image and compare with the intended look: colour bleeding, soft shadows, reflections in chrome, refraction through glass.
 
