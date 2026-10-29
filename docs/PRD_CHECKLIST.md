@@ -23,3 +23,6 @@ Runs in Claude Desktop, Gemini CLI, Cursor, LM Studio and Antigravity (not insta
 
 ## Update after your approvals
 GitHub repo + v0.1.0 release + Homebrew tap published; helper signed with your Apple Development identity (not notarized); npm/registry skipped by your choice; live suite not re-run against the signed helper (interrupted). See `docs/FINAL_REPORT.md` → *Publishing and signing state*.
+
+## Claude Desktop
+`.mcpb` installed and the server answered list requests in Claude Desktop (see FINAL_REPORT); tool call from a chat not yet evidenced.
