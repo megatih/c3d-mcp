@@ -16,7 +16,7 @@ If the c3d_* tools are not available (no MCP, e.g. a plain chat client), do not 
 - `c3d_create_material` types: `Material` (classic, `color` -> diffColor), `Material (PBR)` (`color` -> baseColor, `metalness`, `roughness`), `Toon`, `Glass`. No other roots.
 - Procedural recipe: `c3d_create_material` (returns `rootNodeId`) -> `c3d_add_material_node` (returns `nodeId` and io names) -> `c3d_connect_nodes` (`from_node` nodeId, `from_output` "color", `to_node` rootNodeId, `to_input` "diffColor") -> `c3d_assign_material` -> verify with `c3d_get_material_graph`.
 - Node types: wood, marble, checkerboard, noise, voronoi, gradient, image, mix, multiply, add, color, number, hsv2rgb. Names are case-sensitive; read io names from the add result.
-- Emissive neon: create the material, then `c3d_set_material_params` with `{emisColor:[r,g,b,1]}` on the root. Emission does not light the scene and does not glow; add a real light next to it and bloom in post.
+- Emissive neon: create the material, then `c3d_set_material_params` with `{emisColor:[r,g,b,1]}` on the root. `emisColor` is clamped to 1. In the FALCON renderer an emissive surface does light its surroundings (measured in 8.1.3); in the CHEETAH renderer earlier benchmarks saw no illumination, so add a real light of matching colour next to it there, and bloom in post for a glow.
 - Glass: `c3d_set_material_params` `{transEta:1.52, transAbsorption:0.02}`. Gold/chrome: PBR with `metalness` 1; `reflClearcoat` via params.
 - Per-polygon: `c3d_make_editable` first on primitives, then `c3d_assign_material` with `polygons:[...]` (indices from `c3d_get_mesh`). Each material group takes one of 24 polygon-selection slots per object (returned as `slot`).
 - Textures: image node + `c3d_set_texture` (absolute path) + connect.

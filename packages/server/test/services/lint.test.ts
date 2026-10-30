@@ -14,6 +14,12 @@ describe('lint rules (positive / negative)', () => {
     ['infinite-loop', 'while(true){ var a = 1; }', 'while(true){ if (x) break; }'],
     ['ctor-without-new', 'var v = Vec3D(1,2,3);', 'var v = new Vec3D(1,2,3);'],
     ['light-constants', 'doc.addObject(SPOTLIGHT);', 'doc.addObject(LIGHT);'],
+    ['light-constants', 'doc.addObject(POINTLIGHT);', 'var l = doc.addObject(LIGHT); l.setParameter("lightType", 3);'],
+    ['selected-object-null', 'var o = doc.selectedObject(); if (o === null) { return; }', 'var o = doc.selectedObject(); if (!o) { return; }'],
+    ['vec4-isequal', 'var a = new Vec4D(1,2,3,4); var b = a.copy(); a.isEqual(b);', 'var a = new Vec3D(1,2,3); a.isEqual(a.copy());'],
+    ['many-shader-tags', 'for (var i = 0; i < 30; i++) { o.addTagOfType(SHADERTAG); }', 'var t = o.addTagOfType(SHADERTAG);'],
+    ['falcon-samples-zero', 'doc.currentRenderer().setParameter("samples", 0);', 'doc.currentRenderer().setParameter("samples", 50);'],
+    ['unknown-constant', 'var t = o.addTagOfType(UVTAG);', 'var t = o.addTagOfType(SHADERTAG);'],
     ['missing-update', 'var c = obj.core(); c.setVertex(0, new Vec3D(0,0,0));', 'var c = obj.core(); c.setVertex(0, new Vec3D(0,0,0)); obj.update();'],
     ['unbounded-addpolygon', 'var i=0; while(i<n){ core.addIndexPolygon([0,1,2]); i++; } obj.update();', 'for(var i=0;i<n;i++){ core.addIndexPolygon([0,1,2]); } obj.update();'],
     ['addparam-args', 'function buildUI(base){ base.addParameterFloat("a", 1); }\nfunction buildObject(b,c){}', 'function buildUI(base){ base.addParameterFloat("a", 1, 0, 2, true, true); }\nfunction buildObject(b,c){}'],
@@ -51,5 +57,55 @@ describe('lint rules (positive / negative)', () => {
   it('accepts a realistic clean snippet without errors', () => {
     const code = 'var b = doc.addObject(BOX);\nb.setParameter("name", "X");\nb.update();';
     expect(lintScript(code).filter((f) => f.severity === 'error')).toEqual([]);
+  });
+});
+
+describe('lint knows what was measured in 8.1.3 (research/10)', () => {
+  it('does not flag methods and constants that exist at runtime but are missing from the reference', () => {
+    const r = rules('var f = doc.animationFPS(); doc.setAnimationFPS(24); var id = obj.id(); var p = obj.parameterWithName("position"); p.isAnimatable(); var m = FLAT_INTERPOL + CONST_INTERPOL + WRITE_MODE + BIG_ENDIAN + SEAM + LIGHT;');
+    expect(r).not.toContain('unknown-method');
+    expect(r).not.toContain('unknown-constant');
+  });
+  it('says what to use instead of parent() and rib()', () => {
+    const f = lintScript('var p = obj.parent(); mat.rib();').filter((x) => x.rule === 'unknown-method');
+    expect(f.map((x) => x.message).join(' ')).toMatch(/owner\(\)/);
+    expect(f.map((x) => x.message).join(' ')).toMatch(/rib/);
+  });
+  it('ignores identifiers inside string literals', () => {
+    expect(rules('var s = "EQUATION_X + BOGUS_THING";')).not.toContain('unknown-constant');
+  });
+  it('treats samples=0 as an error because a synchronous render would never finish', () => {
+    expect(lintScript('r.setParameter("samples", 0);')[0]).toMatchObject({ rule: 'falcon-samples-zero', severity: 'error' });
+  });
+  it('lints every official example script without errors', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const { kbLayout } = await import('../../src/services/kb.js');
+    const root = path.join(kbLayout()!.kbRoot, 'examples', 'official');
+    let n = 0;
+    for (const type of fs.readdirSync(root)) for (const f of fs.readdirSync(path.join(root, type))) {
+      const errors = lintScript(fs.readFileSync(path.join(root, type, f), 'utf8')).filter((x) => x.severity === 'error');
+      expect(errors, `${type}/${f}`).toEqual([]);
+      n++;
+    }
+    expect(n).toBe(17);
+  });
+  it('accepts addParameterBool with 4 arguments (official Menger.js builds in 8.1.3) but not with 2', () => {
+    const four = 'function buildUI(b){ b.addParameterBool("level", true, false, true); }\nfunction buildObject(b,c){}';
+    expect(rules(four)).not.toContain('addparam-args');
+    expect(rules(four.replace('"level", true, false, true', '"level", true'))).toContain('addparam-args');
+  });
+  it('does not mistake Object.prototype members for removed API methods (review finding)', () => {
+    const r = lintScript('var s = (5).toString(); o.hasOwnProperty("a"); x.valueOf(); y.constructor();');
+    expect(r.filter((f) => /does not exist in 8\.1\.3/.test(f.message))).toEqual([]);
+  });
+  it('relaxes the argument count only for addParameterBool', () => {
+    const f = (call: string): string[] => rules(`function buildUI(b){ b.${call}; }\nfunction buildObject(b,c){}`);
+    expect(f('addParameterBool("a", true, false, true)')).not.toContain('addparam-args');
+    expect(f('addParameterFloat("a", 1, 0, 2)')).toContain('addparam-args');
+  });
+  it('ignores constructor calls and light constants inside strings', () => {
+    expect(rules('print("Vec3D(1) and SPOTLIGHT");')).not.toContain('ctor-without-new');
+    expect(rules('print("Vec3D(1) and SPOTLIGHT");')).not.toContain('light-constants');
   });
 });

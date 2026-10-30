@@ -35,7 +35,7 @@ async function aim(ctx: ToolContext, id: number, i: { look_at_ref?: z.infer<type
 export const setCamera = defineTool({
   name: 'c3d_set_camera',
   title: 'Create/configure camera',
-  description: 'Creates a camera (omit ref) or reconfigures an existing one: name, position, aim (look_at_ref / look_at_point, verified by read-back), field of view in degrees, clip planes, focal distance, extra params, and active:true to make it the render camera (a newly created camera becomes active automatically). Cheetah cameras look down -Z.',
+  description: 'Creates a camera (omit ref) or reconfigures an existing one: name, position, aim (look_at_ref / look_at_point, verified by read-back), field of view in degrees, clip planes, focal distance, extra params, and active:true to make it the render camera (a newly created camera becomes active automatically). Cheetah cameras look down -Z. projection: perspective or orthographic; camera_light: off/on/auto (auto lights a scene only while it has no light). For a see-through background use c3d_set_background kind "transparent".',
   group: 'camera-light',
   inputSchema: z.strictObject({
     ref: ObjectRef.optional().describe('Existing camera; omit to create one.'),
@@ -46,6 +46,8 @@ export const setCamera = defineTool({
     near: z.number().positive().optional().describe('Near clip (clipNear).'),
     far: z.number().positive().optional().describe('Far clip (clipFar).'),
     focal_distance: z.number().positive().optional().describe('Focal distance for depth of field.'),
+    projection: z.union([z.enum(['perspective', 'orthographic']), z.number().int().min(0).max(2)]).optional().describe('Projection: "perspective" (0) or "orthographic" (2); 1 is a third mode (not perspective, not orthographic; the book calls it panorama, unverified).'),
+    camera_light: z.enum(['off', 'on', 'auto']).optional().describe('Built-in camera light (cameraLightOnOff 0/1/2): "auto" (default) lights the scene only while it contains no light; "off" gives pure black without lights.'),
     active: z.boolean().optional().describe('Make this the active (render) camera.'),
     params: ParamMap.optional().describe('Other camera parameters (see c3d_get_parameters).'),
   }),
@@ -61,7 +63,9 @@ export const setCamera = defineTool({
       if (i.name) await ctx.bridge.one('rename', { ref, name: i.name });
       if (i.position) await ctx.bridge.one('setTransform', { ref, position: toXyz(i.position) });
     }
-    const params = { ...i.params, ...clean({ fieldOfView: i.fov, clipNear: i.near, clipFar: i.far, focalDistance: i.focal_distance }) };
+    const projection = i.projection === 'perspective' ? 0 : i.projection === 'orthographic' ? 2 : i.projection;
+    const cameraLight = i.camera_light === undefined ? undefined : ({ off: 0, on: 1, auto: 2 } as const)[i.camera_light];
+    const params = { ...i.params, ...clean({ fieldOfView: i.fov, clipNear: i.near, clipFar: i.far, focalDistance: i.focal_distance, projection, cameraLightOnOff: cameraLight }) };
     if (Object.keys(params).length) await runApply(ctx, 'setParameters', { ref, params });
     const look = await aim(ctx, ref.id, i);
     let active: boolean | undefined;
@@ -77,7 +81,7 @@ export const setCamera = defineTool({
 export const setLight = defineTool({
   name: 'c3d_set_light',
   title: 'Create/configure light',
-  description: 'Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). A new light casts along its local -Y (down) until aimed; look_at_* switches its axis option to -Z and aims it, and the read-back reports the residual angle.',
+  description: 'Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). A new light casts along its local -Y (down) until aimed; look_at_* switches its axis option to -Z and aims it, and the read-back reports the residual angle. Measured in 8.1.3: shadow_softness (shadowSoft) softens shadows in the Falcon renderer (point/spot: light size; distant: angle); the radius parameter does not. shadowType 0 = no shadows, 1 = raytrace, 2 = raytrace+transparency (same as 1 for opaque objects). visible_in_camera shows an area light panel. Emissive materials also light the scene in Falcon.',
   group: 'camera-light',
   inputSchema: z.strictObject({
     ref: ObjectRef.optional().describe('Existing light; omit to create one.'),
@@ -87,7 +91,9 @@ export const setLight = defineTool({
     light_type: z.union([z.number().int().min(0).max(4), z.string().min(2).max(30)]).optional().describe('0..4 or a lightTypes name from c3d_capabilities.'),
     color: Color.optional(),
     intensity: z.number().min(0).max(100000).optional().describe('Light intensity (1 = default).'),
-    params: ParamMap.optional().describe('Other light parameters (shadowType, radius, ...).'),
+    shadow_softness: z.number().min(0).max(1000).optional().describe('Falcon soft shadows (shadowSoft): light size for point/spot lights, angle for distant lights (0 = hard). The "radius" parameter does NOT soften shadows.'),
+    visible_in_camera: z.boolean().optional().describe('Show the light itself in the render (geometry): the panel of an area light is visible to the camera.'),
+    params: ParamMap.optional().describe('Other light parameters (shadowType 0 none / 1 raytrace / 2 raytrace+transparency, cutOffAngle, attenuation, ...).'),
   }),
   outputSchema: z.looseObject({ object: Descriptor, look_at: z.any().optional() }),
   mutating: true,
@@ -109,7 +115,7 @@ export const setLight = defineTool({
       if (i.name) await ctx.bridge.one('rename', { ref, name: i.name });
       if (i.position) await ctx.bridge.one('setTransform', { ref, position: toXyz(i.position) });
     }
-    const params = { ...i.params, ...clean({ color: i.color === undefined ? undefined : toColor(i.color), intensity: i.intensity, lightType: i.ref !== undefined ? lightType : undefined }) };
+    const params = { ...i.params, ...clean({ color: i.color === undefined ? undefined : toColor(i.color), intensity: i.intensity, shadowSoft: i.shadow_softness, geometry: i.visible_in_camera === undefined ? undefined : i.visible_in_camera ? 1 : 0, lightType: i.ref !== undefined ? lightType : undefined }) };
     if (Object.keys(params).length) await runApply(ctx, 'setParameters', { ref, params });
     const look = await aim(ctx, ref.id, i);
     const object = await ctx.bridge.one<Obj>('getObject', { ref });
@@ -124,11 +130,11 @@ export const setBackground = defineTool({
   name: 'c3d_set_background',
   title: 'Set render background',
   description:
-    'Sets the background of the ACTIVE camera (c3d_get_document_info activeCamera): kind "solid" {color} sets backgroundColor (and clears backgroundImage); "gradient" {stops (2..8 of {pos 0..1, color}), angle_deg (default 90 = top to bottom, 0 = left to right), width/height (default 1024x576, max 4096), dither (default true)} generates a PNG in <workDir>/backgrounds/ (never overwrites) and sets it as backgroundImage; "image" {path} uses an existing png/jpg/tiff. The background shows only in renders and camera views. Create a camera first.',
+    'Sets the background of the ACTIVE camera (c3d_get_document_info activeCamera): kind "solid" {color} sets backgroundColor (and clears backgroundImage); "gradient" {stops (2..8 of {pos 0..1, color}), angle_deg (default 90 = top to bottom, 0 = left to right), width/height (default 1024x576, max 4096), dither (default true)} generates a PNG in <workDir>/backgrounds/ (never overwrites) and sets it as backgroundImage; "image" {path} uses an existing png/jpg/tiff; "transparent" sets backgroundColor alpha 0 so renders saved as PNG have alpha 0 wherever no object is (compositing; verified in both renderers; jpg has no alpha). The background shows only in renders and camera views. Create a camera first.',
   group: 'camera-light',
   inputSchema: z.strictObject({
-    kind: z.enum(['solid', 'gradient', 'image']).describe('Background type.'),
-    color: Color.optional().describe('For solid.'),
+    kind: z.enum(['solid', 'gradient', 'image', 'transparent']).describe('Background type.'),
+    color: Color.optional().describe('For solid (required) and transparent (optional RGB shown nowhere; default black).'),
     stops: z.array(Stop).min(2).max(8).optional().describe('For gradient: color stops, e.g. [{pos:0,color:"#0b0f2a"},{pos:1,color:"#ff5a3c"}].'),
     angle_deg: z.number().min(-360).max(360).optional().describe('For gradient: direction of the color change in degrees (default 90 = top to bottom; 0 = left to right).'),
     width: z.number().int().min(2).max(4096).optional().describe('For gradient: image width in pixels (default 1024).'),
@@ -143,7 +149,11 @@ export const setBackground = defineTool({
   async handler(i, ctx) {
     const params: Record<string, unknown> = {};
     let file: string | undefined;
-    if (i.kind === 'solid') {
+    if (i.kind === 'transparent') {
+      const c = i.color === undefined ? { r: 0, g: 0, b: 0, a: 1 } : toColor(i.color);
+      params.backgroundColor = { r: c.r, g: c.g, b: c.b, a: 0 }; // alpha 0 -> the rendered PNG has alpha 0 outside objects (verified, both renderers)
+      params.backgroundImage = '';
+    } else if (i.kind === 'solid') {
       if (i.color === undefined) throw new BridgeError('INVALID_ARGUMENT', 'kind "solid" needs color.');
       params.backgroundColor = toColor(i.color);
       params.backgroundImage = ''; // clear a previous background image so the flat color shows

@@ -76,7 +76,7 @@
 
 **Search Cheetah3D API docs** - read-only, idempotent. Profiles: full, local, readonly.
 
-Full-text (BM25) search over the Cheetah3D 8.1.3 JavaScript API reference, gotchas and script patterns. Use it BEFORE writing a script with c3d_run_script, or when unsure of a method signature, constant or known crash. Returns ranked snippets with source and API signatures. Query with identifiers or short phrases, e.g. "addIndexPolygon", "FCurve keyframe", "retainRedrawLock".
+Full-text (BM25) search over the Cheetah3D JavaScript API reference (per-method descriptions), the scripts bundled with the app, measured notes (verified in 8.1.3), gotchas/patterns, the book "Learn 3D with Cheetah 3D" and (last, only to fill free slots) archived forum threads. Use it BEFORE writing a script with c3d_run_script, or when unsure of a method signature, constant or known crash. Each hit has a trust level (official, verified, example, kb, book, book-unreviewed, forum) and, where the claim was tested in 8.1.3, a note saying whether it was confirmed, refined or refuted: prefer official/verified/example, treat kb/book-unreviewed/forum as hints to test. Query with identifiers or short phrases, e.g. "addIndexPolygon", "FCurve keyframe", "retainRedrawLock".
 
 Local profile hint: _Search the Cheetah3D API docs for a method, constant or gotcha._
 
@@ -84,6 +84,7 @@ Local profile hint: _Search the Cheetah3D API docs for a method, constant or got
 |---|---|---|---|
 | `query` | string (len<=200) | yes | Search terms: API names, class.method or a short phrase. |
 | `limit` | integer (>=1, <=10) | no | Max results (default 5). |
+| `sources` | `official` \| `verified` \| `example` \| `kb` \| `book` \| `forum`[] | no | Restrict to these sources (default: all; forum threads only fill slots the others leave free). Use ["forum"] to search the archived forum alone. |
 
 **Output fields:** `results` (object[]), `count` (integer (>=-9007199254740991, <=9007199254740991))
 
@@ -412,9 +413,9 @@ Local profile hint: _Count objects, polygons, vertices, lights, cameras, materia
 
 **Create polygon mesh** - writes. Profiles: full, local.
 
-Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent counter-clockwise winding seen from outside) with optional per-corner uvs and a whole-object material. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials: assign afterwards with c3d_assign_material polygons:[...]. For tubes/cables use c3d_create_pipe. Y is up.
+Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent winding seen from outside, counter-clockwise by default) with optional per-corner uvs and a whole-object material. Cheetah3D treats CLOCKWISE as the front face (its own BOX has outward normals), so with the default winding:"ccw" the tool reverses every polygon and the result has OUTWARD normals; pass winding:"cw" to send the indices unchanged (e.g. when re-creating a mesh read with c3d_get_mesh, which reports the native order). The renderer is two-sided, so inward normals are invisible in renders but may matter for exports, booleans and subdivision. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials: assign afterwards with c3d_assign_material polygons:[...]. For tubes/cables use c3d_create_pipe. Y is up.
 
-Local profile hint: _Create a mesh. Y is UP: height goes on the y axis, e.g. a pyramid has its base on y=0 and its apex at [0,height,0]. Vertices are [x,y,z]; polygons are vertex-index lists, counter-clockwise seen from outside._
+Local profile hint: _Create a mesh. Y is UP: a pyramid has its base on y=0 and its apex at [0,height,0]. Vertices are [x,y,z]; polygons are vertex-index lists, counter-clockwise seen from outside (converted for you)._
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -427,6 +428,7 @@ Local profile hint: _Create a mesh. Y is UP: height goes on the y axis, e.g. a p
 | `polygons` | integer (>=0, <=9007199254740991)[][] | yes | Vertex index lists, one per polygon. |
 | `uvs` | any[][][] | no | Per polygon, per corner [u,v]; same shape as polygons. |
 | `material` | string \| integer (>=0, <=9007199254740991) \| object | no | Material to assign to the whole object. |
+| `winding` | `ccw` \| `cw` | no | Winding of the polygons you pass, seen from OUTSIDE (default "ccw"). "ccw": the tool reverses each polygon so Cheetah3D gets outward normals. "cw": indices are sent unchanged (Cheetah3D native order, as returned by c3d_get_mesh). |
 
 **Output fields:** `object` (object), `vertexCount` (integer (>=-9007199254740991, <=9007199254740991)), `polygonCount` (integer (>=-9007199254740991, <=9007199254740991)), `chunks` (integer (>=-9007199254740991, <=9007199254740991))
 
@@ -535,14 +537,14 @@ Lists the document materials with index, name and root node type (material, pbrm
 
 **Create material** - writes. Profiles: full, local.
 
-Creates a material. type: "Material" (classic, default), "Material (PBR)", "Toon" or "Glass". Shortcuts color/metalness/roughness map to the right root-node parameters (diffColor / baseColor / color / transColor); other parameters go in params (see c3d_get_material_graph). Returns the ACTUAL name (collisions get ".2"). Assign it with c3d_assign_material.
+Creates a material. type: "Material" (classic, default), "Material (PBR)", "Toon", "Glass" or "Shadowmat" (shadow catcher: renders transparent and keeps only the shadows cast on it; use with c3d_set_background kind transparent; shadow pixels were seen with the Cheetah renderer, not with Falcon, in 8.1.3 tests). Classic defaults: specColor black, specSize 80, transEta 1.5. Emission (emisColor, clamped to 1) lights neighbouring surfaces in Falcon. Shortcuts color/metalness/roughness map to the right root-node parameters (diffColor / baseColor / color / transColor); other parameters go in params (see c3d_get_material_graph). Returns the ACTUAL name (collisions get ".2"). Assign it with c3d_assign_material.
 
-Local profile hint: _Create a material (Material, Material (PBR), Toon, Glass) with color/metalness/roughness._
+Local profile hint: _Create a material (Material, Material (PBR), Toon, Glass, Shadowmat) with color/metalness/roughness._
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `name` | string (len<=255) | yes | Material name (made unique by Cheetah3D). |
-| `type` | `Material` \| `Material (PBR)` \| `Toon` \| `Glass` | no | Material type (default Material). |
+| `type` | `Material` \| `Material (PBR)` \| `Toon` \| `Glass` \| `Shadowmat` | no | Material type (default Material). |
 | `color` | string \| any[] \| object | no | Main color (diffuse / PBR base / toon color / glass tint). |
 | `metalness` | number (>=0, <=1) | no | PBR materials only. |
 | `roughness` | number (>=0, <=1) | no | PBR materials only. |
@@ -651,7 +653,7 @@ Sets a Texture parameter (default "texture" on an image node) to an absolute ima
 
 **Add tag** - writes. Profiles: full.
 
-Adds a tag to an object by tag type (e.g. SHADERTAG, TARGETTAG, RIGIDBODYTAG, SOFTBODYTAG, HDRITAG, DOFTAG, RENDERTAG - see c3d_capabilities tagTypes). For materials prefer c3d_assign_material. Do not add BAKETAG to non-polygon objects (opens a modal). Returns tag index for c3d_set_tag_params.
+Adds a tag to an object by tag type (e.g. SHADERTAG, TARGETTAG, RIGIDBODYTAG, SOFTBODYTAG, RENDERTAG, SPLINETRACKINGTAG - see c3d_capabilities tagTypes; HDRITAG, DOFTAG, RADIOSITYTAG, FOGTAG and CAUSTICTAG are legacy tags whose effect in 8.x is unverified: prefer an ENVIRONMENTLIGHT object, the dofOn renderer parameter and the renderer settings). At most 24 SHADERTAGs per object (more crashed Cheetah3D 8.1.3). For materials prefer c3d_assign_material. Do not add BAKETAG to non-polygon objects (opens a modal). Returns tag index for c3d_set_tag_params.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -694,7 +696,7 @@ Removes the tag at tag_index from an object. Indices of later tags shift down by
 
 **Create/configure camera** - writes. Profiles: full, local.
 
-Creates a camera (omit ref) or reconfigures an existing one: name, position, aim (look_at_ref / look_at_point, verified by read-back), field of view in degrees, clip planes, focal distance, extra params, and active:true to make it the render camera (a newly created camera becomes active automatically). Cheetah cameras look down -Z.
+Creates a camera (omit ref) or reconfigures an existing one: name, position, aim (look_at_ref / look_at_point, verified by read-back), field of view in degrees, clip planes, focal distance, extra params, and active:true to make it the render camera (a newly created camera becomes active automatically). Cheetah cameras look down -Z. projection: perspective or orthographic; camera_light: off/on/auto (auto lights a scene only while it has no light). For a see-through background use c3d_set_background kind "transparent".
 
 Local profile hint: _Create or adjust a camera: position, aim, fov, active._
 
@@ -709,6 +711,8 @@ Local profile hint: _Create or adjust a camera: position, aim, fov, active._
 | `near` | number | no | Near clip (clipNear). |
 | `far` | number | no | Far clip (clipFar). |
 | `focal_distance` | number | no | Focal distance for depth of field. |
+| `projection` | `perspective` \| `orthographic` \| integer (>=0, <=2) | no | Projection: "perspective" (0) or "orthographic" (2); 1 is a third mode (not perspective, not orthographic; the book calls it panorama, unverified). |
+| `camera_light` | `off` \| `on` \| `auto` | no | Built-in camera light (cameraLightOnOff 0/1/2): "auto" (default) lights the scene only while it contains no light; "off" gives pure black without lights. |
 | `active` | boolean | no | Make this the active (render) camera. |
 | `params` | object | no | Other camera parameters (see c3d_get_parameters). |
 
@@ -718,7 +722,7 @@ Local profile hint: _Create or adjust a camera: position, aim, fov, active._
 
 **Create/configure light** - writes. Profiles: full, local.
 
-Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). A new light casts along its local -Y (down) until aimed; look_at_* switches its axis option to -Z and aims it, and the read-back reports the residual angle.
+Creates a LIGHT (omit ref) or reconfigures one: name, position, aim (look_at_*), color, intensity and light_type. light_type is an integer 0..4 or a name from c3d_capabilities lightTypes; there are no SPOTLIGHT/POINTLIGHT object types. Light types: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. New lights use inverse-square attenuation (params.attenuation=2): renders look dark unless intensity is raised (about distance squared) or attenuation is set to 0 (none). A new light casts along its local -Y (down) until aimed; look_at_* switches its axis option to -Z and aims it, and the read-back reports the residual angle. Measured in 8.1.3: shadow_softness (shadowSoft) softens shadows in the Falcon renderer (point/spot: light size; distant: angle); the radius parameter does not. shadowType 0 = no shadows, 1 = raytrace, 2 = raytrace+transparency (same as 1 for opaque objects). visible_in_camera shows an area light panel. Emissive materials also light the scene in Falcon.
 
 Local profile hint: _Create or adjust a light: type 0..4, color, intensity, position, aim._
 
@@ -732,7 +736,9 @@ Local profile hint: _Create or adjust a light: type 0..4, color, intensity, posi
 | `light_type` | integer (>=0, <=4) \| string (len<=30) | no | 0..4 or a lightTypes name from c3d_capabilities. |
 | `color` | string \| any[] \| object | no | Color: "#rrggbb[aa]", [r,g,b[,a]] or {r,g,b,a} with 0..1 channels (hex is 0..255). |
 | `intensity` | number (>=0, <=100000) | no | Light intensity (1 = default). |
-| `params` | object | no | Other light parameters (shadowType, radius, ...). |
+| `shadow_softness` | number (>=0, <=1000) | no | Falcon soft shadows (shadowSoft): light size for point/spot lights, angle for distant lights (0 = hard). The "radius" parameter does NOT soften shadows. |
+| `visible_in_camera` | boolean | no | Show the light itself in the render (geometry): the panel of an area light is visible to the camera. |
+| `params` | object | no | Other light parameters (shadowType 0 none / 1 raytrace / 2 raytrace+transparency, cutOffAngle, attenuation, ...). |
 
 **Output fields:** `object` (object), `look_at`
 
@@ -740,12 +746,12 @@ Local profile hint: _Create or adjust a light: type 0..4, color, intensity, posi
 
 **Set render background** - writes. Profiles: full.
 
-Sets the background of the ACTIVE camera (c3d_get_document_info activeCamera): kind "solid" {color} sets backgroundColor (and clears backgroundImage); "gradient" {stops (2..8 of {pos 0..1, color}), angle_deg (default 90 = top to bottom, 0 = left to right), width/height (default 1024x576, max 4096), dither (default true)} generates a PNG in <workDir>/backgrounds/ (never overwrites) and sets it as backgroundImage; "image" {path} uses an existing png/jpg/tiff. The background shows only in renders and camera views. Create a camera first.
+Sets the background of the ACTIVE camera (c3d_get_document_info activeCamera): kind "solid" {color} sets backgroundColor (and clears backgroundImage); "gradient" {stops (2..8 of {pos 0..1, color}), angle_deg (default 90 = top to bottom, 0 = left to right), width/height (default 1024x576, max 4096), dither (default true)} generates a PNG in <workDir>/backgrounds/ (never overwrites) and sets it as backgroundImage; "image" {path} uses an existing png/jpg/tiff; "transparent" sets backgroundColor alpha 0 so renders saved as PNG have alpha 0 wherever no object is (compositing; verified in both renderers; jpg has no alpha). The background shows only in renders and camera views. Create a camera first.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
-| `kind` | `solid` \| `gradient` \| `image` | yes | Background type. |
-| `color` | string \| any[] \| object | no | For solid. |
+| `kind` | `solid` \| `gradient` \| `image` \| `transparent` | yes | Background type. |
+| `color` | string \| any[] \| object | no | For solid (required) and transparent (optional RGB shown nowhere; default black). |
 | `stops` | object[] | no | For gradient: color stops, e.g. [{pos:0,color:"#0b0f2a"},{pos:1,color:"#ff5a3c"}]. |
 | `angle_deg` | number (>=-360, <=360) | no | For gradient: direction of the color change in degrees (default 90 = top to bottom; 0 = left to right). |
 | `width` | integer (>=2, <=4096) | no | For gradient: image width in pixels (default 1024). |
@@ -835,7 +841,7 @@ Reads the keyframes of a parameter per component (index 0=x/r, 1=y/g, 2=z/b, 3=w
 
 **Set render settings** - writes, idempotent. Profiles: full.
 
-Configures the renderer: engine (CHEETAH or FALCON), resolution and other renderer parameters (gamma, exposure, giOn, rayDepth, antialiasingMaxSamples ...); unknown parameter names are reported in the errors list of the result. Returns the resulting resolution. Larger resolution = slower render_image.
+Configures the renderer: engine (CHEETAH or FALCON), resolution and other renderer parameters (gamma, exposure, giOn, rayDepth, antialiasingMaxSamples ...); unknown parameter names are reported in the errors list of the result. Renderer parameters differ (measured in 8.1.3): FALCON has samples (default 100; values <= 0 are refused), totalBounces, causticsReflection/causticsRefraction, mbCamera; CHEETAH has giOn, giType, rayDepth, antialiasingMode, photonMapOn; both have gamma, exposure, filmic and dofOn. Returns the resulting resolution. Larger resolution = slower render_image.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -1044,9 +1050,12 @@ Returns the bridge RUNTIME log ring buffer (diagnostics of c3d-mcp operations in
 
 | URI | Description |
 |---|---|
-| `c3d://api/short` | Condensed Cheetah3D JavaScript API cheat sheet and rules. |
-| `c3d://api/full` | Complete Cheetah3D 8.x JavaScript API reference with gotchas (large). |
-| `c3d://gotchas` | Known crashes, quirks and workarounds when scripting Cheetah3D. |
+| `c3d://api/short` | Condensed Cheetah3D JavaScript API cheat sheet and rules. Forum-derived and written for 8.1.1: check c3d://verified for what 8.1.3 refuted. |
+| `c3d://api/full` | Complete Cheetah3D 8.x JavaScript API reference with gotchas (large). Forum-derived: check c3d://verified for what 8.1.3 refuted. |
+| `c3d://gotchas` | Known crashes, quirks and workarounds when scripting Cheetah3D. Forum-derived: some entries are wrong for 8.1.3, see c3d://verified. |
+| `c3d://patterns` | Script skeletons and common tasks per script type (macro, tool, tag, polygon, spline, particle). Forum-derived: check c3d://verified. |
+| `c3d://api/reference` | Official per-class method reference converted from the Cheetah3D help, with descriptions (names verified against 8.1.3; some documented constants and methods do not exist at runtime, see c3d://verified). |
+| `c3d://verified` | Which claims of the scripting knowledge base and the book "Learn 3D with Cheetah 3D" were measured in the running app: confirmed, refined, refuted, not tested. |
 | `c3d://templates/macro` | Starter Macro script with redraw lock handling. |
 | `c3d://templates/polygon-script` | Starter Polygon-object script (buildUI/buildObject). |
 | `c3d://scene` | Current document and object tree (depth 3, first 200 objects). |

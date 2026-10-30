@@ -25,7 +25,7 @@ for (j = 0; j < N; j++) { j1 = (j + 1) % N; add([rings[last][0], rings[last - 1]
 obj.update();
 return { id: obj.id(), vertices: nv, polygons: polys };
 ```
-If shading looks inside-out, `c3d_edit_mesh flip_winding` over all polygon indices.
+Meshes from `c3d_create_mesh` have outward normals. If one still looks inside-out (for example it was built in a raw script), `c3d_edit_mesh flip_winding` over all polygon indices.
 
 ## Helper block for repeated primitives
 Paste at the top of a bulk script. It reuses a folder by name, parents explicitly and assigns a material by link.

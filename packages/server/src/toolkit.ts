@@ -77,7 +77,7 @@ export interface ToolServices {
   /** Report progress for the current tool call. */
   progress(message: string, fraction?: number): void;
   /** Search vendored docs (BM25). */
-  searchDocs(query: string, limit?: number): Array<{ id: string; title: string; snippet: string; source: string }>;
+  searchDocs(query: string, limit?: number, sources?: readonly string[]): Array<{ id: string; title: string; snippet: string; source: string; trust: string; note?: string }>;
   /** Lint a script (advisory). */
   lint(code: string): Array<{ rule: string; line: number; message: string; severity: 'error' | 'warn' }>;
   /** Downscale/analyze images via helper, falling back to sips. */

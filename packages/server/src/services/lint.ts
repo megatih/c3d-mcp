@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- loosely typed runtime data; indices are bounds-checked by construction */
 // Advisory static checks for Cheetah3D scripts. Port of vendor/c3d-scripting-kb/tools/c3d_lint.py plus server-side safety rules.
 import { readKb } from './kb.js';
+import { ABSENT_CONSTANTS, ABSENT_METHODS, VERIFIED_CONSTANTS, VERIFIED_METHODS } from './kbOverlay.js';
 
 export type LintSeverity = 'error' | 'warn';
 export interface LintFinding { rule: string; line: number; message: string; severity: LintSeverity }
@@ -14,10 +15,13 @@ function api(): { methods: Set<string>; constants: Set<string> } | null {
   const a = JSON.parse(raw) as Api;
   const methods = new Set<string>(a.globals);
   for (const c of Object.values(a.classes)) for (const m of Object.keys(c.methods)) methods.add(m);
-  return (apiCache = { methods, constants: new Set(a.constants) });
+  // Constants: the documented ones plus every identifier measured live in 8.1.3, minus the documented ones that are undefined there.
+  const constants = new Set([...a.constants, ...Object.keys(VERIFIED_CONSTANTS)]);
+  for (const c of ABSENT_CONSTANTS) constants.delete(c);
+  return (apiCache = { methods, constants });
 }
 
-const FORUM_KNOWN = new Set(['id', 'animationTime']);
+const VERIFIED_EXTRA = new Set(VERIFIED_METHODS);
 const JS_BUILTINS = new Set(
   `push pop shift unshift slice splice concat join split indexOf lastIndexOf toString toFixed toPrecision replace match substr substring charAt charCodeAt fromCharCode toLowerCase toUpperCase sort reverse map filter forEach reduce some every apply call bind floor ceil round sqrt sin cos tan atan atan2 asin acos abs pow min max random exp log keys parseInt parseFloat isNaN getTime now trim test exec hasOwnProperty search getFullYear getMonth getDate getHours getMinutes getSeconds localeCompare parse stringify isArray assign create defineProperty freeze getOwnPropertyNames includes startsWith endsWith padStart padEnd fill from of entries values has get set add delete`.split(/\s+/),
 );
@@ -55,6 +59,11 @@ export function stripComments(src: string): string {
     }
   }
   return out;
+}
+
+/** Blank the contents of string literals (keeps offsets and newlines) so identifiers inside strings are not mistaken for code. */
+function stripStrings(src: string): string {
+  return src.replace(/"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'/g, (m) => `${m.charAt(0)}${' '.repeat(m.length - 2)}${m.charAt(0)}`);
 }
 
 function matchClose(src: string, from: number, open: string, close: string): number {
@@ -132,7 +141,10 @@ export function lintScript(code: string): LintFinding[] {
 
   for (const [name, n] of Object.entries(ADD_PARAM_ARGS))
     for (const { pos, args } of callsWithArgs(src, name)) {
-      if (args.length < n) add(args.length < Math.min(n, 4) ? 'error' : 'warn', 'addparam-args', pos, `${name} has ${args.length} args, needs ${n}: omitted trailing args have crashed Cheetah3D.`);
+      // The official Menger.js example calls addParameterBool with 4 arguments and builds fine in 8.1.3 (research/10 B25); fewer than 4 is untested and has crashed older versions.
+      // Only addParameterBool with 4 arguments was shown to work; every other form keeps the documented count as the warning threshold.
+      const need = name === 'addParameterBool' ? Math.min(n, 4) : n;
+      if (args.length < need) add(args.length < Math.min(n, 4) ? 'error' : 'warn', 'addparam-args', pos, `${name} has ${args.length} args, ${n} documented${name === 'addParameterBool' ? ' (4 works: official Menger.js)' : ''}: omitted trailing args have crashed Cheetah3D in older versions.`);
       if (args[0] && /^\s*["']type["']\s*$/.test(args[0])) add('error', 'param-named-type', pos, 'Parameter named "type" collides with a hidden built-in; the object vanishes after reload.');
     }
   for (const [name, f] of fns) if (name !== 'buildUI' && /\.addParameter\w+\s*\(/.test(f.body)) add('warn', 'addparam-outside-buildui', f.start, `addParameter* called in ${name}(); only valid inside buildUI().`);
@@ -153,13 +165,19 @@ export function lintScript(code: string): LintFinding[] {
       if (hook === 'buildObject' && /Math\.random\s*\(/.test(f.body)) add('warn', 'random-in-buildobject', f.start, 'Math.random() in buildObject(): geometry changes on every rebuild; use a seeded PRNG.');
     }
 
-  for (const m of src.matchAll(/(?<![\w.])(?<!new )(Vec2D|Vec3D|Vec4D|Mat3D|Mat4D|FCurveKey|File)\s*\(/g)) add('error', 'ctor-without-new', m.index, `${m[1]}(...) without \`new\` has crashed Cheetah3D.`);
+  const noStr = stripStrings(src);
+  for (const m of noStr.matchAll(/(?<![\w.])(?<!new )(Vec2D|Vec3D|Vec4D|Mat3D|Mat4D|FCurveKey|File)\s*\(/g)) add('error', 'ctor-without-new', m.index, `${m[1]}(...) without \`new\` throws a TypeError in 8.1.3 (older versions crashed Cheetah3D); write new ${m[1]}(...).`);
   for (const m of src.matchAll(/\b(Vec2D|Vec3D|Vec4D|Mat3D|Mat4D|PolyCore|SplineCore)\.prototype\b/g)) add('warn', 'native-prototype', m.index, `Extending ${m[1]}.prototype is ignored or breaks on native classes.`);
-  for (const m of src.matchAll(/\b(SPOTLIGHT|POINTLIGHT|DISTANTLIGHT|AREALIGHT|SKYLIGHT)\b/g)) add('warn', 'light-constants', m.index, `${m[1]}: lights are LIGHT + the "lightType" parameter (0..4); these constants do not exist or throw at runtime.`);
+  for (const m of noStr.matchAll(/\b(SPOTLIGHT|POINTLIGHT|DISTANTLIGHT|AREALIGHT|SKYLIGHT)\b/g))
+    add('warn', 'light-constants', m.index, m[1] === 'POINTLIGHT'
+      ? 'POINTLIGHT (15) exists but doc.addObject(POINTLIGHT) creates a non-light object in 8.1.3; use doc.addObject(LIGHT) and set the "lightType" parameter (0 ambient, 1 area, 2 distant, 3 point, 4 spot).'
+      : `${m[1]} is undefined in 8.1.3 (ReferenceError): lights are LIGHT + the "lightType" parameter (0..4).`);
   for (const m of src.matchAll(/(?<![\w.])print\s*\(\s*(true|false|\d+|[a-zA-Z_]\w*\s*\))/g)) add('warn', 'print-nonstring', m.index, 'print() only reliably accepts strings; wrap values: print("" + x).');
   for (const m of src.matchAll(/\.vertex\s*\([^)]*\)\s*\.\s*(add|sub|multiply|set)\s*\(/g))
     if (!/setVertex/.test(src.slice(Math.max(0, m.index - 80), m.index))) add('warn', 'vertex-copy', m.index, 'core.vertex(i) returns a copy; write back with core.setVertex(i, ...).');
-  if (/selectedObject\s*\(\s*\)/.test(src) && /(==|!=)\s*null/.test(src) && !src.includes('owner()')) add('warn', 'selected-object-null', null, 'doc.selectedObject() returns the root (not null) when nothing is selected; test obj.owner() == null.');
+  if (/selectedObject\s*\(\s*\)/.test(src) && /(===|!==)\s*null/.test(src)) add('warn', 'selected-object-null', null, 'doc.selectedObject() returns undefined (not null) when the root is selected, so a strict null test never matches; test !obj or == null.');
+  if (/Vec4D/.test(src)) for (const m of src.matchAll(/\.\s*isEqual\s*\(/g)) add('warn', 'vec4-isequal', m.index, 'Vec4D.isEqual() throws "Wrong number or type of arguments" in 8.1.3 (Vec3D.isEqual works); compare the components instead.');
+  for (const m of src.matchAll(/setParameter\s*\(\s*["']samples["']\s*,\s*0\s*\)/g)) add('error', 'falcon-samples-zero', m.index, 'Falcon samples=0 is reported to mean "refine until stopped" (not tested here); a synchronous render could then never finish. Use a positive sample count.');
 
   // ---- server safety rules ----
   for (const m of src.matchAll(/\bFile\s*\.\s*mkDir\b|\.mkDir\s*\(/g)) add('error', 'file-mkdir', m.index, 'File.mkDir is banned: it wipes the target directory.');
@@ -177,6 +195,13 @@ export function lintScript(code: string): LintFinding[] {
       if (open > 0 && /addIndexPolygon|addPolygon/.test(src.slice(open, matchClose(src, open + 1, '{', '}')))) add('warn', 'unbounded-addpolygon', m.index, 'addIndexPolygon inside a while loop: bad or unbounded indices crash Cheetah3D; use a bounded for loop and validate indices.');
     }
   }
+  for (const m of src.matchAll(/\b(?:for|while)\s*\(/g)) {
+    const close = matchClose(src, m.index + m[0].length, '(', ')');
+    const open = /^\s*\{/.exec(src.slice(close));
+    if (!open) continue;
+    const from = close + open[0].length;
+    if (/addTagOfType\s*\(\s*SHADERTAG\s*\)/.test(src.slice(from, matchClose(src, from, '{', '}')))) add('warn', 'many-shader-tags', m.index, 'Material (SHADERTAG) tags added in a loop: 30 on one object crashed Cheetah3D 8.1.3 and 24 were fine (25-29 untested). Keep at most 24 per object; c3d_assign_material and c3d_add_tag enforce this.');
+  }
   if (/\.(setVertex|addIndexPolygon|addPolygon|addVertex|setPolygon)\s*\(/.test(src) && !/\.update\s*\(/.test(src)) add('warn', 'missing-update', null, 'Geometry edited but obj.update() is never called; the viewport/render will not refresh.');
 
   // ---- API conformance (needs api-index) ----
@@ -185,15 +210,21 @@ export function lintScript(code: string): LintFinding[] {
     const defined = new Set([...fns.keys(), ...[...src.matchAll(/(\w+)\s*[:=]\s*function/g)].map((m) => m[1]!)]);
     for (const m of src.matchAll(/\.\s*([a-zA-Z_]\w*)\s*\(/g)) {
       const n = m[1]!;
-      if (a.methods.has(n) || JS_BUILTINS.has(n) || defined.has(n)) continue;
-      if (FORUM_KNOWN.has(n)) continue;
+      if (defined.has(n)) continue;
+      if (Object.hasOwn(ABSENT_METHODS, n)) {
+        add('warn', 'unknown-method', m.index, `.${n}() does not exist in 8.1.3: ${ABSENT_METHODS[n]!}`);
+        continue;
+      }
+      if (a.methods.has(n) || JS_BUILTINS.has(n) || VERIFIED_EXTRA.has(n)) continue;
       add('warn', 'unknown-method', m.index, `.${n}() is not in the 8.x API reference.`);
     }
     const declared = new Set([...src.matchAll(/\b(?:var|let|const)\s+([A-Z][A-Z0-9_]+)/g)].map((m) => m[1]!));
-    for (const m of src.matchAll(/(?<![\w."'])([A-Z][A-Z0-9_]{3,})(?![\w"'])/g)) {
+    const codeOnly = stripStrings(src);
+    for (const m of codeOnly.matchAll(/(?<![\w."'])([A-Z][A-Z0-9_]{3,})(?![\w"'])/g)) {
       const c = m[1]!;
-      if (!a.constants.has(c) && !declared.has(c) && c !== 'LIGHT' && c !== 'NAN' && !/^(JSON|WRITE_MODE|READ_MODE|HPB|NaN)$/.test(c) && !/_MODE$|_INTERPOL$|_PARAMETER$/.test(c))
-        add('warn', 'unknown-constant', m.index, `${c}: not a documented constant.`);
+      if (/^(SPOTLIGHT|POINTLIGHT|DISTANTLIGHT|AREALIGHT|SKYLIGHT)$/.test(c)) continue; // reported by light-constants
+      if (ABSENT_CONSTANTS.includes(c)) add('warn', 'unknown-constant', m.index, `${c} is documented or quoted but undefined in 8.1.3 (ReferenceError).`);
+      else if (!a.constants.has(c) && !declared.has(c) && !/^(JSON|NAN|HPB)$/.test(c)) add('warn', 'unknown-constant', m.index, `${c}: not a known constant (not in the reference and not found in Cheetah3D 8.1.3).`);
     }
   }
   const seen = new Set<string>();

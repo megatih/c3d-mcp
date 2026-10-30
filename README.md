@@ -12,7 +12,7 @@ Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-
                               └──Unix socket──▶ C3D Bridge Helper.app (Swift) ─┘ presses the macro's menu item (Accessibility)
 ```
 
-* **Server** (`packages/server`): 63 `c3d_*` tools, resources and prompts; queue, safety checks, backups.
+* **Server** (`packages/server`): 60 `c3d_*` tools, resources and prompts; queue, safety checks, backups.
 * **Bridge** (`bridge/`): a tiny loader macro plus a runtime that Cheetah3D executes, draining a request inbox and writing results.
 * **Helper** (`helper/`): a small Accessibility app that activates Cheetah3D, presses the bridge menu item and reports dialogs. Optional (an `osascript` fallback exists) but recommended: ~3× faster, modal detection, screenshots.
 
@@ -32,7 +32,7 @@ Read it first if you like (`curl -fsSL <url> -o install.sh; less install.sh; bas
 <details><summary>Manual install</summary>
 
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app
@@ -88,11 +88,11 @@ Same-user threat model. The server never overwrites a file that existed before t
 ## Things worth knowing about Cheetah3D itself
 
 Verified against 8.1.3 while building this (details in `research/08-open-questions-and-probes.md`):
-render formats are png/jpg/tiff only; glTF/GLB cannot be opened (FBX/OBJ/DAE/STL/3DS/USDZ/DXF can); object names are not unique (tools address objects by stable `id`); Edit › Undo does not revert script changes (use checkpoints); exporting **OBJ** crashed Cheetah3D once on a nested scene (an automatic checkpoint is taken first; prefer other formats); a dialog open in Cheetah3D blocks everything (`BLOCKED_BY_MODAL` carries its text).
+render formats are png/jpg/tiff only; glTF/GLB cannot be opened (FBX/OBJ/DAE/STL/3DS/USDZ/DXF can); object names are not unique (tools address objects by stable `id`); Edit › Undo does not revert script changes (use checkpoints); exporting **OBJ** crashed Cheetah3D once on a nested scene (an automatic checkpoint is taken first; prefer other formats); a dialog open in Cheetah3D blocks everything (`BLOCKED_BY_MODAL` carries its text); Cheetah3D's front face is clockwise, so `c3d_create_mesh` converts your counter-clockwise polygons to get outward normals; 30 material tags on one object crashed it, 24 were fine (the tools stop at 24).
 
 ## Repository layout
 
-`packages/server` TypeScript MCP server · `bridge/` in-app runtime + Swift JavaScriptCore test harness · `helper/` Swift helper app · `contracts/` JSON Schemas shared by all three · `docs/PROTOCOL.md` the bridge protocol · `evals/` task suite + runner · `plugin/` + `.claude-plugin/` Claude Code plugin & marketplace · `mcpb/` Claude Desktop extension · `packaging/` Homebrew cask, registry `server.json`, signing scripts · `research/` the research notes and live probe results · `vendor/c3d-scripting-kb` pinned MIT snapshot used for doc search.
+`packages/server` TypeScript MCP server · `bridge/` in-app runtime + Swift JavaScriptCore test harness · `helper/` Swift helper app · `contracts/` JSON Schemas shared by all three · `docs/PROTOCOL.md` the bridge protocol · `evals/` task suite + runner · `plugin/` + `.claude-plugin/` Claude Code plugin & marketplace · `mcpb/` Claude Desktop extension · `packaging/` Homebrew cask, registry `server.json`, signing scripts · `research/` the research notes and live probe results (`research/10` = what was verified in 8.1.3) · `vendor/c3d-scripting-kb` pinned MIT snapshot and `vendor/learn3d-cheetah` pinned BSD-2 book text, both used for doc search, lint rules and skills.
 
 ## Development
 
@@ -105,9 +105,19 @@ node evals/runner/run.mjs --n=3                                                 
 scripts/release.sh                                                                  # builds npm tarball, .mcpb, helper zip into release/ (publishes nothing)
 ```
 
+## Credits and knowledge sources
+
+c3d-mcp stands on the work of **Tonio Loewald**, who documented Cheetah3D scripting for the community:
+
+* **[c3d-scripting-kb](https://github.com/tonioloewald/c3d-scripting-kb)** (MIT): the Cheetah3D API reference as Markdown, the gotchas and patterns collected from the user forum, the official example scripts, the linter whose rules `c3d_lint_script` ports, and the forum archive. We use it for `c3d_search_api_docs`, lint rules, MCP resources and skill content.
+* **[Learn 3D with Cheetah 3D](https://learn3d.loewald.com)** (BSD-2-Clause, [source](https://github.com/tonioloewald/Learn-3D-with-Cheetah-3D)): the book's scripting chapter and its guidance on lights, materials, rendering and animation. We use it for the search corpus and for skill recipes.
+* The official reference and example scripts are © Martin Wengenmayer / MW3D-Solutions (shipped with Cheetah3D); the forum scripts and threads belong to their authors (credited in the KB's `NOTICE.md`; email addresses and other people's home folders were removed from our copy).
+
+Everything taken from these sources was checked against Cheetah3D 8.1.3 first; what held, what changed and what could not be tested is recorded in [research/10-kb-verification-8.1.3.md](research/10-kb-verification-8.1.3.md) and surfaced to agents as trust levels and notes in search results. Corrections to those sources are ours, not theirs.
+
 ## License
 
-MIT. The vendored knowledge base (`vendor/c3d-scripting-kb`) is MIT © its authors; see its `LICENSE`/`NOTICE.md`.
+MIT. The vendored knowledge base (`vendor/c3d-scripting-kb`) is MIT © its authors (forum material per its `NOTICE.md`); the vendored book text (`vendor/learn3d-cheetah`) is BSD-2-Clause © 2019 Tonio Loewald; see their `LICENSE` files.
 
 ---
 #cheetah3d #mcp #modelcontextprotocol #macos #3d #ai #claude #codex #antigravity #automation #rendering

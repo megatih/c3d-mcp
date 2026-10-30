@@ -1,0 +1,11 @@
+id: light_soft_shadow
+title: "Soft-shadow point light"
+profile: full
+timeout_s: 180
+fixture: fixtures/empty.jas
+tags: ["light", "verified"]
+prompt: "Add a point light named SoftLamp at [3, 5, 2] with soft shadows (Falcon renderer style) and a ground plane named Ground. Do not render."
+assertions:
+  - {"type": "object_exists", "name_regex": "SoftLamp", "object_type": "LIGHT"}
+  - {"type": "param_range", "object_regex": "SoftLamp", "param": "shadowSoft", "min": 0.1, "max": 1000}
+  - {"type": "object_exists", "name_regex": "Ground"}

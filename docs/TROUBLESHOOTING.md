@@ -61,3 +61,9 @@ After you update or rebuild the helper, macOS may drop the grant (ad-hoc signatu
 | Cheetah3D crashed while exporting OBJ | Cheetah3D's OBJ exporter crashed once on a nested scene | Prefer FBX/DAE/STL/USDZ/3DS/DXF; the tool takes a checkpoint first. |
 | Non-ASCII text corrupted in your own scripts | `File.write` truncates non-ASCII | Escape as `\uXXXX`. |
 | Dark renders | New lights use inverse-square attenuation | Raise `intensity` (about distance²) or set the light's `attenuation` to 0. |
+| A render is completely black with no light in the scene | The camera light is `auto`/`off` | `c3d_set_camera {camera_light:"on"}` or add a light (auto lights the scene only while it has none). |
+| Shadows too hard / too soft | Falcon soft shadows come from the light's `shadowSoft`, not `radius` | `c3d_set_light {shadow_softness}` (point/spot: light size; distant: angle). |
+| Exported mesh or boolean looks inside-out although the render looked fine | Counter-clockwise polygons have inward normals in Cheetah3D (the renderer is two-sided) | `c3d_create_mesh` converts for you; for other meshes `c3d_edit_mesh flip_winding`. |
+| `c3d_assign_material` says "already has 24 material tags" | Cheetah3D 8.1.3 crashes with many more material tags on one object | Reuse materials or split the object. |
+| `c3d_set_render_settings` refuses `samples` | Falcon `samples` 0 means "refine until stopped" and would never finish | Use a positive value (default 100). |
+| Search hits marked `book-unreviewed` or `forum` disagree with a tool | Those sources were not verified in 8.1.3 | Prefer `official` / `verified` / `example` hits and the `NOTE` lines; see `c3d://verified`. |

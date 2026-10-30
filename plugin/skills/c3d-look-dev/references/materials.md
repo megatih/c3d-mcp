@@ -25,7 +25,7 @@ Combine nodes (`mix`, `multiply`, `add`, `gradient`, `noise`, `voronoi`, `hsv2rg
 `c3d_add_material_node type:"image"` -> `c3d_set_texture {material, node, path:<absolute existing file>}` -> connect `color` to `diffColor`/`baseColor`. Clear with `c3d_set_material_params` and an empty path.
 
 ## Emissive neon
-`c3d_set_material_params {material, params:{emisColor:[1,0.2,0.8,1]}}`. Emission is shading only: it neither illuminates neighbours nor blooms. Place a point/area light of matching colour close to the sign for spill, then add bloom with `c3d_postprocess_image`.
+`c3d_set_material_params {material, params:{emisColor:[1,0.2,0.8,1]}}`. `emisColor` is clamped to 1. With the FALCON renderer an emissive surface also lights neighbouring surfaces (measured in 8.1.3: a floor next to an emissive box is lit); with the CHEETAH renderer earlier benchmarks saw shading only. It never blooms. Place a point/area light of matching colour close to the sign for spill, then add bloom with `c3d_postprocess_image`.
 
 ## Per-polygon materials
 `c3d_make_editable` (primitives become editable polygon objects; the id may change, re-read it) -> `c3d_get_mesh` for polygon indices -> `c3d_assign_material {polygons:[...]}` per material. At most 24 slots per object. Whole-object assignment adds a SHADERTAG; `replace_existing` (default true) swaps the previous one.

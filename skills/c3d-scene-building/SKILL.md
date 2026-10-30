@@ -35,14 +35,14 @@ If the `c3d_*` tools are not available: on clients without the MCP server (for e
 | Need | Tool |
 |---|---|
 | Boxes, spheres, cylinders, cones, planes, tori | `c3d_create_object` with `params` - [primitives](references/primitives.md) |
-| Arbitrary shapes, n-gons, UVs | `c3d_create_mesh` (CCW winding seen from outside, validated, chunked) |
+| Arbitrary shapes, n-gons, UVs | `c3d_create_mesh` (counter-clockwise seen from outside, converted to outward normals, validated, chunked) |
 | Pipes, cables, rails, bent tubes, partial torus arcs | `c3d_create_pipe` (TORUS has no sweep angle) |
 | Per-vertex edit of an existing shape | `c3d_make_editable` (experimental, id may change; use the returned object), then `c3d_get_mesh` / `c3d_edit_mesh` |
 | Paths for Extrude/Lathe | `c3d_create_spline` |
 | Dozens to hundreds of similar objects, surfaces of revolution | `c3d_run_script` |
 | Copies | `c3d_duplicate` (experimental, `count` and `offset`); for many, script it |
 
-Primitives cannot be edited per vertex. If shading looks inside-out on a custom mesh, flip with `c3d_edit_mesh flip_winding`.
+Primitives cannot be edited per vertex. Custom meshes from `c3d_create_mesh` have outward normals; for a mesh made another way that looks inside-out, flip with `c3d_edit_mesh flip_winding`.
 
 ## Bulk building with c3d_run_script
 Use it when no dedicated tool fits or when making many objects; one call replaces hundreds of tool calls. A real run built a 1,100-object scene with scripts for panels, paving and railings.

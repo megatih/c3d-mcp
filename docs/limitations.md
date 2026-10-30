@@ -48,7 +48,7 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 * **Save semantics**: `c3d_save_document` / `c3d_export` / checkpoints write a COPY (`saveToFile` does not re-point the document, P07). The window title and dirty state do not change.
 * **No overwrite**: files that existed before the session are never overwritten; session-owned files only after confirmation.
 * **Rendering is synchronous** and may open the Render Manager window, which temporarily disables the bridge trigger menu (the helper re-raises the document window). `c3d_render_sequence` renders one frame per bridge request and does not restore the animation time.
-* **Lights** are `LIGHT` + `lightType` 0..4; the constants `SPOTLIGHT`, `POINTLIGHT`, ... do not exist (P05/P17).
+* **Lights** are `LIGHT` + `lightType` 0..4; `SPOTLIGHT`, `DISTANTLIGHT`, `AREALIGHT` and `SKYLIGHT` are undefined, and `POINTLIGHT` (15) exists but `addObject(POINTLIGHT)` creates a non-light object (P05/P17, research/10 B2).
 * **Keyframes** use seconds, linear by default; vector parameters create three F-curves (P14).
 * **Mesh size**: single requests are capped at 200000 vertices/polygons; `c3d_create_mesh` splits into chunks of ~4000 automatically and removes the partial object if a chunk fails.
 * **`c3d_run_script`** is advisory-linted (blocked only on error-severity findings unless `force:true`); it is not a security sandbox. Scripts that use `OS.system` or file access require confirmation; `C3D_MCP_DISABLE_EXEC`, `C3D_MCP_DISABLE_SHELL` turn them off.
@@ -66,10 +66,21 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 
 ## Found by the benchmark runs (docs/benchmark/)
 - **Rendering features Cheetah3D itself does not offer:** no outlines / Freestyle-style line work, no bloom or glow, no compositor or render passes. These are now available as image post-processing: render with `c3d_render_image`, then run `c3d_postprocess_image` (bloom, edge outlines, vignette, colour grade, posterize; needs the helper app, `c3d-mcp install` updates it). They are applied to the finished 2D image, so they cannot use depth/object IDs (no per-object outlines, no glow that is occluded correctly) and the unprocessed render has no glow to lights. **Gradient backgrounds** are supported by `c3d_set_background` (the tool generates a PNG and assigns it as the active camera's background image; sizes up to 4096 px; not visible in the editor viewport).
-- **Materials:** the `Toon` root only accepts `color` (its lit/shaded ramp cannot be set); only `Material`, `Material (PBR)`, `Toon` and `Glass` roots are created by `c3d_create_material`.
+- **Materials:** the `Toon` root only accepts `color` (its lit/shaded ramp cannot be set); only `Material`, `Material (PBR)`, `Toon`, `Glass` and `Shadowmat` roots are created by `c3d_create_material`.
 - **Geometry:** `TORUS` has no sweep angle; use `c3d_create_pipe` for bent pipes, cables and partial torus arcs (circular cross-section only, fillets are polylines sampled at `arc_steps`). Scene totals (objects by type, polygons, vertices, triangles, materials) come from `c3d_get_scene_stats`; per-object statistics are not offered.
 - **Lights:** a new light casts along its local -Y (its `axis` option defaults to 1; 0 = -X, 1 = -Y, >=2 = -Z). `look_at` on a light now switches the axis to -Z before aiming (verified by render).
 - **Rotation:** `rotation` components are x=heading, y=pitch, z=bank (default HPB order), not x/y/z axis rotations.
 - **Reparenting:** `keep_world` only works between root-level parents.
 - **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and removing a material (`doc.removeMaterial`) in the same script run that created it crashes Cheetah3D at idle (crash #2, root cause isolated by bisect in research/08). Since 0.1.2 the script `doc` refuses that case with UNSUPPORTED; removing a material created in an earlier call is safe.
 - **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1`.
+
+
+## Measured in 8.1.3 while checking the scripting knowledge base and the book (research/10)
+- **Material tags:** 30 material (SHADERTAG) tags on one object crashed Cheetah3D (abort in `buildMaterialArray`); 24 were fine, 25-29 untested. `c3d_assign_material` refuses to go past 24 per object (`UNSUPPORTED`).
+- **No "Update Menu":** Tools › Script has no such item; new script files (including the bridge macro) need a Cheetah3D restart. Edits to existing scripts are picked up (P02).
+- **Winding:** Cheetah3D's front face is clockwise seen from outside. `c3d_create_mesh` / `c3d_create_pipe` convert the documented counter-clockwise input so normals point outward (before this fix they pointed inward: invisible in renders because the renderer is two-sided; exports, booleans and subdivision may have been affected). `c3d_get_mesh` reports the native order, so re-create such a mesh with `winding:"cw"`.
+- **Falcon `samples` = 0** means "refine until stopped" in the book; the tools refuse `samples <= 0` and the linter flags it as a precaution, because a synchronous render could then never finish. (The hang itself was not tested.)
+- **Shadow catcher** (`Shadowmat`): the ground renders transparent over a transparent background; shadow pixels appeared with the CHEETAH renderer but not with FALCON in our tests.
+- **Soft shadows:** `shadow_softness` works in FALCON (light size for point/spot, angle for distant lights); `radius` does not soften shadows. CHEETAH-renderer soft shadows were not verified.
+- **Emission:** `emisColor` is clamped to 1; in FALCON it lights neighbouring surfaces. CHEETAH-renderer behaviour with GI was not re-measured.
+- **Not tested** (listed as such in research/10 section D): script-type hook details (`buildObject` rebuild loops, `addParameterBool` with fewer than 4 arguments; the official example scripts of all script types do build and run), creator child rules, refractive caustics, Sky Light, dynamics, IK and spline tracking. Search hits from the book and the forum for these topics are labelled `book-unreviewed` / `forum`: treat them as hints.

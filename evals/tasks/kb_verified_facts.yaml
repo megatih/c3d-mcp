@@ -1,0 +1,12 @@
+id: kb_verified_facts
+title: "Use verified facts, not forum lore"
+profile: full
+timeout_s: 150
+fixture: fixtures/empty.jas
+tags: ["docs", "read", "verified"]
+prompt: "In Cheetah3D 8.1.3 scripts: how do I get the parent of an object, and does Vec4D.isEqual work? Use the documentation search and tell me what the documentation says is confirmed in 8.1.3."
+assertions:
+  - {"type": "tool_called", "tool": "c3d_search_api_docs"}
+  - {"type": "answer_contains", "regex": "owner"}
+  - {"type": "answer_contains", "regex": "(?i)(throw|error|fail|broken|not work|does not work|doesn't work)"}
+  - {"type": "scene_unchanged"}
