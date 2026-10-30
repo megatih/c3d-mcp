@@ -7,6 +7,16 @@ export type Uvs = number[][][];
 
 export interface MeshData { vertices: Vertex[]; polygons: number[][]; uvs?: Uvs }
 
+/**
+ * Cheetah3D (8.1.3, measured with core.normal(): native BOX 6/6 outward vs 6/6 inward for counter-clockwise polygons) treats CLOCKWISE
+ * (seen from outside) as the front face. Callers describe meshes counter-clockwise seen from outside, so every polygon (and its
+ * per-corner uvs) is reversed before sending; the first corner stays first.
+ */
+export function toCheetahWinding(m: MeshData): MeshData {
+  const rev = <T>(a: T[]): T[] => [a[0]!, ...a.slice(1).reverse()];
+  return { vertices: m.vertices, polygons: m.polygons.map(rev), ...(m.uvs ? { uvs: m.uvs.map(rev) } : {}) };
+}
+
 export function validateMesh(m: MeshData): void {
   const n = m.vertices.length;
   m.vertices.forEach((v, i) => {

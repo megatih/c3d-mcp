@@ -8,7 +8,7 @@ description: Writes and debugs Cheetah3D 8.1.3 JavaScript (ES5, JavaScriptCore) 
 If the c3d_* tools are not available, skip to "Standalone macro fallback" and deliver a macro file the user runs by hand.
 
 ## With the tools
-1. `c3d_search_api_docs` for signatures; never rely on memory for method names.
+1. `c3d_search_api_docs` for signatures; never rely on memory for method names. Every hit has a trust level: `official` (API reference), `verified` (measured in 8.1.3), `example` (scripts shipped with Cheetah3D) are reliable; `kb`, `book`, `book-unreviewed` and `forum` are hints, and a `NOTE [refuted|refined in Cheetah3D 8.1.3]` line overrides the text above it. `sources:["official","example"]` narrows the search; resource `c3d://verified` lists what was confirmed or refuted.
 2. `c3d_lint_script` first (checks missing `new`, banned calls, endless loops, missing `update()`, unknown methods). Fix every error; warnings about unknown constants are often harmless.
 3. `c3d_checkpoint`, then `c3d_run_script` (default deadline 60 s, `timeout_s` up to 600). Keep each script under ~8000 characters; split big builds into several runs.
 4. End with an explicit `return {...}` of counts and ids (a trailing expression is NOT returned). Use `print()` for logs; both come back in the result. Only JSON-able values (plain objects, arrays, strings, finite numbers) come back; Vec3D/objects are not returned, convert to `{x,y,z}` or ids.
@@ -36,7 +36,7 @@ If the c3d_* tools are not available, skip to "Standalone macro fallback" and de
 - Primitives (BOX, BALL, CYLINDER...) are parametric: size via `sizeX/sizeY/sizeZ`, `radius`, `height`; use `bevelRadius`/`bevelSections` for bevels. One SHADERTAG per object unless you set polygon selections yourself.
 - Avoid coplanar overlapping faces; offset by >= 0.01 m.
 
-Full lists: `references/api-cheatsheet.md`, `references/pitfalls.md`.
+Full lists: `references/api-cheatsheet.md`, `references/pitfalls.md`; script folders, entry points and what each type produces: `references/script-types.md`.
 
 ## Templates
 - `templates/macro-template.js` - minimal `main(doc)` macro with helpers and lock handling.

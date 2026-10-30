@@ -1,0 +1,7 @@
+<!--{"parent": "4_Just_Enough_to_be_Dangerous.md", "order": 8}-->
+
+## Selecting Parts of Meshes
+
+> **Note:** this section is a stub (two headings, no text). <!-- TODO editorial -->
+
+## Combining Meshes

@@ -10,7 +10,7 @@ const TagList = z.array(z.looseObject({ index: z.number().int(), type: z.string(
 export const addTag = defineTool({
   name: 'c3d_add_tag',
   title: 'Add tag',
-  description: 'Adds a tag to an object by tag type (e.g. SHADERTAG, TARGETTAG, RIGIDBODYTAG, SOFTBODYTAG, HDRITAG, DOFTAG, RENDERTAG - see c3d_capabilities tagTypes). For materials prefer c3d_assign_material. Do not add BAKETAG to non-polygon objects (opens a modal). Returns tag index for c3d_set_tag_params.',
+  description: 'Adds a tag to an object by tag type (e.g. SHADERTAG, TARGETTAG, RIGIDBODYTAG, SOFTBODYTAG, RENDERTAG, SPLINETRACKINGTAG - see c3d_capabilities tagTypes; HDRITAG, DOFTAG, RADIOSITYTAG, FOGTAG and CAUSTICTAG are legacy tags whose effect in 8.x is unverified: prefer an ENVIRONMENTLIGHT object, the dofOn renderer parameter and the renderer settings). At most 24 SHADERTAGs per object (more crashed Cheetah3D 8.1.3). For materials prefer c3d_assign_material. Do not add BAKETAG to non-polygon objects (opens a modal). Returns tag index for c3d_set_tag_params.',
   group: 'tags',
   inputSchema: z.strictObject({ ref: ObjectRef, type: z.string().min(3).max(40).describe('Tag type name, e.g. "TARGETTAG".'), params: ParamMap.optional().describe('Initial tag parameters.') }),
   outputSchema: z.looseObject({ tagIndex: z.number().int(), type: z.string(), tags: TagList }),

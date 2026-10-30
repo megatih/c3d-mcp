@@ -421,6 +421,11 @@ C3D.scene = (function () {
     if (typeId === CAP.constant('BAKETAG') && e.obj.family() !== CAP.constant('NGONFAMILY')) {
       U.fail('INVALID_ARGUMENT', 'BAKETAG can only be added to polygon objects', undefined, 'a BAKETAG on another object type raises a blocking modal (P24)');
     }
+    if (typeId === CAP.constant('SHADERTAG')) {
+      var shaderTags = 0, ti;
+      for (ti = 0; ti < e.obj.tagCount(); ti++) { if (e.obj.tagAtIndex(ti).type() === typeId) { shaderTags++; } }
+      if (shaderTags >= 24) { U.fail('UNSUPPORTED', 'this object already has ' + shaderTags + ' material tags; Cheetah3D 8.1.3 crashed with 30 (24 were fine)', { shaderTags: shaderTags, max: 24 }, 'reuse materials or split the object'); }
+    }
     tag = e.obj.addTagOfType(typeId);
     if (a.params) { outcome = P.apply(ctx, tag, a.params); }
     tag.update();

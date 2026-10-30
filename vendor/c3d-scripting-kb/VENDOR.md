@@ -1,6 +1,18 @@
 # Vendored snapshot: tonioloewald/c3d-scripting-kb
-- Source: https://github.com/tonioloewald/c3d-scripting-kb
-- Commit: a9008bffeea41b69c6189cfbc03266202ed71381 (HEAD of main, pushed 2026-10-27; fetched 2026-10-29)
-- License: MIT (see LICENSE, NOTICE.md)
-- Included (pruned): knowledge/, reference/{api-index.json,ExecuteScript.md}, dist/*.md, tools/c3d_lint.py, skill/SKILL.md, README, llms.txt.
-- Omitted: forum/ (thread archive), catalog/, docs/, examples/, scripts/ (large; not needed at runtime).
+- Source: https://github.com/tonioloewald/c3d-scripting-kb (author: Tonio Loewald)
+- Commit: a9008bffeea41b69c6189cfbc03266202ed71381 (HEAD of main, pushed 2026-10-27; fetched 2026-10-29, extended 2026-10-30)
+- License: MIT (see LICENSE, NOTICE.md). Forum material is archived on the assumption of CC BY 4.0 with author credit; see NOTICE.md (takedown policy included).
+- Included:
+  - knowledge/, dist/*.md, tools/c3d_lint.py, skill/SKILL.md, README, llms.txt
+  - reference/{api-index.json, ExecuteScript.md}
+  - reference/api/*.md (26 official class pages converted from the Cheetah3D 8.1.1 help)
+  - reference/book-ch17.8-scripts.md (older edition of the book's scripting chapter)
+  - examples/official/** (17 scripts bundled with Cheetah3D)
+  - forum/threads/ (539 forum thread transcripts), scripts/forum/ (archived forum scripts), catalog/forum-threads.json (per-thread reviews)
+- Omitted: catalog/ (other files, incl. tres-graficos links), docs/, examples/generated/, tools/ (other than the linter), reference/book-master-list.json.
+- Checked against Cheetah3D 8.1.3 on 2026-10-30:
+  - examples/official/** is byte-identical to the scripts in Cheetah3D.app (`diff -r` clean).
+  - Method and constant names in reference/api/*.md equal those in the 8.1.3 bundled help.
+  - Everything else (gotchas, patterns, forum material) is NOT guaranteed for 8.1.3; see research/10-kb-verification-8.1.3.md for the claims we tested.
+- Sanitized by c3d-mcp: in forum/threads, scripts/forum and catalog/forum-threads.json, email addresses were replaced by `[email removed]` and other people's home folders (`/Users/<name>/`) by `~/`, so that third-party personal data is not redistributed. Nothing else was altered; the upstream repository has the originals.
+- Not shipped in the npm package (kept in this repository for reference only): scripts/forum (archived forum scripts); the forum transcripts and catalog are packaged and searched last.

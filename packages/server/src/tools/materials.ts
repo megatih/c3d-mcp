@@ -7,7 +7,7 @@ import { applyText, runApply } from '../lib/ops.js';
 import { clean, ok, page } from '../lib/result.js';
 import { Color, Limit, MaterialRef, ObjectRef, Offset, ParamMap, ResponseFormat, normMat, normRef, toColor } from '../lib/schemas.js';
 
-const COLOR_PARAM: Record<string, string> = { material: 'diffColor', pbrmetal: 'baseColor', toon: 'color', dielectric: 'transColor' };
+const COLOR_PARAM: Record<string, string> = { material: 'diffColor', pbrmetal: 'baseColor', toon: 'color', dielectric: 'transColor', shadow: 'color' };
 const IMAGE_EXT = ['png', 'jpg', 'jpeg', 'tif', 'tiff', 'hdr', 'exr', 'tga', 'bmp', 'gif'];
 
 const Shortcuts = {
@@ -27,7 +27,7 @@ function expand(rootType: string, s: { color?: z.infer<typeof Color>; metalness?
   return out;
 }
 
-const ROOT_FOR_TYPE: Record<string, string> = { 'Material (PBR)': 'pbrmetal', Toon: 'toon', Glass: 'dielectric' };
+const ROOT_FOR_TYPE: Record<string, string> = { 'Material (PBR)': 'pbrmetal', Toon: 'toon', Glass: 'dielectric', Shadowmat: 'shadow' };
 
 export const listMaterials = defineTool({
   name: 'c3d_list_materials',
@@ -49,14 +49,14 @@ export const listMaterials = defineTool({
 export const createMaterial = defineTool({
   name: 'c3d_create_material',
   title: 'Create material',
-  description: 'Creates a material. type: "Material" (classic, default), "Material (PBR)", "Toon" or "Glass". Shortcuts color/metalness/roughness map to the right root-node parameters (diffColor / baseColor / color / transColor); other parameters go in params (see c3d_get_material_graph). Returns the ACTUAL name (collisions get ".2"). Assign it with c3d_assign_material.',
+  description: 'Creates a material. type: "Material" (classic, default), "Material (PBR)", "Toon", "Glass" or "Shadowmat" (shadow catcher: renders transparent and keeps only the shadows cast on it; use with c3d_set_background kind transparent; shadow pixels were seen with the Cheetah renderer, not with Falcon, in 8.1.3 tests). Classic defaults: specColor black, specSize 80, transEta 1.5. Emission (emisColor, clamped to 1) lights neighbouring surfaces in Falcon. Shortcuts color/metalness/roughness map to the right root-node parameters (diffColor / baseColor / color / transColor); other parameters go in params (see c3d_get_material_graph). Returns the ACTUAL name (collisions get ".2"). Assign it with c3d_assign_material.',
   group: 'materials',
-  inputSchema: z.strictObject({ name: z.string().min(1).max(255).describe('Material name (made unique by Cheetah3D).'), type: z.enum(['Material', 'Material (PBR)', 'Toon', 'Glass']).optional().describe('Material type (default Material).'), ...Shortcuts, params: ParamMap.optional().describe('Extra root-node parameters.') }),
+  inputSchema: z.strictObject({ name: z.string().min(1).max(255).describe('Material name (made unique by Cheetah3D).'), type: z.enum(['Material', 'Material (PBR)', 'Toon', 'Glass', 'Shadowmat']).optional().describe('Material type (default Material).'), ...Shortcuts, params: ParamMap.optional().describe('Extra root-node parameters.') }),
   outputSchema: z.looseObject({ material: z.looseObject({ index: z.number().int().optional(), name: z.string() }) }),
   mutating: true,
   idempotent: false,
   profiles: ['full', 'local'],
-  localDescription: 'Create a material (Material, Material (PBR), Toon, Glass) with color/metalness/roughness.',
+  localDescription: 'Create a material (Material, Material (PBR), Toon, Glass, Shadowmat) with color/metalness/roughness.',
   async handler(i, ctx) {
     const type = i.type ?? 'Material';
     const params = expand(ROOT_FOR_TYPE[type] ?? 'material', i, i.params);
