@@ -3,9 +3,10 @@
 ## For users
 The helper is a small background app (no Dock icon) that the server starts automatically (`open -g -a`, socket `~/Library/Application Support/Cheetah3D/MCP/helper.sock`). It brings Cheetah3D to the front for a moment, presses the bridge menu item, reports open dialogs, can screenshot the Cheetah3D window and downscale renders, then restores the app you were using.
 
-* Installed by `c3d-mcp install` to `~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app` (or via the Homebrew cask `c3d-bridge-helper`).
+* Installed by `c3d-mcp install` to `~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app` (or via the Homebrew cask `c3d-bridge-helper`). `c3d-mcp install` also **updates** it: an older or damaged helper is replaced (the old app is backed up in `MCP-backups/helper-<time>/`, and put back automatically if the new one does not start). A helper from the Homebrew cask is never replaced by c3d-mcp: use `brew upgrade --cask c3d-bridge-helper`.
 * Needs **Accessibility** (and optionally **Screen Recording**): add the app with **+** in System Settings → Privacy & Security — see `docs/TROUBLESHOOTING.md#granting-permissions`.
-* Remove it with `c3d-mcp uninstall`. It only talks to the Unix socket owned by your user.
+* Remove it with `c3d-mcp uninstall` (it stops the helper process and removes its LaunchAgent first, if one of ours exists). It only talks to the Unix socket owned by your user.
+* After an update macOS asks for Accessibility (and Screen Recording) again, because the downloadable helper is ad-hoc signed and each build counts as a new app. A helper you built and signed with your own stable certificate keeps its grants.
 
 The rest of this file is developer documentation (architecture, command reference, live-verification notes).
 

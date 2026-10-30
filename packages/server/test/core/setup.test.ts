@@ -88,6 +88,26 @@ describe('runSetup', () => {
     expect(rep.ok).toBe(true);
   });
 
+  it('says what it detected and lists the dry-run plan from the installer', async () => {
+    const r = rig({});
+    const rep = await run(r, { yes: true, dryRun: true, clients: 'none', skills: false });
+    expect(r.out.join('')).toMatch(/Detected: fresh install/);
+    expect(rep.steps.some((s) => s.name === 'install' && /would create runtime/.test(s.detail))).toBe(true);
+    expect(existsSync(r.h.env.paths.root)).toBe(false);
+  });
+
+  it('passes the install mode through and reports the detected state before installing', async () => {
+    const r = rig({ grantAfter: 0 });
+    await run(r, { yes: true, clients: 'none', skills: false, mode: 'auto' });
+    expect(r.out.join('')).toMatch(/Detected: fresh install/);
+    r.out.length = 0;
+    const rep = await run(r, { yes: true, clients: 'none', skills: false, mode: 'repair' });
+    // everything is installed now; the rig's fake helper app cannot pass the code-signature check, so that is the only finding
+    expect(r.out.join('')).toMatch(/Detected: partial install \(helper corrupt\)/);
+    expect(rep.steps.filter((x) => x.status === 'fail')).toEqual([]);
+    expect(rep.ok).toBe(true);
+  });
+
   it('reports requirements with detected clients', async () => {
     const r = rig({ detect: ['agy'] });
     mkdirSync(join(r.home, 'Library', 'Application Support', 'Claude'), { recursive: true });

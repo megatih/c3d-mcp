@@ -88,8 +88,11 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
+/** Copies the file next to itself; never overwrites an earlier backup (two edits in the same second get -2, -3, ...). */
 async function backup(path: string, now: Date): Promise<string> {
-  const dest = `${path}.c3d-backup-${timestamp(now)}`;
+  const base = `${path}.c3d-backup-${timestamp(now)}`;
+  let dest = base;
+  for (let n = 2; await readIfExists(dest) !== undefined; n++) dest = `${base}-${n}`;
   await copyFile(path, dest);
   return dest;
 }
@@ -205,5 +208,85 @@ export async function configureClient(client: SetupClient, o: ConfigureOptions):
     return client === 'codex' ? await configureToml(client, target, o) : await configureJson(client, target, o);
   } catch (err) {
     return { client, status: 'failed', target: clientConfigPath(client, o.home) ?? 'claude mcp add', detail: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+export type UnconfigureStatus = 'removed' | 'absent' | 'foreign' | 'would-remove' | 'refused' | 'failed';
+export interface UnconfigureResult {
+  client: SetupClient;
+  status: UnconfigureStatus;
+  target: string;
+  backup?: string;
+  detail: string;
+}
+export interface UnconfigureOptions { home: string; dryRun?: boolean; exec?: Executor; now?: () => Date }
+
+/** An entry is ours only if it launches c3d-mcp (npx package name, installed bin path or release tarball). */
+const launchesC3d = (text: string): boolean => /c3d-mcp/.test(text);
+
+async function unconfigureJson(client: SetupClient, target: string, o: UnconfigureOptions): Promise<UnconfigureResult> {
+  const text = await readIfExists(target);
+  if (text === undefined || text.trim() === '') return { client, status: 'absent', target, detail: 'no config file' };
+  let doc: unknown;
+  try {
+    doc = JSON.parse(text);
+  } catch (err) {
+    return { client, status: 'refused', target, detail: `${target} is not valid JSON (${err instanceof Error ? err.message : String(err)}); left untouched. Remove the "${SERVER}" entry by hand.` };
+  }
+  if (!isRecord(doc) || !isRecord(doc.mcpServers) || !(SERVER in doc.mcpServers)) return { client, status: 'absent', target, detail: `no "${SERVER}" entry` };
+  if (!launchesC3d(JSON.stringify(doc.mcpServers[SERVER]))) return { client, status: 'foreign', target, detail: `the "${SERVER}" entry does not launch c3d-mcp; kept` };
+  if (o.dryRun) return { client, status: 'would-remove', target, detail: `would remove "${SERVER}" from ${target}` };
+  const bak = await backup(target, (o.now ?? ((): Date => new Date()))());
+  const rest = Object.fromEntries(Object.entries(doc.mcpServers).filter(([name]) => name !== SERVER));
+  await writeFile(target, `${JSON.stringify({ ...doc, mcpServers: rest }, null, 2)}\n`);
+  return { client, status: 'removed', target, backup: bak, detail: `removed "${SERVER}"` };
+}
+
+/** The `[mcp_servers.c3d]` table (and its sub-tables) as text. */
+function tomlSection(text: string): string {
+  const out: string[] = [];
+  let inside = false;
+  for (const line of text.split('\n')) {
+    if (TOML_HEADER.test(line) || /^\s*\[\s*mcp_servers\s*\.\s*(?:c3d|"c3d")\s*\./.test(line)) inside = true;
+    else if (ANY_HEADER.test(line)) inside = false;
+    if (inside) out.push(line);
+  }
+  return out.join('\n');
+}
+
+async function unconfigureToml(client: SetupClient, target: string, o: UnconfigureOptions): Promise<UnconfigureResult> {
+  const text = await readIfExists(target);
+  if (text === undefined || !TOML_HEADER.test(text)) return { client, status: 'absent', target, detail: `no [mcp_servers.${SERVER}] section` };
+  const section = tomlSection(text);
+  if (!launchesC3d(section)) return { client, status: 'foreign', target, detail: `the [mcp_servers.${SERVER}] section does not launch c3d-mcp; kept` };
+  if (o.dryRun) return { client, status: 'would-remove', target, detail: `would remove [mcp_servers.${SERVER}] from ${target}` };
+  const bak = await backup(target, (o.now ?? ((): Date => new Date()))());
+  const stripped = stripTomlSection(text).replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '');
+  await writeFile(target, stripped ? `${stripped}\n` : '');
+  return { client, status: 'removed', target, backup: bak, detail: `removed [mcp_servers.${SERVER}]` };
+}
+
+async function unconfigureClaudeCode(o: UnconfigureOptions): Promise<UnconfigureResult> {
+  const exec = o.exec ?? systemExec;
+  const client: SetupClient = 'claude-code';
+  const shown = `claude mcp remove --scope user ${SERVER}`;
+  const list = await exec('claude', ['mcp', 'list'], { timeoutMs: 60_000 }).catch(() => undefined);
+  if (!list || list.code !== 0) return { client, status: 'absent', target: shown, detail: 'the claude CLI is not available (or listed nothing)' };
+  const line = list.stdout.split('\n').find((l) => /^\s*c3d\s*:/.test(l) || /^\s*c3d\s*$/.test(l));
+  if (!line) return { client, status: 'absent', target: shown, detail: `"${SERVER}" is not registered in Claude Code` };
+  if (!launchesC3d(line)) return { client, status: 'foreign', target: shown, detail: `the "${SERVER}" registration does not launch c3d-mcp; kept` };
+  if (o.dryRun) return { client, status: 'would-remove', target: shown, detail: `would run: ${shown}` };
+  const r = await exec('claude', ['mcp', 'remove', '--scope', 'user', SERVER], { timeoutMs: 60_000 });
+  return r.code === 0 ? { client, status: 'removed', target: shown, detail: 'unregistered with `claude mcp remove` (user scope)' } : { client, status: 'failed', target: shown, detail: `claude mcp remove failed: ${(r.stderr || r.stdout).trim().slice(0, 200) || `exit ${String(r.code)}`}` };
+}
+
+/** Removes the `c3d` server entry that `configureClient` added, keeping every other setting; refuses entries that are not ours. */
+export async function unconfigureClient(client: SetupClient, o: UnconfigureOptions): Promise<UnconfigureResult> {
+  try {
+    if (client === 'claude-code') return await unconfigureClaudeCode(o);
+    const target = clientConfigPath(client, o.home) as string;
+    return client === 'codex' ? await unconfigureToml(client, target, o) : await unconfigureJson(client, target, o);
+  } catch (err) {
+    return { client, status: 'failed', target: clientConfigPath(client, o.home) ?? 'claude mcp remove', detail: err instanceof Error ? err.message : String(err) };
   }
 }

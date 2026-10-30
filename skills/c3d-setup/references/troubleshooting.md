@@ -8,14 +8,15 @@ Run `npx -y c3d-mcp doctor` first. Logs: `~/Library/Logs/c3d-mcp/` (`c3d-mcp.log
 |---|---|---|
 | No `c3d_*` tools in the client | Server not registered, client not restarted, wrong config path | `c3d-mcp config <client>`; put it in the file named in the comment line; restart the client |
 | `spawn npx ENOENT` (Claude Desktop) | GUI app has no shell PATH | `c3d-mcp config claude-desktop --form absolute` |
-| `APP_NOT_RUNNING` | Cheetah3D closed | `open -a Cheetah3D` |
+| `APP_NOT_RUNNING` | Cheetah3D closed (with the helper app installed c3d-mcp launches it itself, unless `C3D_MCP_NO_AUTOLAUNCH=1` or the launch failed) | `open -a Cheetah3D`, or fix the helper (`c3d_doctor`) |
 | `BRIDGE_NOT_INSTALLED` | Macro/runtime missing | `c3d-mcp install`, then restart Cheetah3D once |
+| Unsure what is wrong with an install | partial, outdated or manifest-less install | `c3d-mcp status` names the state and the fix; `c3d-mcp install --repair` or `--reinstall` repairs it |
 | `TRIGGER_FAILED`, menu item missing | Bridge installed but Cheetah3D not restarted | Restart Cheetah3D |
 | `TRIGGER_FAILED`, item disabled | Another app frontmost, a non-document window (Render Manager) is key, or no document window open | Open or raise a document window; retry |
 | `TRIGGER_FAILED` / helper unreachable / `PERMISSION_MISSING` | Accessibility not granted, or grant dropped after helper update | Re-add `C3D Bridge Helper.app` under Accessibility, toggle off/on; run `doctor`; check `helper.log` |
 | Helper refuses to launch (signature error) | Unsigned local build | `C3D_HELPER_SKIP_VERIFY=1`, or reinstall the signed helper with `c3d-mcp install` |
 | `c3d_capture_viewport` fails | Screen Recording missing | Grant Screen Recording to the helper |
-| `c3d_new_document` etc. `UNSUPPORTED` | Helper missing or too old | `c3d-mcp install` (updates the helper), grant Accessibility |
+| `c3d_new_document` etc. `UNSUPPORTED` | Helper missing or too old | `c3d-mcp install` (installs or replaces the helper; the old one is backed up and restored if the new one does not start), then grant Accessibility again |
 | `BLOCKED_BY_MODAL` | A Cheetah3D dialog is open; the message holds its text. Known: "Fileformat ... not supported", "Texture baking error!", "The document ... could not be opened" | Ask the user to dismiss it by hand, then retry |
 | `VERSION_SKEW`, stale runtime | In-app runtime differs from the server version | `c3d-mcp install` (no restart needed for runtime-only updates); if it persists restart Cheetah3D |
 | `SCRIPT_ERROR` mentioning the runtime failing to load | Corrupt/old runtime | `c3d-mcp install` |

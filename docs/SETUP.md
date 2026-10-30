@@ -1,6 +1,6 @@
 # Setup per client
 
-> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.1/c3d-mcp-0.3.1.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
+> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.2/c3d-mcp-0.3.2.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
 
 All clients launch the same stdio server: `npx -y c3d-mcp serve` (or `node /path/to/packages/server/bin/c3d-mcp.js serve`).
 `c3d-mcp config <client>` prints a ready-to-paste snippet for each client below (with two leading `#` comment lines naming the config file). Add `--raw` to print only the snippet so it can be redirected into a file, e.g. `c3d-mcp config codex --raw > codex-snippet.toml`.
@@ -13,15 +13,16 @@ Checks macOS, Cheetah3D 8.1.3 and Node.js 22+, offers to install Node.js (Homebr
 
 ## 0b. One-time bridge install (all clients)
 ```
-npx -y c3d-mcp install      # backs up Scripts/, installs the bridge macro + runtime and the helper app (to ~/Library/Application Support/Cheetah3D/MCP/helper/)
+npx -y c3d-mcp install      # detects fresh / outdated / partial, then installs or updates the bridge macro + runtime and the helper app (to ~/Library/Application Support/Cheetah3D/MCP/helper/); backs up Scripts/ first
 ```
+Other lifecycle commands: `c3d-mcp status` (what is installed and what to run next; changes nothing), `c3d-mcp install --repair` (fix only what is broken), `c3d-mcp install --reinstall` (rewrite everything), `c3d-mcp install --dry-run` (show the plan), `c3d-mcp uninstall [--all] [--dry-run]`. Update by running `install` again after upgrading the package: an older helper app is replaced (macOS then asks for the Accessibility permission again). Details: [INSTALL.md](INSTALL.md#5-installing-updating-repairing-reinstalling-and-uninstalling).
 Then **restart Cheetah3D once** (new macros only appear after a restart). Grant **Accessibility** to *C3D Bridge Helper*: System Settings → Privacy & Security → Accessibility → **+** → ⇧⌘G → `~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app` (the helper never triggers the prompt itself, so it is not listed until you add it). Screen Recording is optional (only `c3d_capture_viewport`).
 Verify: `npx -y c3d-mcp doctor`. After the restart you will find the macro under *Tools › Script › Macro Script › C3D-MCP › C3D-MCP Bridge.js* — you never run it by hand; the helper presses it for you.
 
 **Requirements:** macOS 14+ on Apple Silicon (developed and tested on macOS 27.2), Cheetah3D 8.1.3, Node.js ≥ 22. Without the helper the server falls back to `osascript` (slower; your terminal/MCP client then needs Accessibility), and `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable.
 
 ## Claude Desktop
-* Easiest: double-click `c3d-mcp-0.3.1.mcpb`.
+* Easiest: double-click `c3d-mcp-0.3.2.mcpb`.
 * Manual: `~/Library/Application Support/Claude/claude_desktop_config.json`
 ```json
 { "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"] } } }

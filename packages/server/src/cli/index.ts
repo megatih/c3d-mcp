@@ -6,7 +6,8 @@ import { PACKAGE_ROOT, packageVersion } from '../core/assets.js';
 import { SKILL_TARGETS, installSkills, listSkills, skillsSourceDir, uninstallSkills, type SkillTarget } from '../core/skillsInstall.js';
 import { CLIENTS, configSnippet, type ClientName } from '../core/configSnippets.js';
 import { doctor } from '../core/doctor.js';
-import { install, uninstall } from '../core/install.js';
+import { install, uninstall, type InstallReport, type UninstallReport } from '../core/install.js';
+import { detectInstall, loadBundle, type InstallState } from '../core/installState.js';
 import { createRuntime, type Runtime } from '../core/runtime.js';
 import { SETUP_CLIENTS, type SetupClient } from '../core/clientConfigs.js';
 import { runSetup } from '../core/setup.js';
@@ -29,8 +30,11 @@ const USAGE = `c3d-mcp ${packageVersion()} - MCP server for Cheetah3D 8.1.3 (mac
 Usage: c3d-mcp <command> [options]
 
 Commands:
-  install            Install the in-app bridge (idempotent; backs up Scripts/ first)
-  uninstall          Remove what install created (never backups or your scripts)
+  status             Show what is installed (fresh, current, outdated, partial) and what to run next; changes nothing
+  install            Install or update the bridge and the helper app: detects a fresh, existing or partial install and does what is needed
+                     (idempotent; backs up Scripts/ first). --repair fixes only what is broken, --reinstall rewrites everything
+  uninstall          Remove the bridge and the helper app (never backups or your scripts); --all also removes the agent skills and the
+                     c3d entries in MCP client configs
   setup              Guided setup: bridge + helper, permissions, MCP clients, skills, test render (see docs/SETUP.md)
   doctor             Check Cheetah3D, the bridge, permissions and the helper
   skills <action>    Agent skills for Claude Code, Codex and Antigravity: install | uninstall | list (see docs/SKILLS.md)
@@ -45,7 +49,12 @@ Options:
   --form <npx|absolute>   config: launch via "npx -y c3d-mcp serve" (default) or absolute node/bin paths
   --target <t>       skills: claude, codex, antigravity or all (default all)
   --project <dir>    skills: install into <dir>/.claude|.agents/skills instead of the home directory
-  --dry-run          skills, setup: show what would change
+  --dry-run          install, uninstall, skills, setup: show what would change and change nothing
+  --repair           install, setup: fix only what is broken or missing; versions stay as they are
+  --reinstall        install, setup: rewrite every managed file and replace the helper app (keeps the secret, backups and your scripts)
+  --no-helper        install: leave the helper app alone (no install, no update)
+  --skip-ping        install: do not test the bridge afterwards (does not touch the running Cheetah3D)
+  --all              uninstall: also remove the agent skills and the c3d entries in MCP client configs
   --clients <list>   setup: comma-separated clients (${SETUP_CLIENTS.join(', ')}), all (detected) or none
   --no-skills        setup: do not install the agent skills
   --node-path <abs>  setup: pin this node binary in client configs (absolute launch form instead of npx)
@@ -78,7 +87,7 @@ export const defaultIO: CliIO = {
 
 const PARSE_OPTIONS = {
   allowPositionals: true,
-  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' }, clients: { type: 'string' }, 'no-skills': { type: 'boolean' }, 'node-path': { type: 'string' } },
+  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' }, clients: { type: 'string' }, 'no-skills': { type: 'boolean' }, 'node-path': { type: 'string' }, repair: { type: 'boolean' }, reinstall: { type: 'boolean' }, 'no-helper': { type: 'boolean' }, 'skip-ping': { type: 'boolean' }, all: { type: 'boolean' } },
 } as const;
 
 function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTIONS>> | string {
@@ -90,6 +99,39 @@ function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTI
 }
 
 const MARK = { ok: '[ok]  ', warn: '[warn]', fail: '[FAIL]', done: '[done]', unchanged: '[same]', skipped: '[skip]' } as const;
+
+const NEXT: Record<InstallState['recommended'], string> = { install: 'c3d-mcp install', update: 'c3d-mcp install   (updates what is outdated)', repair: 'c3d-mcp install --repair   (or plain `install` to also update)', none: 'nothing to do' };
+
+function formatState(state: InstallState): string {
+  const rows = state.components.map((c) => `  ${c.name.padEnd(9)} ${c.status.padEnd(9)} ${c.detail}`);
+  return `c3d-mcp status\n  Detected: ${state.summary}\n${rows.join('\n')}\n\n  Next: ${NEXT[state.recommended]}\n`;
+}
+
+function formatInstall(report: InstallReport): string {
+  const flags = `${report.mode === 'auto' ? '' : ` --${report.mode}`}${report.dryRun ? ' --dry-run' : ''}`;
+  let out = `c3d-mcp install${flags}\n`;
+  if (report.state) out += `  Detected: ${report.state.summary}\n`;
+  if (report.dryRun) {
+    out += report.plan.length ? `  Would do (dry run, nothing was changed):\n${report.plan.map((l) => `    - ${l}`).join('\n')}\n` : '  Nothing to do (dry run, nothing was changed).\n';
+    return out;
+  }
+  for (const st of report.steps) out += `  ${MARK[st.status === 'fail' ? 'fail' : st.status]} ${st.name}: ${st.detail}\n`;
+  for (const g of report.guidance) out += `\n  ${g}\n`;
+  out += report.ok ? '\nNext: run `c3d-mcp doctor` and add the server to your MCP client (`c3d-mcp config <client>`).\n' : '\nInstall failed; nothing else was changed.\n';
+  return out;
+}
+
+function formatUninstall(report: UninstallReport): string {
+  let out = '';
+  const verb = report.dryRun ? 'would remove' : 'removed';
+  for (const r of report.removed) out += `  ${verb} ${r}\n`;
+  for (const k of report.kept) out += `  kept    ${k}\n`;
+  for (const sk of report.skills ?? []) out += `  ${sk.status.padEnd(15)} skill  ${sk.target}: ${sk.dest}\n`;
+  for (const c of report.clients ?? []) if (c.status !== 'absent') out += `  ${c.status.padEnd(15)} client ${c.client}: ${c.detail}\n`;
+  for (const n of report.notes) out += `  ${n}\n`;
+  if (report.removed.length === 0 && !(report.skills?.length) && !(report.clients?.some((c) => c.status !== 'absent'))) out += '  nothing removed\n';
+  return out;
+}
 
 export async function main(argv: string[], overrides: Partial<CliIO> = {}): Promise<number> {
   const io: CliIO = { ...defaultIO, ...overrides };
@@ -124,36 +166,50 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
       io.serve(config);
       return 0;
 
-    case 'install': {
-      const report = await install(io.runtime(config), { installHelper: createHelperInstaller() });
-      if (json) emit(report);
-      else {
-        io.out('c3d-mcp install\n');
-        for (const s of report.steps) io.out(`  ${MARK[s.status === 'fail' ? 'fail' : s.status]} ${s.name}: ${s.detail}\n`);
-        for (const g of report.guidance) io.out(`\n  ${g}\n`);
-        io.out(report.ok ? '\nNext: run `c3d-mcp doctor` and add the server to your MCP client (`c3d-mcp config <client>`).\n' : '\nInstall failed; nothing else was changed.\n');
+    case 'status': {
+      const rt = io.runtime(config);
+      const loaded = await loadBundle(rt);
+      if ('error' in loaded) {
+        io.err(`${loaded.error}\n`);
+        return 1;
       }
+      const state = await detectInstall(rt, loaded.bundle);
+      if (json) emit(state);
+      else io.out(formatState(state));
+      return 0;
+    }
+
+    case 'install': {
+      if (values.repair && values.reinstall) {
+        io.err('Use either --repair or --reinstall, not both.\n');
+        return 2;
+      }
+      const mode = values.reinstall ? 'reinstall' : values.repair ? 'repair' : 'auto';
+      const report = await install(io.runtime(config), { mode, dryRun: values['dry-run'] === true, skipPing: values['skip-ping'] === true, installHelper: values['no-helper'] ? false : createHelperInstaller() });
+      if (json) emit(report);
+      else io.out(formatInstall(report));
       return report.ok ? 0 : 1;
     }
 
     case 'uninstall': {
-      if (!values.yes && !json) {
+      const dry = values['dry-run'] === true;
+      const base = { all: values.all === true, home: io.env.HOME };
+      const rt = io.runtime(config);
+      if (!values.yes && !json && !dry) {
         if (!io.stdinIsTTY) {
           io.err('Refusing to uninstall without confirmation: pass --yes.\n');
           return 2;
         }
-        if (!(await io.confirm(`Remove the C3D-MCP bridge (${config.mcpDir} and the loader macro)? Backups and your scripts are kept.`))) {
+        io.out(formatUninstall(await uninstall(rt, { ...base, dryRun: true })));
+        const what = base.all ? 'the C3D-MCP bridge, the helper app, the agent skills and the c3d entries in your MCP client configs' : `the C3D-MCP bridge (${config.mcpDir} and the loader macro)`;
+        if (!(await io.confirm(`Remove ${what}? Backups and your scripts are kept.`))) {
           io.out('Aborted.\n');
           return 1;
         }
       }
-      const report = await uninstall(io.runtime(config));
+      const report = await uninstall(rt, { ...base, dryRun: dry });
       if (json) emit(report);
-      else {
-        for (const r of report.removed) io.out(`  removed ${r}\n`);
-        for (const n of report.notes) io.out(`  ${n}\n`);
-        if (report.removed.length === 0) io.out('  nothing removed\n');
-      }
+      else io.out(formatUninstall(report));
       return report.ok ? 0 : 1;
     }
 
@@ -194,7 +250,7 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
         return 2;
       }
       const report = await runSetup(
-        { yes: values.yes === true, dryRun: values['dry-run'] === true, clients, skills: values['no-skills'] !== true, nodePath: values['node-path'] },
+        { yes: values.yes === true, dryRun: values['dry-run'] === true, clients, skills: values['no-skills'] !== true, nodePath: values['node-path'], mode: values.reinstall ? 'reinstall' : values.repair ? 'repair' : 'auto' },
         { rt: io.runtime(config), home: io.env.HOME, out: json ? (): void => undefined : (t) => io.out(t), confirm: (q, d) => io.confirm(q, d) },
       );
       if (json) emit(report);
