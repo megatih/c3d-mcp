@@ -1,0 +1,389 @@
+{
+ "cases": [
+  {
+   "name": "assignMaterial/addTag: more than 24 material tags on one object is refused (Cheetah3D 8.1.3 crashed with 30)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "p",
+       "ops": [
+        {
+         "op": "createMesh",
+         "args": {
+          "name": "Tagged",
+          "vertices": [
+           [
+            0,
+            0,
+            0
+           ],
+           [
+            1,
+            0,
+            0
+           ],
+           [
+            1,
+            1,
+            0
+           ]
+          ],
+          "polygons": [
+           [
+            0,
+            1,
+            2
+           ]
+          ]
+         },
+         "as": "m"
+        },
+        {
+         "op": "createMaterial",
+         "args": {
+          "name": "CapMat"
+         },
+         "as": "a"
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "assignMaterial",
+         "args": {
+          "ref": "$m",
+          "material": "$a",
+          "replaceExisting": false
+         }
+        },
+        {
+         "op": "addTag",
+         "args": {
+          "ref": "$m",
+          "type": "SHADERTAG"
+         }
+        }
+       ]
+      }
+     ],
+     "responses": {
+      "p": {
+       "ok": true,
+       "protocol": 1,
+       "results": [
+        {
+         "op": "createMesh",
+         "ok": true
+        },
+        {
+         "op": "createMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": true
+        },
+        {
+         "op": "assignMaterial",
+         "ok": false,
+         "error": {
+          "code": "UNSUPPORTED"
+         }
+        },
+        {
+         "op": "addTag",
+         "ok": false,
+         "error": {
+          "code": "UNSUPPORTED"
+         }
+        }
+       ]
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

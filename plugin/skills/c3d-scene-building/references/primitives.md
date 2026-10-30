@@ -20,7 +20,7 @@ Splines (for Extrude/Lathe/Sweep inputs): `c3d_create_spline paths:[{points:[{p:
 Script equivalents: `doc.addObject(BOX)` then `o.setParameter('sizeX', 2)`; position and rotation use `setParameter('position', new Vec3D(x,y,z))`.
 
 ## Custom mesh
-`c3d_create_mesh {vertices:[[x,y,z],...], polygons:[[i,j,k,...],...], uvs?, material?, name, parent, position}`. Polygons are 3 to 64 corners, counter-clockwise seen from outside, Y up. Indices are validated before sending; meshes over ~4000 elements are chunked automatically (limit 200000). A pyramid has its base at y=0 and apex at `[0,height,0]`.
+`c3d_create_mesh {vertices:[[x,y,z],...], polygons:[[i,j,k,...],...], uvs?, material?, name, parent, position}`. Polygons are 3 to 64 corners, counter-clockwise seen from outside (the tool reverses them because Cheetah3D's front face is clockwise, so the result has outward normals; `winding:"cw"` sends indices unchanged, e.g. when re-creating a mesh read with `c3d_get_mesh`), Y up. Indices are validated before sending; meshes over ~4000 elements are chunked automatically (limit 200000). A pyramid has its base at y=0 and apex at `[0,height,0]`.
 
 ## Pipes
 `c3d_create_pipe {points:[[x,y,z],...2..200], radius, segments (6..48, default 16), bend_radius?, arc_steps? (1..24), closed?, caps?, material?}`. `bend_radius` rounds each interior corner and must be at most half the shorter adjacent segment, else `INVALID_ARGUMENT`. Points are relative to the object's `position`. Output is one editable polygon mesh.

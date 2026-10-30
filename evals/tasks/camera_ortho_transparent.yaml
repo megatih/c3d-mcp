@@ -1,0 +1,11 @@
+id: camera_ortho_transparent
+title: "Orthographic camera with transparent background"
+profile: full
+timeout_s: 180
+fixture: fixtures/empty.jas
+tags: ["camera", "verified"]
+prompt: "Create an orthographic camera named TopCam at [0, 10, 0] looking at the origin, make it the active camera, and set a transparent background for compositing. Do not render."
+assertions:
+  - {"type": "object_exists", "name_regex": "TopCam", "object_type": "CAMERA"}
+  - {"type": "param_range", "object_regex": "TopCam", "param": "projection", "min": 2, "max": 2}
+  - {"type": "param_range", "object_regex": "TopCam", "param": "backgroundColor", "component": "w", "min": 0, "max": 0}

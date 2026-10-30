@@ -1,0 +1,7 @@
+<!--{"parent": "4_Just_Enough_to_be_Dangerous.md", "order": 9}-->
+
+## Fine-Tuning Meshes
+
+> **Note:** this section is a stub (two headings, no text). <!-- TODO editorial -->
+
+## Splitting Meshes Apart

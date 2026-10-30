@@ -14,6 +14,14 @@ describe('c3d_create_mesh', () => {
     expect(r.structured).toMatchObject({ vertexCount: 4, polygonCount: 1, chunks: 1 });
     expect(t.bridge.argsOf('createMesh')[0]).toMatchObject({ name: 'Quad', transform: { position: { x: 1, y: 0, z: 0 } }, material: { name: 'Wood' } });
   });
+  it('reverses polygons (and uvs) by default so Cheetah3D gets outward normals; winding:"cw" sends them unchanged', async () => {
+    const uvs = [[[0, 0], [1, 0], [1, 1], [0, 1]]];
+    await runTool(createMesh, { ...quad, uvs }, t.ctx);
+    expect(t.bridge.argsOf('createMesh')[0]).toMatchObject({ polygons: [[0, 3, 2, 1]], uvs: [[[0, 0], [0, 1], [1, 1], [1, 0]]] });
+    t = makeCtx();
+    await runTool(createMesh, { ...quad, uvs, winding: 'cw' }, t.ctx);
+    expect(t.bridge.argsOf('createMesh')[0]).toMatchObject({ polygons: [[0, 1, 2, 3]], uvs });
+  });
   it('validates indices client-side and never contacts the bridge', async () => {
     const e = await expectCode(runTool(createMesh, { vertices: quad.vertices, polygons: [[0, 1, 9]] }, t.ctx), 'INVALID_ARGUMENT');
     expect(e.details).toMatchObject({ polygon: 0, index: 9 });
@@ -30,7 +38,7 @@ describe('c3d_create_mesh', () => {
     for (let y = 0; y <= n; y++) for (let x = 0; x <= n; x++) vertices.push([x, y, 0]);
     const polygons: number[][] = [];
     for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) polygons.push([y * (n + 1) + x, y * (n + 1) + x + 1, (y + 1) * (n + 1) + x + 1, (y + 1) * (n + 1) + x]);
-    const r = await runTool(createMesh, { vertices, polygons }, t.ctx);
+    const r = await runTool(createMesh, { vertices, polygons, winding: 'cw' }, t.ctx);
     expect(r.structured.chunks).toBeGreaterThan(1);
     const calls = t.bridge.argsOf('createMesh');
     expect(calls[0]).not.toHaveProperty('append');

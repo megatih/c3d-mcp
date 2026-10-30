@@ -26,7 +26,8 @@ export function packageRoot(): string {
   return walkUp(here, (d) => isOurPackage(d)) ?? path.resolve(here, '../..');
 }
 
-export interface KbLayout { kbRoot: string; research02?: string }
+/** kbRoot: knowledge base (knowledge/, reference/, examples/, forum/, catalog/); bookRoot: chapter .md files; researchDir: project research notes. */
+export interface KbLayout { kbRoot: string; research02?: string; researchDir?: string; bookRoot?: string }
 
 let cached: KbLayout | null | undefined;
 export function kbLayout(): KbLayout | null {
@@ -35,13 +36,17 @@ export function kbLayout(): KbLayout | null {
   const packaged = path.join(pkg, 'assets', 'kb');
   if (fs.existsSync(path.join(packaged, 'knowledge'))) {
     const r = ['research/02-cheetah3d-js-api.md', 'research-02.md', '02-cheetah3d-js-api.md'].map((f) => path.join(packaged, f)).find((f) => fs.existsSync(f));
-    cached = r ? { kbRoot: packaged, research02: r } : { kbRoot: packaged };
+    const rd = path.join(packaged, 'research');
+    const bk = path.join(packaged, 'book');
+    cached = { kbRoot: packaged, ...(r ? { research02: r } : {}), ...(fs.existsSync(rd) ? { researchDir: rd } : {}), ...(fs.existsSync(bk) ? { bookRoot: bk } : {}) };
     return cached;
   }
   const repo = walkUp(pkg, (d) => fs.existsSync(path.join(d, 'vendor', 'c3d-scripting-kb')));
   if (!repo) return (cached = null);
   const r = path.join(repo, 'research', '02-cheetah3d-js-api.md');
-  cached = fs.existsSync(r) ? { kbRoot: path.join(repo, 'vendor', 'c3d-scripting-kb'), research02: r } : { kbRoot: path.join(repo, 'vendor', 'c3d-scripting-kb') };
+  const bk = path.join(repo, 'vendor', 'learn3d-cheetah', 'book');
+  const rd = path.join(repo, 'research');
+  cached = { kbRoot: path.join(repo, 'vendor', 'c3d-scripting-kb'), ...(fs.existsSync(r) ? { research02: r } : {}), ...(fs.existsSync(rd) ? { researchDir: rd } : {}), ...(fs.existsSync(bk) ? { bookRoot: bk } : {}) };
   return cached;
 }
 
@@ -55,4 +60,20 @@ export function readKb(rel: string): string | undefined {
   if (!l) return undefined;
   const f = path.join(l.kbRoot, rel);
   return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : undefined;
+}
+
+/** Files (not directories) directly inside a knowledge-base directory, sorted; empty when it does not exist. */
+export function listKb(rel: string, ext?: string): string[] {
+  const l = kbLayout();
+  if (!l) return [];
+  const d = path.join(l.kbRoot, rel);
+  if (!fs.existsSync(d)) return [];
+  return fs.readdirSync(d, { withFileTypes: true }).filter((e) => e.isFile() && (!ext || e.name.endsWith(ext))).map((e) => e.name).sort();
+}
+
+/** A project research note (research/NN-*.md) from the packaged assets or the repository checkout. */
+export function readResearch(file: string): string | undefined {
+  const d = kbLayout()?.researchDir;
+  const f = d ? path.join(d, file) : undefined;
+  return f && fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : undefined;
 }
