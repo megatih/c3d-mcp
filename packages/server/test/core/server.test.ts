@@ -354,6 +354,22 @@ describe('built-in tools', () => {
   });
 });
 
+describe('c3d_install_bridge modes', () => {
+  it('detects, previews with dry_run and changes nothing, then installs and reports the detection', async () => {
+    h = makeHarness({}, { seed: false });
+    const { client } = await connect([]);
+    const dry = await client.callTool({ name: 'c3d_install_bridge', arguments: { skip_ping: true, dry_run: true } });
+    expect(dry.isError).toBeFalsy();
+    const d = dry.structuredContent as { dry_run: boolean; detected?: string; plan: string[]; changed: boolean };
+    expect(d.dry_run).toBe(true);
+    expect(d.changed).toBe(false);
+    expect(d.detected).toMatch(/fresh/);
+    expect(d.plan.length).toBeGreaterThan(0);
+    const real = await client.callTool({ name: 'c3d_install_bridge', arguments: { skip_ping: true, mode: 'repair' } });
+    expect((real.structuredContent as { mode: string }).mode).toBe('repair');
+  });
+});
+
 describe('prompts, resources and instructions', () => {
   it('exposes prompts and resources from the registries', async () => {
     const prompt: PromptDef = { name: 'demo', title: 'Demo', description: 'd', args: { subject: { description: 's', required: true }, style: { description: 'st' } }, build: (a) => `Build ${a.subject} ${a.style ?? 'plain'}` };

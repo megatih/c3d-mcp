@@ -5,7 +5,7 @@ import { main, type CliIO } from '../../src/cli/index.js';
 import { createRuntime } from '../../src/core/runtime.js';
 import { createLogger } from '../../src/logging.js';
 import { FakeApp, makeTestEnv, type TestEnv } from '../helpers/fakeApp.js';
-import { noHelper } from '../helpers/runtime.js';
+import { noHelper, safeExec } from '../helpers/runtime.js';
 
 let env: TestEnv | undefined;
 afterEach(() => {
@@ -22,9 +22,9 @@ function harness(opts: { tty?: boolean; answer?: boolean; envVars?: Record<strin
     out: (t) => { cap.out += t; },
     err: (t) => { cap.err += t; },
     stdinIsTTY: opts.tty ?? false,
-    env: { C3D_MCP_DIR: env.config.mcpDir, C3D_CHEETAH_SUPPORT_DIR: env.config.cheetahSupportDir, C3D_MCP_LOG_DIR: env.config.logDir, ...opts.envVars },
+    env: { HOME: join(env.root, 'home'), C3D_MCP_DIR: env.config.mcpDir, C3D_CHEETAH_SUPPORT_DIR: env.config.cheetahSupportDir, C3D_MCP_LOG_DIR: env.config.logDir, ...opts.envVars },
     confirm: (q) => { cap.asked.push(q); return Promise.resolve(opts.answer ?? true); },
-    runtime: (config) => createRuntime(config, { trigger: app.trigger, probe: app.probe, helper: noHelper, logger: createLogger({ write: () => undefined }), expectedRuntimeMajor: 1 }),
+    runtime: (config) => createRuntime(config, { exec: safeExec, trigger: app.trigger, probe: app.probe, helper: noHelper, logger: createLogger({ write: () => undefined }), expectedRuntimeMajor: 1 }),
     serve: () => { cap.served++; },
   };
   return cap;
@@ -170,5 +170,109 @@ describe('cli', () => {
     expect(report.dryRun).toBe(true);
     expect(report.requirements.rows.length).toBeGreaterThan(5);
     expect(code === 0 || code === 1).toBe(true);
+  });
+});
+
+describe('cli lifecycle: status, install modes, uninstall scopes', () => {
+  const home = (): string => join(env?.root ?? '', 'home');
+  const prepare = (extra: { tty?: boolean; answer?: boolean } = {}): Cap => {
+    const c = harness({ ...extra, envVars: {} });
+    mkdirSync(join(env?.paths.scriptsDir ?? '', 'Macro'), { recursive: true });
+    mkdirSync(home(), { recursive: true });
+    c.io.env = { ...c.io.env, HOME: home() };
+    return c;
+  };
+  const run = async (c: Cap, args: string[]): Promise<{ code: number; out: string }> => {
+    c.out = '';
+    const code = await main(args, c.io);
+    return { code, out: c.out };
+  };
+
+  it('status: fresh, then current after install; --json carries the state and the recommendation', async () => {
+    const c = prepare();
+    const fresh = await run(c, ['status']);
+    expect(fresh.code).toBe(0);
+    expect(fresh.out).toMatch(/Detected: fresh install/);
+    expect(fresh.out).toMatch(/c3d-mcp install/);
+    expect(await main(['install', '--no-helper'], c.io)).toBe(0);
+    const json = await run(c, ['status', '--json']);
+    const state = JSON.parse(json.out) as { kind: string; recommended: string; components: { name: string; status: string }[] };
+    expect(state.kind).toBe('current');
+    expect(state.recommended).toBe('none');
+    expect(state.components.find((x) => x.name === 'runtime')?.status).toBe('ok');
+    expect((await run(c, ['status'])).out).toMatch(/Detected: current/);
+  });
+
+  it('install --dry-run prints what it found and what it would do, and changes nothing', async () => {
+    const c = prepare();
+    const r = await run(c, ['install', '--dry-run', '--no-helper']);
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/Detected: fresh install/);
+    expect(r.out).toMatch(/create runtime/);
+    expect(r.out).toMatch(/dry run/i);
+    expect((await run(c, ['status', '--json'])).out).toMatch(/"kind": "fresh"/);
+  });
+
+  it('install --repair and --reinstall: repair fixes a broken install, reinstall rewrites it; both say what they detected', async () => {
+    const c = prepare();
+    await main(['install', '--no-helper'], c.io);
+    rmSync(env?.paths.runtimeFile ?? '');
+    expect((await run(c, ['status'])).out).toMatch(/Detected: partial install/);
+    const repair = await run(c, ['install', '--repair', '--no-helper']);
+    expect(repair.code).toBe(0);
+    expect(repair.out).toMatch(/Detected: partial/);
+    expect((await run(c, ['status', '--json'])).out).toMatch(/"kind": "current"/);
+    const re = await run(c, ['install', '--reinstall', '--no-helper', '--json']);
+    expect(JSON.parse(re.out)).toMatchObject({ ok: true, mode: 'reinstall' });
+  });
+
+  it('install --skip-ping never pings the bridge (needed for sandboxed installs that must not touch the running app)', async () => {
+    const c = prepare();
+    const r = await run(c, ['install', '--no-helper', '--skip-ping', '--json']);
+    expect(r.code).toBe(0);
+    const ping = (JSON.parse(r.out) as { steps: { name: string; status: string }[] }).steps.find((x) => x.name === 'ping');
+    expect(ping?.status).toBe('skipped');
+  });
+
+  it('install rejects --repair together with --reinstall', async () => {
+    const c = prepare();
+    expect(await main(['install', '--repair', '--reinstall'], c.io)).toBe(2);
+    expect(c.err).toMatch(/repair.*reinstall|reinstall.*repair/);
+  });
+
+  it('uninstall --dry-run lists what would be removed and removes nothing; --all names skills and client configs', async () => {
+    const c = prepare();
+    await main(['install', '--no-helper'], c.io);
+    const dry = await run(c, ['uninstall', '--dry-run']);
+    expect(dry.code).toBe(0);
+    expect(dry.out).toMatch(/would remove/i);
+    expect(dry.out).toContain(env?.paths.macroFile ?? '?');
+    expect((await run(c, ['status', '--json'])).out).toMatch(/"kind": "current"/);
+    const all = await run(c, ['uninstall', '--all', '--dry-run', '--json']);
+    const report = JSON.parse(all.out) as { dryRun: boolean; clients: unknown[]; skills: unknown[] };
+    expect(report.dryRun).toBe(true);
+    expect(Array.isArray(report.clients)).toBe(true);
+    expect(Array.isArray(report.skills)).toBe(true);
+  });
+
+  it('uninstall on a TTY lists the plan and asks once; --yes needs no question; refusing changes nothing', async () => {
+    const no = prepare({ tty: true, answer: false });
+    await main(['install', '--no-helper'], no.io);
+    const refused = await run(no, ['uninstall']);
+    expect(refused.code).toBe(1);
+    expect(refused.out).toMatch(/Aborted/);
+    expect(refused.out).toContain(env?.paths.macroFile ?? '?');
+    expect(no.asked).toHaveLength(1);
+    expect((await run(no, ['status', '--json'])).out).toMatch(/"kind": "current"/);
+    const yes = await run(no, ['uninstall', '--yes']);
+    expect(yes.code).toBe(0);
+    expect(no.asked).toHaveLength(1);
+    expect((await run(no, ['status', '--json'])).out).toMatch(/"kind": "fresh"/);
+  });
+
+  it('help documents the lifecycle commands and flags', async () => {
+    const c = prepare();
+    const help = await run(c, ['--help']);
+    for (const word of ['status', '--repair', '--reinstall', '--no-helper', '--all', '--dry-run']) expect(help.out).toContain(word);
   });
 });

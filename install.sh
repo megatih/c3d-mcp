@@ -26,16 +26,31 @@
 #   --dry-run             report only; download/install/change nothing
 #   --no-node-install     never install Node.js (fail with instructions)
 #   --skip-cheetah-check  do not require Cheetah3D / its support folder
+#   --no-setup            install the package, then stop before the setup wizard (scripts, CI)
 #   --version <v>         install this c3d-mcp version (default: pinned/latest)
 #   --prefix <dir>        install location (default ~/.c3d-mcp)
+#   --status              show what is installed and what to run next; changes nothing
+#   --update              update to the pinned/latest version (default when an older one is found)
+#   --repair              fix a partial or broken install without changing versions
+#   --reinstall           download and rewrite everything again (keeps your settings, backups and scripts)
+#   --uninstall           remove the bridge and the helper app (through c3d-mcp uninstall)
+#     --all               also remove agent skills, MCP client entries, $PREFIX and the PATH line
+#     --keep-prefix       with --all: keep $PREFIX (Node.js, package, launcher) and the PATH line
 #   --help                show this help
 #   anything else         passed through to `c3d-mcp setup`
+#
+# LIFECYCLE
+#   The installer first detects what is there: no install (fresh), current, update available,
+#   newer than the release, or partial (launcher/package missing, launcher pointing at a
+#   Node.js that is gone). Run interactively it then offers a menu (update, repair, reinstall,
+#   uninstall, status); with --yes or --dry-run it does the sensible thing without asking.
 #
 # ENV OVERRIDES (mainly for tests)
 #   C3D_INSTALL_BASE_URL     release base URL (default GitHub releases/download)
 #   C3D_NODE_BASE_URL        Node.js dist URL (default https://nodejs.org/dist)
 #   C3D_APPS_DIRS            colon-separated dirs searched for Cheetah3D.app
 #   C3D_CHEETAH_SUPPORT_DIR  Cheetah3D support dir (same var the server uses)
+#   C3D_INSTALL_ANSWERS      comma-separated answers to questions and the menu (tests only)
 # =============================================================================
 set -eu
 
@@ -64,10 +79,13 @@ step() { printf '\n== %s ==\n' "$*"; }
 die()  { printf '%s[error]%s %s\n' "$C_BAD" "$C_OFF" "$*" >&2; exit 1; }
 
 # --- State ---
-YES=0; DRY=0; NO_NODE_INSTALL=0; SKIP_CHEETAH=0
+YES=0; DRY=0; NO_NODE_INSTALL=0; SKIP_CHEETAH=0; NO_SETUP=0
 VERSION_OVERRIDE=""; PREFIX=""; VERSION=""; OLD_NODE=""
 PASS_ARGS=()
 TTY_IN=""; TTY_CHECKED=0
+ACTION=""; ALL=0; KEEP_PREFIX=0; FORCE=0
+ANSWERS="${C3D_INSTALL_ANSWERS:-}"
+LAUNCHER=""; INST_KIND="none"; INST_VERSION=""; INST_PROBLEMS=""; GLOBAL_C3D=
 NODE_BIN=""
 ARCH=""; NODE_ARCH=""
 
@@ -81,9 +99,18 @@ Usage: install.sh [flags]
   --dry-run             report only; download/install/change nothing
   --no-node-install     never install Node.js
   --skip-cheetah-check  do not require Cheetah3D / its support folder
+  --no-setup            install the package, then stop before the setup wizard (scripts, CI)
   --version <v>         c3d-mcp version to install
   --prefix <dir>        install location (default ~/.c3d-mcp)
+  --status              show what is installed and what to run next (changes nothing)
+  --update | --repair | --reinstall
+                        update to the pinned/latest version | fix a partial install | rewrite everything
+  --uninstall [--all] [--keep-prefix]
+                        remove the bridge and helper; --all also removes skills, MCP client entries,
+                        the prefix and its PATH line (--keep-prefix keeps those last two)
   --help                this text
+Run it again at any time: it detects a fresh, current, outdated or partial install and, in a terminal,
+offers a menu (update, repair, reinstall, uninstall, status).
 Other flags are passed to `c3d-mcp setup` (--json, --clients <csv|all|none>, --no-skills).
 HLP
 }
@@ -95,16 +122,25 @@ parse_args() {
       --dry-run) DRY=1; PASS_ARGS+=("--dry-run") ;;
       --no-node-install) NO_NODE_INSTALL=1 ;;
       --skip-cheetah-check) SKIP_CHEETAH=1 ;;
+      --no-setup) NO_SETUP=1 ;;
       --version) [ $# -ge 2 ] || die "--version needs a value"; VERSION_OVERRIDE="$2"; shift ;;
       --version=*) VERSION_OVERRIDE="${1#--version=}" ;;
       --prefix) [ $# -ge 2 ] || die "--prefix needs a value"; PREFIX="$2"; shift ;;
       --prefix=*) PREFIX="${1#--prefix=}" ;;
+      --status) ACTION=status ;;
+      --update) ACTION=update ;;
+      --repair) ACTION=repair ;;
+      --reinstall) ACTION=reinstall ;;
+      --uninstall) ACTION=uninstall ;;
+      --all) ALL=1 ;;
+      --keep-prefix) KEEP_PREFIX=1 ;;
       --help|-h) show_help; exit 0 ;;
       *) PASS_ARGS+=("$1") ;;
     esac
     shift
   done
   [ -n "$PREFIX" ] || PREFIX="$HOME/.c3d-mcp"
+  LAUNCHER="$PREFIX/bin/c3d-mcp"
 }
 
 # --- Prompts: read from the terminal even under `curl | bash` ---
@@ -114,6 +150,14 @@ init_tty() {
   if [ -t 0 ]; then TTY_IN="/dev/stdin"
   elif ( : </dev/tty ) 2>/dev/null; then TTY_IN="/dev/tty"
   else TTY_IN=""; fi
+}
+
+# pop_answer: next scripted answer (C3D_INSTALL_ANSWERS, used by the tests) into REPLY_ANS; 1 when none is left
+REPLY_ANS=""
+pop_answer() {
+  [ -n "$ANSWERS" ] || return 1
+  case "$ANSWERS" in *,*) REPLY_ANS=${ANSWERS%%,*}; ANSWERS=${ANSWERS#*,} ;; *) REPLY_ANS=$ANSWERS; ANSWERS="" ;; esac
+  return 0
 }
 
 # ask "question" default(y|n) -> returns 0 for yes
@@ -128,13 +172,17 @@ ask() {
     say "? $q $hint -> (dry-run, not asked) $def"
     [ "$def" = y ]; return
   fi
-  init_tty
-  if [ -z "$TTY_IN" ]; then
-    die "Need to ask: \"$q\" but no terminal is available. Re-run with --yes to accept defaults, or download first:
+  if pop_answer; then
+    ans="$REPLY_ANS"; say "? $q $hint -> $ans"
+  else
+    init_tty
+    if [ -z "$TTY_IN" ]; then
+      die "Need to ask: \"$q\" but no terminal is available. Re-run with --yes to accept defaults, or download first:
   curl -fsSL $LATEST_URL/download/install.sh -o install.sh && bash install.sh"
+    fi
+    printf '? %s %s ' "$q" "$hint" >&2
+    read -r ans <"$TTY_IN" || ans=""
   fi
-  printf '? %s %s ' "$q" "$hint" >&2
-  read -r ans <"$TTY_IN" || ans=""
   [ -n "$ans" ] || ans="$def"
   case "$ans" in y|Y|yes|YES|Yes) return 0 ;; *) return 1 ;; esac
 }
@@ -354,13 +402,31 @@ install_c3d() {
     say "Would create launcher: $PREFIX/bin/c3d-mcp"
     return 0
   fi
-  if [ -f "$PREFIX/app/node_modules/c3d-mcp/package.json" ] \
-     && grep -q "\"version\": *\"$VERSION\"" "$PREFIX/app/node_modules/c3d-mcp/package.json" 2>/dev/null; then
-    ok "c3d-mcp $VERSION already installed in $PREFIX"
-    write_launcher
-    return 0
+  local have_app=0
+  [ -f "$PREFIX/app/node_modules/c3d-mcp/bin/c3d-mcp.js" ] && have_app=1
+  if [ "$have_app" = 1 ] && [ -n "$INST_VERSION" ] && [ "$FORCE" != 1 ]; then
+    local cmp; cmp=$(ver_cmp "$INST_VERSION" "$VERSION")
+    if [ "$cmp" = 0 ]; then
+      ok "c3d-mcp $VERSION is up to date in $PREFIX"
+      write_launcher
+      return 0
+    elif [ "$cmp" = 1 ]; then
+      ok "c3d-mcp $INST_VERSION in $PREFIX is newer than the release $VERSION; keeping it (never downgraded)"
+      write_launcher
+      return 0
+    fi
+    # repair keeps the installed version; only update/auto move to the new one
+    if [ "$ACTION" = repair ]; then
+      ok "c3d-mcp $INST_VERSION is intact; repair does not change versions (run with --update to move to $VERSION)"
+      write_launcher
+      return 0
+    fi
   fi
-  if ! ask "Install c3d-mcp $VERSION into $PREFIX?" y; then die "Cancelled; nothing installed."; fi
+  local verb="Install" what="$VERSION into $PREFIX"
+  if [ "$FORCE" = 1 ] && [ "$have_app" = 1 ]; then verb="Reinstall"; what="$VERSION in $PREFIX"
+  elif [ "$have_app" = 1 ] && [ -n "$INST_VERSION" ]; then verb="Update"; what="from $INST_VERSION to $VERSION in $PREFIX"
+  elif [ "$have_app" = 0 ] && [ "$INST_KIND" = partial ]; then verb="Repair (reinstall)"; what="$VERSION into $PREFIX"; fi
+  if ! ask "$verb c3d-mcp $what?" y; then die "Cancelled; nothing installed."; fi
   local tmp; tmp=$(mktemp -d "${TMPDIR:-/tmp}/c3d-dl.XXXXXX")
   say "Downloading $url"
   curl -fsSL "$url" -o "$tmp/$tgz" || { rm -rf "$tmp"; die "Download failed: $url"; }
@@ -382,6 +448,7 @@ install_c3d() {
   [ -x "$npm_bin" ] || npm_bin=$(command -v npm 2>/dev/null || true)
   if [ -z "$npm_bin" ]; then rm -rf "$tmp"; die "npm not found next to $NODE_BIN"; fi
   [ -f "$PREFIX/app/package.json" ] || printf '{"name":"c3d-mcp-app","private":true}\n' > "$PREFIX/app/package.json"
+  if [ "$FORCE" = 1 ]; then rm -rf -- "${PREFIX:?}/app/node_modules/c3d-mcp"; fi
   # Put the chosen node first so npm and its scripts use the same runtime.
   PATH="$(dirname "$NODE_BIN"):$PATH" "$npm_bin" install --prefix "$PREFIX/app" --omit=dev --no-audit --no-fund "$tmp/$tgz" \
     || { rm -rf "$tmp"; die "npm install failed"; }
@@ -409,10 +476,183 @@ offer_path() {
   fi
 }
 
+# --- Lifecycle: detect, status, menu, uninstall ---
+# ver_cmp a b -> prints -1, 0 or 1 (numeric, dotted)
+ver_cmp() {
+  awk -v a="$1" -v b="$2" 'BEGIN { split(a, x, "."); split(b, y, "."); for (i = 1; i <= 3; i++) { if (x[i] + 0 < y[i] + 0) { print -1; exit } if (x[i] + 0 > y[i] + 0) { print 1; exit } } print 0 }'
+}
+
+# launcher_node: the Node.js the launcher execs ("" when unreadable)
+launcher_node() { sed -n 's/^exec "\([^"]*\)".*/\1/p' "$LAUNCHER" 2>/dev/null | head -n 1; }
+
+# soft_version: the target version when known without the network (pinned or --version); "" otherwise
+soft_version() {
+  local v="$C3D_VERSION"
+  [ -z "$VERSION_OVERRIDE" ] || v="${VERSION_OVERRIDE#v}"
+  if is_placeholder "$v"; then VERSION=""; else VERSION="$v"; fi
+}
+
+# detect_install: sets INST_KIND (none|current|outdated|newer|partial), INST_VERSION, INST_PROBLEMS, GLOBAL_C3D
+detect_install() {
+  INST_KIND="none"; INST_VERSION=""; INST_PROBLEMS=""
+  local app="$PREFIX/app/node_modules/c3d-mcp" has_launcher=0 has_app=0 has_node=0 ln=""
+  [ -e "$LAUNCHER" ] && has_launcher=1
+  [ -f "$app/bin/c3d-mcp.js" ] && has_app=1
+  [ -x "$PREFIX/node/bin/node" ] && has_node=1
+  if [ -f "$app/package.json" ]; then
+    INST_VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$app/package.json" | head -n 1)
+  fi
+  GLOBAL_C3D=$(command -v c3d-mcp 2>/dev/null || true)
+  [ "$GLOBAL_C3D" != "$LAUNCHER" ] || GLOBAL_C3D=""
+  if [ "$has_launcher" = 0 ] && [ "$has_app" = 0 ] && [ "$has_node" = 0 ] && [ ! -d "$PREFIX/app" ]; then return 0; fi
+  [ "$has_app" = 1 ] || INST_PROBLEMS="$INST_PROBLEMS app missing;"
+  [ "$has_launcher" = 1 ] || INST_PROBLEMS="$INST_PROBLEMS launcher missing;"
+  if [ "$has_launcher" = 1 ]; then
+    ln=$(launcher_node)
+    if [ -z "$ln" ] || [ ! -x "$ln" ]; then INST_PROBLEMS="$INST_PROBLEMS launcher points at a Node.js that is gone (${ln:-unreadable});"; fi
+  fi
+  if [ "$has_app" = 1 ] && [ -z "$INST_VERSION" ]; then INST_PROBLEMS="$INST_PROBLEMS package version unreadable;"; fi
+  if [ -n "$INST_PROBLEMS" ]; then INST_KIND="partial"; return 0; fi
+  soft_version
+  if [ -z "$VERSION" ] || [ "$VERSION" = latest ]; then INST_KIND="current"; return 0; fi
+  case "$(ver_cmp "$INST_VERSION" "$VERSION")" in
+    -1) INST_KIND="outdated" ;;
+    1) INST_KIND="newer" ;;
+    *) INST_KIND="current" ;;
+  esac
+}
+
+print_detection() {
+  case "$INST_KIND" in
+    none) say "Detected: no existing install (fresh) under $PREFIX" ;;
+    current) say "Detected: c3d-mcp ${INST_VERSION:-?} is installed in $PREFIX${VERSION:+ and up to date with the release $VERSION}" ;;
+    outdated) say "Detected: c3d-mcp $INST_VERSION is installed in $PREFIX; update available: $INST_VERSION -> $VERSION" ;;
+    newer) say "Detected: c3d-mcp $INST_VERSION is installed in $PREFIX, newer than the release $VERSION (it will not be downgraded)" ;;
+    partial) say "Detected: partial install in $PREFIX:${INST_PROBLEMS%;}" ;;
+  esac
+  if [ -n "$GLOBAL_C3D" ]; then
+    say "          a c3d-mcp was also found outside the prefix: $GLOBAL_C3D (not touched by this installer)"
+  fi
+  if [ -f "$HOME/.zprofile" ] && grep -qF "$PREFIX/bin" "$HOME/.zprofile" 2>/dev/null; then
+    say "          PATH: $HOME/.zprofile puts $PREFIX/bin on PATH"
+  fi
+}
+
+launcher_usable() { [ -x "$LAUNCHER" ] && { local ln; ln=$(launcher_node); [ -n "$ln" ] && [ -x "$ln" ]; }; }
+
+do_status() {
+  step "Status"
+  print_detection
+  if launcher_usable; then
+    say "Bridge, helper and Cheetah3D side (c3d-mcp status):"
+    "$LAUNCHER" status 2>&1 | sed 's/^/  /' || true
+  elif [ "$INST_KIND" = none ]; then
+    say "Next: run this installer to install c3d-mcp."
+  else
+    say "Next: run this installer with --repair."
+  fi
+}
+
+# choose_action: the menu shown when an install already exists and a terminal is available
+choose_action() {
+  local rec="" tries=0 choice=""
+  case "$INST_KIND" in outdated) rec=1 ;; partial) rec=2 ;; *) rec=6 ;; esac
+  while [ "$tries" -lt 3 ]; do
+    say ""
+    say "c3d-mcp is already installed. What would you like to do?"
+    say "  1) Update c3d-mcp (and the bridge and helper app)$([ "$rec" = 1 ] && printf ' (recommended)')"
+    say "  2) Repair a broken or partial install$([ "$rec" = 2 ] && printf ' (recommended)')"
+    say "  3) Reinstall everything"
+    say "  4) Uninstall the bridge and the helper app"
+    say "  5) Uninstall everything (also skills, MCP client entries, $PREFIX)"
+    say "  6) Show status$([ "$rec" = 6 ] && printf ' (recommended)')"
+    say "  q) Quit"
+    if pop_answer; then choice="$REPLY_ANS"; say "Choose [$rec]: $choice"
+    else printf 'Choose [%s]: ' "$rec" >&2; read -r choice <"$TTY_IN" || choice="q"; fi
+    [ -n "$choice" ] || choice="$rec"
+    case "$choice" in
+      1) ACTION=update; return 0 ;;
+      2) ACTION=repair; return 0 ;;
+      3) ACTION=reinstall; return 0 ;;
+      4) ACTION=uninstall; return 0 ;;
+      5) ACTION=uninstall; ALL=1; return 0 ;;
+      6) ACTION=status; return 0 ;;
+      q|Q) ACTION=quit; return 0 ;;
+      *) say "Please answer 1-6 or q."; tries=$((tries + 1)) ;;
+    esac
+  done
+  ACTION=quit
+}
+
+# remove_path_line: drop exactly the two lines offer_path added; never touch an edited line
+remove_path_line() {
+  local zp="$HOME/.zprofile" exp tmp
+  [ -f "$zp" ] || return 0
+  grep -qF "$PREFIX/bin" "$zp" 2>/dev/null || return 0
+  exp="export PATH=\"$PREFIX/bin:\$PATH\""
+  if ! grep -qxF "$exp" "$zp"; then
+    warn "$zp mentions $PREFIX/bin on a line that was edited by hand; left alone (remove it yourself)"
+    return 0
+  fi
+  if [ "$DRY" = 1 ]; then say "Would remove the PATH line for $PREFIX/bin from $zp (backup first)"; return 0; fi
+  cp "$zp" "$zp.c3d-backup-$(date -u +%Y%m%dT%H%M%SZ)"
+  tmp=$(mktemp "${TMPDIR:-/tmp}/c3d-zp.XXXXXX")
+  awk -v line="$exp" '{ if (hold != "") { if ($0 == line) { hold = ""; next } print hold; hold = "" } if ($0 == "# c3d-mcp") { hold = $0; next } if ($0 == line) next; print } END { if (hold != "") print hold }' "$zp" >"$tmp"
+  cat "$tmp" >"$zp"
+  rm -f -- "${tmp:?}"
+  ok "Removed the PATH line for $PREFIX/bin from $zp (backup next to it)"
+}
+
+# remove_prefix: only what this installer created; anything else keeps the directory.
+# Every removal uses ${PREFIX:?} so an empty PREFIX can never turn into a top-level path.
+remove_prefix() {
+  case "${PREFIX:-}" in ""|"/"|"$HOME") warn "Refusing to remove '${PREFIX:-}'"; return 0 ;; esac
+  if [ "$DRY" = 1 ]; then
+    [ -e "${PREFIX:?}/app" ] && say "Would remove ${PREFIX:?}/app"
+    [ -e "${PREFIX:?}/node" ] && say "Would remove ${PREFIX:?}/node"
+    [ -e "${PREFIX:?}/bin/c3d-mcp" ] && say "Would remove ${PREFIX:?}/bin/c3d-mcp"
+    return 0
+  fi
+  if [ -e "${PREFIX:?}/app" ]; then rm -rf -- "${PREFIX:?}/app"; ok "Removed $PREFIX/app"; fi
+  if [ -e "${PREFIX:?}/node" ]; then rm -rf -- "${PREFIX:?}/node"; ok "Removed $PREFIX/node"; fi
+  if [ -e "${PREFIX:?}/bin/c3d-mcp" ]; then rm -f -- "${PREFIX:?}/bin/c3d-mcp"; ok "Removed $PREFIX/bin/c3d-mcp"; fi
+  rmdir "${PREFIX:?}/bin" 2>/dev/null || true
+  if [ -d "${PREFIX:?}" ]; then
+    local left; left=$(ls -A "${PREFIX:?}" 2>/dev/null | head -n 5 | tr '\n' ' ')
+    if [ -z "$left" ]; then rmdir "${PREFIX:?}" && ok "Removed $PREFIX"
+    else say "Kept $PREFIX: it contains files not created by c3d-mcp ($left)"; fi
+  fi
+}
+
+do_uninstall() {
+  step "Uninstall"
+  print_detection
+  local cli="" flag="" what
+  if launcher_usable; then cli="$LAUNCHER"
+  elif [ -n "$GLOBAL_C3D" ]; then cli="$GLOBAL_C3D"; say "Using $GLOBAL_C3D to remove the bridge (the launcher in $PREFIX is not usable)."; fi
+  if [ "$INST_KIND" = none ] && [ -z "$cli" ]; then say "Nothing to uninstall: no c3d-mcp found under $PREFIX."; return 0; fi
+  [ "$ALL" = 0 ] || flag="--all"
+  what="the bridge and the helper app"
+  [ "$ALL" = 0 ] || what="the bridge, the helper app, agent skills, MCP client entries$([ "$KEEP_PREFIX" = 1 ] || printf ' and %s' "$PREFIX")"
+  if [ -n "$cli" ]; then
+    say "What c3d-mcp would remove:"
+    "$cli" uninstall $flag --dry-run 2>&1 | sed 's/^/  /' || true
+  else
+    say "No usable c3d-mcp to remove the bridge from Cheetah3D; only $PREFIX can be cleaned up."
+  fi
+  if [ "$ALL" = 1 ] && [ "$KEEP_PREFIX" = 0 ]; then say "  and the installer's own files under $PREFIX (Node.js, package, launcher) and its PATH line"; fi
+  if [ "$DRY" = 1 ]; then say "Dry run: nothing was removed."; return 0; fi
+  if [ "$YES" != 1 ] && ! ask "Remove $what? Your backups and your own scripts are kept." n; then say "Cancelled; nothing removed."; return 0; fi
+  if [ -n "$cli" ]; then "$cli" uninstall $flag --yes || warn "c3d-mcp uninstall reported a problem (see above); continuing"; fi
+  if [ "$ALL" = 1 ] && [ "$KEEP_PREFIX" = 0 ]; then remove_prefix; remove_path_line; fi
+  ok "Uninstall finished. Restart Cheetah3D to drop the C3D-MCP menu."
+}
+
 # --- 5. Hand over ---
 handover() {
   step "Setup wizard"
   local cmd=("$PREFIX/bin/c3d-mcp" setup)
+  case "$ACTION" in repair) cmd+=(--repair) ;; reinstall) cmd+=(--reinstall) ;; esac
   if [ ${#PASS_ARGS[@]} -gt 0 ]; then cmd+=("${PASS_ARGS[@]}"); fi
   cmd+=(--node-path "$NODE_BIN")
   if [ "$DRY" = 1 ]; then
@@ -432,10 +672,35 @@ main() {
   say "c3d-mcp installer"
   if [ "$DRY" = 1 ]; then say "(dry run: nothing will be downloaded or changed)"; fi
   check_platform
+  detect_install
+  case "$ACTION" in
+    status) do_status; return 0 ;;
+    uninstall) do_uninstall; return 0 ;;
+  esac
+  print_detection
+  if [ -z "$ACTION" ]; then
+    if [ "$INST_KIND" = none ]; then ACTION=install
+    elif [ "$YES" = 0 ] && [ "$DRY" = 0 ] && { [ -n "$ANSWERS" ] || { init_tty; [ -n "$TTY_IN" ]; }; }; then
+      choose_action
+      case "$ACTION" in
+        quit) say "Nothing changed."; return 0 ;;
+        status) do_status; return 0 ;;
+        uninstall) do_uninstall; return 0 ;;
+      esac
+    else
+      case "$INST_KIND" in partial) ACTION=repair ;; *) ACTION=update ;; esac
+    fi
+  fi
+  [ "$ACTION" != reinstall ] || FORCE=1
   check_cheetah
   check_node
   install_c3d
   offer_path
+  if [ "$NO_SETUP" = 1 ]; then
+    say ""
+    say "Skipped the setup wizard (--no-setup). Next: $LAUNCHER setup"
+    return 0
+  fi
   handover
 }
 

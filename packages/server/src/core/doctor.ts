@@ -1,6 +1,7 @@
 import { stat } from 'node:fs/promises';
 import { BridgeError } from '../toolkit.js';
 import { compareSemver, packageVersion, readRuntimeVersionFile } from './assets.js';
+import { detectInstall, loadBundle } from './installState.js';
 import { readManifest } from './install.js';
 import type { Runtime } from './runtime.js';
 
@@ -22,7 +23,7 @@ interface HelperPermissions { accessibility?: boolean; screenRecording?: boolean
 interface HelperWindow { title?: string; role?: string; subrole?: string; main?: boolean }
 
 /** Helper app version shipped with this release (kept equal to helper/VERSION by a test). */
-export const EXPECTED_HELPER_VERSION = '0.3.1';
+export const EXPECTED_HELPER_VERSION = '0.3.2';
 
 function versionLess(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
@@ -78,6 +79,15 @@ export async function doctor(rt: Runtime): Promise<DoctorReport> {
     return ok('runtime-version', `runtime ${have}${cmp > 0 ? ` (newer than bundled ${want})` : ''}, protocol 1`);
   });
 
+  // What is installed vs what this package would install (fresh / current / outdated / partial / unmanaged).
+  await guarded('install-state', async () => {
+    const loaded = await loadBundle(rt);
+    if ('error' in loaded) return warn('install-state', loaded.error, 'Reinstall the c3d-mcp package.');
+    const state = await detectInstall(rt, loaded.bundle);
+    if (state.kind === 'current' || state.kind === 'newer') return ok('install-state', state.summary);
+    return warn('install-state', state.summary, state.recommended === 'repair' ? 'Run `c3d-mcp install --repair` (or `c3d-mcp install` to repair and update), then restart Cheetah3D if the loader macro changed.' : 'Run `c3d-mcp install` (it installs, updates or repairs as needed).');
+  });
+
   // Cheetah3D process.
   const app = await rt.probe.inspect().catch(() => ({ running: false, source: 'pgrep' as const }));
   checks.push(app.running ? ok('cheetah-running', `Cheetah3D is running${'pid' in app && app.pid ? ` (pid ${app.pid})` : ''} [via ${app.source}]`) : bad('cheetah-running', 'Cheetah3D is not running', 'Start Cheetah3D.'));
@@ -101,7 +111,7 @@ export async function doctor(rt: Runtime): Promise<DoctorReport> {
       const r = await rt.helper.call<{ version?: string; pid?: number }>('ping', {}, 5000);
       permissions = await rt.helper.call<HelperPermissions>('permissions', {}, 5000).catch(() => undefined);
       if (r.version && versionLess(r.version, EXPECTED_HELPER_VERSION)) {
-        return warn('helper', `Helper reachable but old (version ${r.version}, pid ${r.pid ?? '?'}); this release ships ${EXPECTED_HELPER_VERSION}`, 'Run `c3d-mcp install` to update the helper app (newer commands such as post-processing need it); macOS may ask for Accessibility and Screen Recording again.');
+        return warn('helper', `Helper reachable but old (version ${r.version}, pid ${r.pid ?? '?'}); this release ships ${EXPECTED_HELPER_VERSION}`, 'Run `c3d-mcp install`: it replaces an older helper app (newer commands such as post-processing need it) and restarts it; macOS may ask for Accessibility and Screen Recording again.');
       }
       return ok('helper', `Helper reachable (version ${r.version ?? '?'}, pid ${r.pid ?? '?'})`);
     } catch (err) {

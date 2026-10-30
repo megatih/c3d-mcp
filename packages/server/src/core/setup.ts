@@ -9,7 +9,7 @@ import { PACKAGE_ROOT } from './assets.js';
 import { CLIENT_LABELS, SETUP_CLIENTS, configureClient, detectClients, type ConfigureResult, type SetupClient } from './clientConfigs.js';
 import { doctor, type DoctorReport } from './doctor.js';
 import { createHelperInstaller } from './helperInstall.js';
-import { install, type HelperInstaller, type InstallReport } from './install.js';
+import { install, type HelperInstaller, type InstallMode, type InstallReport } from './install.js';
 import type { Runtime } from './runtime.js';
 import { openPane, parseMacOSMajor, systemFrontWindowTitle, type OpenPaneDeps, type OpenPaneResult, type PrivacyPane } from './settingsPanes.js';
 import { installSkills, type SkillResult, type SkillTarget, type SkillsOptions } from './skillsInstall.js';
@@ -24,6 +24,8 @@ export interface SetupOptions {
   nodePath?: string;
   /** Seconds to wait for a permission grant (default 180). */
   permissionTimeoutSec?: number;
+  /** How the bridge and helper are installed: auto (default), repair or reinstall (see `c3d-mcp install`). */
+  mode?: InstallMode;
 }
 
 export interface SmokeResult { status: 'ok' | 'fail' | 'skipped'; detail: string; hint?: string }
@@ -173,9 +175,14 @@ export async function runSetup(opts: SetupOptions, deps: SetupDeps): Promise<Set
   out('\n2. Bridge and helper\n');
   let installReport: InstallReport | undefined;
   if (dryRun) {
-    step('install', 'skipped', 'dry run: would install the bridge macro, runtime and helper app');
+    const preview = await install(rt, { mode: opts.mode ?? 'auto', dryRun: true, installHelper: deps.installHelper ?? createHelperInstaller(rt.exec) });
+    if (preview.state) out(`  Detected: ${preview.state.summary}\n`);
+    if (!preview.ok) step('install', 'fail', preview.steps.at(-1)?.detail ?? 'install cannot start');
+    else if (preview.plan.length === 0) step('install', 'unchanged', 'dry run: nothing to do');
+    else for (const line of preview.plan) step('install', 'skipped', `dry run: would ${line}`);
   } else {
-    installReport = await install(rt, { installHelper: deps.installHelper ?? createHelperInstaller(rt.exec) });
+    installReport = await install(rt, { mode: opts.mode ?? 'auto', installHelper: deps.installHelper ?? createHelperInstaller(rt.exec) });
+    if (installReport.state) out(`  Detected: ${installReport.state.summary}\n`);
     for (const s of installReport.steps) step(s.name, s.status, s.detail);
     if (!installReport.ok) {
       hints.push(...installReport.guidance);

@@ -25,7 +25,7 @@ Every tool error carries `{code, message, hint, details}`. All codes:
 | `BLOCKED_BY_MODAL` | A dialog is open in Cheetah3D; the message contains its text | Dismiss it by hand. Known ones: "Fileformat … not supported", "Texture baking error!", "The document … could not be opened". |
 | `WRONG_DOCUMENT` | The front document is not the one this session works on | `c3d_use_document`, or `c3d_new_document` to start a fresh scratch document. |
 | `VERSION_SKEW` | Runtime inside Cheetah3D differs from this server (protocol/major) | `c3d-mcp install`; runtime-only updates need no Cheetah3D restart. |
-| `BRIDGE_NOT_INSTALLED` | Bridge macro/runtime files are missing | `c3d-mcp install`, then restart Cheetah3D once. |
+| `BRIDGE_NOT_INSTALLED` | Bridge macro/runtime files are missing | `c3d-mcp status` shows what is missing, `c3d-mcp install` repairs it (then restart Cheetah3D once if the loader macro was recreated). |
 | `PERMISSION_MISSING` | Accessibility or Screen Recording not granted to the helper (a rebuilt/updated helper must be re-granted) | See "Granting permissions" below. |
 | `NOT_FOUND` | Object, material, node, parameter or file not found | Check names/ids with `c3d_list_scene` / `c3d_list_materials`. |
 | `AMBIGUOUS` | A name or path matches several objects (Cheetah3D does not make names unique) | Use the stable `id` returned by the tools. |
@@ -67,3 +67,10 @@ After you update or rebuild the helper, macOS may drop the grant (ad-hoc signatu
 | `c3d_assign_material` says "already has 24 material tags" | Cheetah3D 8.1.3 crashes with many more material tags on one object | Reuse materials or split the object. |
 | `c3d_set_render_settings` refuses `samples` | Falcon `samples` 0 means "refine until stopped" and would never finish | Use a positive value (default 100). |
 | Search hits marked `book-unreviewed` or `forum` disagree with a tool | Those sources were not verified in 8.1.3 | Prefer `official` / `verified` / `example` hits and the `NOTE` lines; see `c3d://verified`. |
+
+## Install state (partial, outdated, or "which command do I run?")
+* `c3d-mcp status` names the state: fresh, current, outdated, newer, partial (with the missing or modified parts) or unmanaged (files exist but the install manifest is gone). `c3d-mcp doctor` shows the same in its `install-state` check.
+* **outdated** or **partial**: `c3d-mcp install` (or `c3d-mcp install --repair` to leave versions alone). **Something still wrong after that**: `c3d-mcp install --reinstall`.
+* The helper app is old (doctor warns): `c3d-mcp install` replaces it; macOS asks for Accessibility again. If the new helper does not start, the old one is restored automatically and the install report says so.
+* Start over: `c3d-mcp uninstall --dry-run` shows what would go, `c3d-mcp uninstall` removes the bridge and helper, `c3d-mcp uninstall --all` also removes skills and MCP client entries (backups are made). Your scripts and `MCP-backups` are never touched.
+* Installer menu and flags: [INSTALL.md](INSTALL.md#5-installing-updating-repairing-reinstalling-and-uninstalling).

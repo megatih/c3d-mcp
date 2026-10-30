@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "https://github.com/megatih/c3d-mcp/releases/download/v0.3.1/c3d-mcp-0.3.1.tgz",
+        "https://github.com/megatih/c3d-mcp/releases/download/v0.3.2/c3d-mcp-0.3.2.tgz",
         "serve"
       ],
       "env": {
