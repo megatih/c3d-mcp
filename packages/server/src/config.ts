@@ -5,6 +5,8 @@ import type { TriggerMode } from './core/trigger.js';
 
 export interface RuntimeConfig extends ServerConfig {
   trigger: TriggerMode;
+  /** Launch Cheetah3D when it is not running (needs the helper app). C3D_MCP_NO_AUTOLAUNCH=1 turns it off. */
+  autoLaunch: boolean;
 }
 
 const PROFILES: readonly Profile[] = ['full', 'local', 'readonly'];
@@ -35,5 +37,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, home: string = 
     logDir: resolve(env.C3D_MCP_LOG_DIR || join(home, 'Library', 'Logs', 'c3d-mcp')),
     workDir: resolve(env.C3D_MCP_WORKDIR || join(mcpDir, 'tmp')),
     trigger: oneOf('C3D_MCP_TRIGGER', env.C3D_MCP_TRIGGER, TRIGGERS, 'auto'),
+    autoLaunch: !flag(env.C3D_MCP_NO_AUTOLAUNCH),
   };
 }

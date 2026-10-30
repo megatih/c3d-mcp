@@ -16,7 +16,7 @@ Honesty note: animation was tested far less than modelling. Verified live: fps/t
 
 ## Keyframes
 - `c3d_set_keyframes {ref, param, keys:[{time, value, interpolation?}], take?, replace?}` handles one parameter per call. `ref` is an object id (preferred), path or `{selected:true}`.
-- Interpolation per key: `linear` (default), `soft`, `spline`, `flat`, `const`. Use `const` for stepped/cut animation, `soft` or `spline` for ease.
+- Interpolation per key: `soft` (default, measured), `linear`, `spline`, `flat`, `const`. `flat` and `spline` are the same constant (2) in 8.1.3 and read back as `spline`. Use `const` for stepped/cut animation, `soft` or `spline` for ease.
 - Values: number for scalars; `[x,y,z]` or `{x,y,z}` for Vec3D (position, rotation, scale); colours (Vec4D) accept 3 components `[r,g,b]` or 4 `[r,g,b,a]`. One F-curve per component is created. Times must be unique.
 - `replace` defaults to true: the parameter's existing keys in that take are cleared first. Pass `replace:false` to add to an existing curve.
 - Rotation is HPB (x = heading about vertical Y, y = pitch, z = bank). For a turntable, animate heading x from 0 to 360 on a parent `FOLDER` that contains the model; use `linear` interpolation for constant speed. For a seamless loop the last key (360) shows the same pose as the first (0), so render one frame fewer than the key span (stop the sequence one frame before the 360 key).
@@ -28,7 +28,7 @@ Honesty note: animation was tested far less than modelling. Verified live: fps/t
 - Single frame: `c3d_render_image {path, width, height, time?}`. `time` renders at that second. Formats png, jpg, tiff only; any other extension is rejected. Use a new filename every call; the server never overwrites. Rendering is synchronous and may open Cheetah's Render Manager window; the helper re-raises the document window.
 - Sequence: `c3d_render_sequence {end, start?, fps?, width?, height?, prefix?, directory?, format?}` starts a background job and returns `job_id`, `total_frames` and the directory immediately. Frames are named `prefix_0001.png ...`. Max 3600 frames. Each frame still blocks Cheetah3D while rendering, one bridge request per frame, so other tools interleave between frames but the app is busy.
   - Poll with `c3d_job_status {job_id}` (omit the id to list jobs; jobs vanish when the server restarts). Stop with `c3d_job_cancel`; the current frame finishes and rendered frames are kept.
-  - The animation time is NOT restored after a sequence. Call `c3d_set_time` afterwards.
+  - The animation time is restored after every frame (measured), so it is as before the sequence; call `c3d_set_time` only if you want a different playhead.
   - Size the job first: render one test frame with `c3d_render_image time:...`, multiply its time by the frame count, and keep tool timeouts in mind. Use low resolution and `giOn:false` for previews (160x120, 12 fps, 2 s = 24 frames is a good smoke test).
   - Assembling video is outside the tools; report the directory and the frame naming, and say an external encoder is needed.
 - `c3d_capture_viewport` returns a screenshot of the editor window (gizmos, grid, selection), not a render. Needs Screen Recording permission for the helper (`PERMISSION_MISSING` otherwise). Useful to show the user selection state or to debug camera framing.

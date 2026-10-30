@@ -242,7 +242,7 @@ export class FakeBridge implements BridgeClient {
       case 'getKeyframes': {
         const o = this.resolve(a.ref); const ks = this.keys.get(`${o.id}:${a.param}`) ?? [];
         const comps = ks.length && typeof ks[0].value !== 'number' ? 3 : 1;
-        return { param: a.param, take: this.doc.current, components: Array.from({ length: comps }, (_, index) => ({ index, keys: ks.map((k: any) => ({ time: k.time, value: typeof k.value === 'number' ? k.value : [k.value.x, k.value.y, k.value.z][index], interpolation: k.interpolation ?? 'linear' })) })) };
+        return { param: a.param, take: this.doc.current, components: Array.from({ length: comps }, (_, index) => ({ index, keys: ks.map((k: any) => ({ time: k.time, value: typeof k.value === 'number' ? k.value : Array.isArray(k.value) ? k.value[index] : [k.value.x, k.value.y, k.value.z][index], interpolation: k.interpolation ?? 'linear' })) })) };
       }
       case 'setRenderSettings': return { renderer: a.renderer ?? 'CHEETAH', resolution: { x: a.width ?? 320, y: a.height ?? 240 }, applied: Object.keys(a.params ?? {}), errors: [] };
       case 'render': {

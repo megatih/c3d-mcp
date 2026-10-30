@@ -1,7 +1,10 @@
 // Live-test helpers: talk to the REAL Cheetah3D through the installed bridge. Only runs with C3D_LIVE=1.
 import { randomUUID } from 'node:crypto';
+import { afterAll, beforeAll } from 'vitest';
 import { loadConfig } from '../../src/config.js';
 import { createRuntime, type Runtime } from '../../src/core/runtime.js';
+import { trackWindows } from '../../scripts/window-cleanup.mjs';
+import { dismissTestDialogs } from './cleanup.js';
 
 export const LIVE = process.env['C3D_LIVE'] === '1';
 
@@ -18,4 +21,15 @@ export async function newScratch(rt: Runtime): Promise<string> {
   await rt.bridge.one('setMarker', { uuid: marker.slice('__c3d_mcp_session_'.length) });
   rt.session.expectDocument = { marker };
   return marker;
+}
+
+/** Call inside a describe: closes the Cheetah3D windows (scratch documents) the block opened, answering "Don't Save". */
+export function closeWindowsAfterAll(): void {
+  let cleanup = (): string[] => [];
+  beforeAll(() => { cleanup = trackWindows(); });
+  afterAll(async () => {
+    await dismissTestDialogs();
+    cleanup();
+    await dismissTestDialogs();
+  });
 }

@@ -3,8 +3,12 @@ import { Client } from '@modelcontextprotocol/client';
 import { StdioClientTransport } from '@modelcontextprotocol/client/stdio';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import { trackWindows } from './window-cleanup.mjs';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 export async function connect(env = {}) {
+  // Close the Cheetah3D windows this run opens (also on throw / process.exit); C3D_KEEP_WINDOWS=1 keeps them.
+  const cleanup = trackWindows();
+  process.once('exit', cleanup);
   const transport = new StdioClientTransport({ command: process.execPath, args: [join(root, 'bin/c3d-mcp.js'), 'serve'], env: { ...process.env, ...env }, stderr: 'pipe' });
   transport.stderr?.on('data', (c) => { if (process.env.C3D_DEBUG) process.stderr.write(c); });
   const client = new Client({ name: 'live', version: '1' });
@@ -15,5 +19,5 @@ export async function connect(env = {}) {
     const ms = Date.now() - t0;
     return { name, args, ms, isError: !!r.isError, sc: r.structuredContent, text: r.content?.map((c) => c.type === 'text' ? c.text : `[${c.type}]`).join(' ').slice(0, 300) };
   };
-  return { client, call, close: () => client.close() };
+  return { client, call, close: async () => { try { await client.close(); } finally { cleanup(); } } };
 }

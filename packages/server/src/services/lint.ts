@@ -177,12 +177,12 @@ export function lintScript(code: string): LintFinding[] {
     if (!/setVertex/.test(src.slice(Math.max(0, m.index - 80), m.index))) add('warn', 'vertex-copy', m.index, 'core.vertex(i) returns a copy; write back with core.setVertex(i, ...).');
   if (/selectedObject\s*\(\s*\)/.test(src) && /(===|!==)\s*null/.test(src)) add('warn', 'selected-object-null', null, 'doc.selectedObject() returns undefined (not null) when the root is selected, so a strict null test never matches; test !obj or == null.');
   if (/Vec4D/.test(src)) for (const m of src.matchAll(/\.\s*isEqual\s*\(/g)) add('warn', 'vec4-isequal', m.index, 'Vec4D.isEqual() throws "Wrong number or type of arguments" in 8.1.3 (Vec3D.isEqual works); compare the components instead.');
-  for (const m of src.matchAll(/setParameter\s*\(\s*["']samples["']\s*,\s*0\s*\)/g)) add('error', 'falcon-samples-zero', m.index, 'Falcon samples=0 is reported to mean "refine until stopped" (not tested here); a synchronous render could then never finish. Use a positive sample count.');
+  for (const m of src.matchAll(/setParameter\s*\(\s*["']samples["']\s*,\s*(?:0(?:\.0*)?|-\s*\d+(?:\.\d+)?)\s*\)/g)) add('error', 'falcon-samples-zero', m.index, 'Falcon samples<=0 is refused: 0 is reported to mean "refine until stopped" (not tested here), so a synchronous render could never finish. Use a positive sample count.');
 
   // ---- server safety rules ----
   for (const m of src.matchAll(/\bFile\s*\.\s*mkDir\b|\.mkDir\s*\(/g)) add('error', 'file-mkdir', m.index, 'File.mkDir is banned: it wipes the target directory.');
   for (const m of src.matchAll(/\bOS\s*\.\s*system\b/g)) add('warn', 'os-system', m.index, 'OS.system runs a shell command synchronously; requires confirmation.');
-  for (const m of src.matchAll(/\.\s*removeMaterial\s*\(/g)) add('warn', 'remove-material', m.index, 'doc.removeMaterial on a material created in the same script run crashes Cheetah3D 8.1.3 at idle (the runtime refuses it). Remove materials in a later call, or leave unused materials in place.');
+  for (const m of src.matchAll(/\.\s*removeMaterial\s*\(/g)) add('warn', 'remove-material', m.index, 'removeMaterial on a material created in the same script run crashes Cheetah3D 8.1.3 at idle. The runtime refuses it on the script\'s doc, but cannot guard a document reached through obj.document(). Remove materials in a later call, or leave unused materials in place.');
   for (const m of src.matchAll(/\bOS\s*\[|\bglobalThis\s*\[|\bthis\s*\[\s*["'`]OS|\bwindow\s*\[/g)) add('error', 'computed-os-access', m.index, 'Computed access to OS/globals (e.g. OS["sys"+"tem"]) is not allowed.');
   for (const m of src.matchAll(/(?<![\w.])eval\s*\(|\bnew\s+Function\s*\(|(?<![\w.])Function\s*\(/g)) add('warn', 'eval', m.index, 'eval/Function executes dynamic code and bypasses linting.');
   for (const m of src.matchAll(LOOP_HEAD)) {

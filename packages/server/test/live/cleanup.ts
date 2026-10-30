@@ -1,5 +1,6 @@
 // Cleanup of dialogs/panels that the live tests themselves cause. Uses Accessibility (clicking the dialog's own button), never key
 // presses: System Events delivers keystrokes to the frontmost APP, which is often not Cheetah3D (that left an Open panel behind).
+// Document windows the tests open are closed by scripts/window-cleanup.mjs (see setup.ts and closeWindowsAfterAll in live.ts).
 import { execFileSync } from 'node:child_process';
 
 const SCRIPT = `tell application "System Events"

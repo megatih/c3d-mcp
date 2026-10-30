@@ -16,10 +16,10 @@ If the c3d_* tools are not available, skip to "Standalone macro fallback" and de
 6. If a script throws, run `c3d_list_scene`: geometry created before the throw stays. Restore the checkpoint or delete the strays.
 
 ## Sandbox facts
-- Engine is JavaScriptCore, ES5 style: `var`, `function`, no arrow functions, `let/const`, template strings, `require`, timers or network. `main(doc)` is for macros; in `c3d_run_script` the globals `doc`, `print`, `Vec3D`, `Vec4D` and constants (BOX, FOLDER, SHADERTAG...) are provided.
-- `OS.system`, `OS.messageBox`, panels, `eval`, the Function constructor and `File.mkDir` are blocked; file writes are limited to the work directory. Prefer no `File`/`OS` at all.
+- Engine is JavaScriptCore. Modern syntax (`let/const`, arrows, template strings) runs in 8.1.3, but write ES5 style (`var`, `function`) like the bundled scripts; there is no `require`, timers or network. `main(doc)` is for macros; in `c3d_run_script` the globals `doc`, `print`, `Vec3D`, `Vec4D` and constants (BOX, FOLDER, SHADERTAG...) are provided.
+- `OS.messageBox`, panels, `eval`, the Function constructor and `File.mkDir` are blocked; file writes are limited to the work directory. `OS.system` runs only after confirmation, is synchronous, returns the raw wait status (exit code x 256, so `exit 3` returns 768) and does not capture stdout (redirect it to a file). Prefer no `File`/`OS` at all.
 - It is advisory containment, not a security boundary; an endless loop freezes Cheetah3D.
-- `doc.removeMaterial` on a material created in the same run crashes Cheetah3D; the runtime refuses it with `UNSUPPORTED`. Create in one call, remove in a later one, or just leave it.
+- `doc.removeMaterial` on a material created in the same run crashes Cheetah3D; the runtime refuses it with `UNSUPPORTED` on `doc`, but cannot guard a document reached through `obj.document()`, so never do it either way. Create in one call, remove in a later one, or just leave it.
 
 ## Rules that prevent crashes and silent bugs
 - Call `obj.update()` after editing parameters or geometry.
@@ -27,7 +27,7 @@ If the c3d_* tools are not available, skip to "Standalone macro fallback" and de
 - `doc.addObject(TYPE)` attaches under the parent of the currently selected object. Always parent explicitly: `parent.addChildAtIndex(obj, parent.childCount())`.
 - Names are not unique; keep object references or ids, not names.
 - Accessors return copies: write back with `setVertex` / `setParameter`.
-- Vectors: `new Vec3D(x,y,z)`, `new Vec4D(r,g,b,a)` (missing `new` crashes); read `.x .y .z .w`. Colours are Vec4D 0..1.
+- Vectors: `new Vec3D(x,y,z)`, `new Vec4D(r,g,b,a)` (missing `new` throws a TypeError in 8.1.3); read `.x .y .z .w`. Colours are Vec4D 0..1.
 - `parameterInfo()` yields `[name, typeString]` pairs.
 - `rotation` is HPB degrees (x heading, y pitch, z bank).
 - Pair `doc.retainRedrawLock()` with `doc.releaseRedrawLock()` in `try/finally` when you take the lock; an unbalanced lock freezes redraw. Bulk loops are faster under the lock.

@@ -6,6 +6,7 @@ import { createAppProbe, type AppProbe } from './appProbe.js';
 import { assetLocations, newestExisting, readRuntimeVersionFile } from './assets.js';
 import { BridgeClientImpl, type BridgeClientOptions } from './bridgeClient.js';
 import { HelperClientImpl, defaultHelperAppPaths } from './helperClient.js';
+import { createLauncher } from './launcher.js';
 import { FileLock, RequestQueue } from './lock.js';
 import { Mailbox } from './mailbox.js';
 import { mcpPaths, type McpPaths } from './paths.js';
@@ -60,6 +61,7 @@ export function createRuntime(config: RuntimeConfig, o: RuntimeOverrides = {}): 
   const bundledRuntimeVersion = bundledPath ? readRuntimeVersionFile(bundledPath) : undefined;
   const expectedRuntimeMajor = o.expectedRuntimeMajor ?? (bundledRuntimeVersion ? Number.parseInt(bundledRuntimeVersion.split('.')[0] ?? '', 10) : undefined);
   const logger = o.logger ?? createLogger({ dir: config.logDir, redact: () => [mailbox.readSecret() ?? ''] });
-  const bridge = new BridgeClientImpl({ paths, mailbox, queue, trigger, probe, session, clock, expectedRuntimeMajor, ...o.bridge });
+  const launcher = config.autoLaunch ? createLauncher(helper, session) : undefined;
+  const bridge = new BridgeClientImpl({ paths, mailbox, queue, trigger, probe, session, clock, expectedRuntimeMajor, ...(launcher ? { launcher } : {}), ...o.bridge });
   return { config, paths, mailbox, queue, helper, trigger, probe, bridge, session, exec, clock, logger, bundledRuntimeVersion };
 }

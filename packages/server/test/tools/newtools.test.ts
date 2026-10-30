@@ -162,6 +162,6 @@ describe('c3d_set_keyframes', () => {
     expect(setKeyframes.description).toMatch(/Vec4D/);
     const o = t.bridge.addObject('LIGHT', 'L');
     await runTool(setKeyframes, { ref: o.id, param: 'color', keys: [{ time: 0, value: [1, 0.5, 0.2] }, { time: 1, value: [0, 0, 1, 1] }] }, t.ctx);
-    expect((t.bridge.argsOf('setKeyframes')[0] as { keys: Array<{ value: unknown }> }).keys.map((k) => k.value)).toEqual([{ x: 1, y: 0.5, z: 0.2 }, { x: 0, y: 0, z: 1, w: 1 }]);
+    expect((t.bridge.argsOf('setKeyframes')[0] as { keys: Array<{ value: unknown }> }).keys.map((k) => k.value)).toEqual([[1, 0.5, 0.2], [0, 0, 1, 1]]);
   });
 });

@@ -23,7 +23,7 @@ If the c3d_* tools are not available (no MCP, e.g. a plain chat client), do not 
 - Details and limits: `references/materials.md`.
 
 ## Lights
-- `c3d_set_light` `light_type`: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. There are no SPOTLIGHT/POINTLIGHT object types.
+- `c3d_set_light` `light_type`: 0 ambient, 1 area, 2 distant, 3 point (default), 4 spot. There are no SPOTLIGHT/POINTLIGHT object types. The number-to-type mapping is inferred (4 shows a cone, 0 and 2 have no falloff, 1 and 3 fall off with distance), not confirmed one by one.
 - New lights use inverse-square falloff (`params.attenuation` 2): raise `intensity` about distance squared, or set attenuation 0.
 - Area light: `params {width, height, attenuation}`. `look_at_point`/`look_at_ref` switches the axis option to -Z before aiming; set position first.
 - Tune intensity until `c3d_render_image` `meanLuma` is in the target band (0.2-0.5 interior drafts, 0.3-0.45 finals). `blank:true` means flat colour: no light, camera inside geometry or empty scene.

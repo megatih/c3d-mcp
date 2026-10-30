@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { CLIENT_CAPABILITIES_META_KEY, inputResponse, type ServerContext } from '@modelcontextprotocol/server';
-import type { BridgeClient, ToolServices } from '../toolkit.js';
+import type { BridgeClient, RunOpts, ToolServices } from '../toolkit.js';
 import { FALLBACK_CAPABILITIES } from './fallbackCapabilities.js';
 
 /** Thrown by `services.confirm` to unwind the handler; the server turns it into an MCP `input_required` (elicitation) result. */
@@ -46,6 +46,24 @@ export interface ToolServiceDeps {
   autoConfirm?: boolean;
 }
 
+/** Gives every bridge call of a tool the "Waiting for Cheetah3D (Ns)" heartbeat as MCP progress (only emitted while a call waits longer than the client's progress interval). */
+export function withProgress(bridge: BridgeClient, services: Pick<ToolServices, 'progress'>): BridgeClient {
+  const withOpts = (opts?: RunOpts): RunOpts => ({ ...opts, onProgress: opts?.onProgress ?? ((message) => { services.progress(message); }) });
+  return {
+    run: (ops, opts) => bridge.run(ops, withOpts(opts)),
+    one: (op, args, opts) => bridge.one(op, args, withOpts(opts)),
+  };
+}
+
+/** Progress is only valid while the request is in flight; background jobs (c3d_render_sequence) keep using the tool context afterwards. */
+export function scopeProgress(services: ToolServices): { services: ToolServices; end(): void } {
+  let active = true;
+  return {
+    services: { ...services, progress: (message, fraction) => { if (active) services.progress(message, fraction); } },
+    end: () => { active = false; },
+  };
+}
+
 /** Per-call services: progress and confirm need the current request's context. */
 export function createToolServices(deps: ToolServiceDeps, call?: ServerContext): ToolServices {
   let step = 0;
@@ -65,7 +83,8 @@ export function createToolServices(deps: ToolServiceDeps, call?: ServerContext):
     },
     progress(message, fraction) {
       if (!call || token === undefined) return;
-      const progress = fraction === undefined ? ++step : Math.max(fraction, last + 1e-6);
+      // MCP requires strictly increasing progress: heartbeats (no fraction) and fraction updates can be mixed within one request.
+      const progress = Math.max(fraction === undefined ? ++step : fraction, last + 1e-6);
       last = progress;
       call.mcpReq
         .notify({ method: 'notifications/progress', params: { progressToken: token, progress, ...(fraction === undefined ? {} : { total: 1 }), message } })

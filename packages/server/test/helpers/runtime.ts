@@ -1,3 +1,4 @@
+import type { RuntimeConfig } from '../../src/config.js';
 import { createRuntime, type Runtime, type RuntimeOverrides } from '../../src/core/runtime.js';
 import { createLogger } from '../../src/logging.js';
 import type { HelperClient } from '../../src/toolkit.js';
@@ -12,8 +13,9 @@ export const noHelper: HelperClient & { installedApp(): undefined } = {
 export interface Harness { env: TestEnv; app: FakeApp; rt: Runtime }
 
 /** Runtime wired to a FakeApp: real mailbox/queue/lock on temp dirs, fast timings. */
-export function makeHarness(over: RuntimeOverrides = {}, opts: { seed?: boolean } = {}): Harness {
+export function makeHarness(over: RuntimeOverrides = {}, opts: { seed?: boolean; config?: Partial<RuntimeConfig> } = {}): Harness {
   const env = makeTestEnv();
+  Object.assign(env.config, opts.config);
   if (opts.seed !== false) seedBridgeFiles(env.paths);
   const app = new FakeApp(env.paths);
   const rt = createRuntime(env.config, {

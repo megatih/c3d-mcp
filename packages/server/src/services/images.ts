@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion -- loosely typed runtime data; indices are bounds-checked by construction */
-// Image downscale/analysis. Helper (ImageIO/Vision) first, `sips` + a minimal PNG decoder as fallback.
+// Image downscale/analysis. Helper (ImageIO/CoreGraphics) first, `sips` + a minimal PNG decoder as fallback.
 import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';

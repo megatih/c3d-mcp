@@ -1,6 +1,6 @@
 # c3d-mcp Claude Code plugin
 
-Adds the `c3d` MCP server (via `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.tgz serve` until the package is on npm), a `cheetah3d` skill (workflow + Cheetah3D scripting facts) and a SessionStart hook that prints a one-line `c3d-mcp doctor --brief` status when `c3d-mcp` is installed on your PATH (`npm i -g c3d-mcp`); the hook never downloads anything.
+Adds the `c3d` MCP server (via `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.1/c3d-mcp-0.3.1.tgz serve` until the package is on npm), a `cheetah3d` skill (workflow + Cheetah3D scripting facts) and a SessionStart hook that prints a one-line `c3d-mcp doctor --brief` status when `c3d-mcp` is installed on your PATH (`npm i -g c3d-mcp`); the hook never downloads anything.
 
 ```
 claude plugin marketplace add megatih/c3d-mcp

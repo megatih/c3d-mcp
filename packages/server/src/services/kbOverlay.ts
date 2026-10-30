@@ -10,12 +10,13 @@ export { VERIFIED_CONSTANTS } from './kbConstants.generated.js';
 export const ABSENT_CONSTANTS: readonly string[] = ["AREALIGHT","DISTANTLIGHT","SPOTLIGHT","UVTAG","TONEMAPPINGTAG","BIG_ENDIAM","LITTLE_ENDIA","SKYLIGHT","SUBDIVMOD","IDENTITY"];
 
 /** Methods that exist at runtime although the reference does not list them. */
-export const VERIFIED_METHODS: readonly string[] = ['id', 'animationTime', 'animationFPS', 'setAnimationFPS', 'setAnimationTime', 'isAnimatable'];
+export const VERIFIED_METHODS: readonly string[] = ['id', 'animationTime', 'animationFPS', 'setAnimationFPS', 'setAnimationTime', 'isAnimatable', 'readInt'];
 
 /** Methods that are documented or widely quoted but do not exist in 8.1.3. */
 export const ABSENT_METHODS: Readonly<Record<string, string>> = {
   parent: 'Object has no parent(); use owner().',
   rib: 'Material.rib() is documented but removed.',
+  isAnimateable: 'Parameter has isAnimatable() (the documented spelling isAnimateable does not exist).',
 };
 
 export type NoteStatus = 'confirmed' | 'refined' | 'refuted';
@@ -34,5 +35,9 @@ export const KB_NOTES: readonly KbNote[] = [
   { any: ['recordparametersforundo', 'recordgeometryforundo'], status: 'refined', text: 'Measured in 8.1.3: callable from a macro without error, but Edit > Undo still does not revert script changes (research/08 P11); use c3d checkpoints.' },
   { any: ['update menu'], status: 'refuted', text: 'Measured in 8.1.3: Tools > Script has no "Update Menu" item; restart Cheetah3D to pick up NEW script files (research/08 P02).' },
   { any: ['shadertag'], status: 'refined', text: 'Measured in 8.1.3: 30 material (SHADERTAG) tags on one object crashed Cheetah3D (stack-smash abort in buildMaterialArray); 24 were fine. c3d tools allow at most 24 per object.' },
-  { any: ['readint'], status: 'refuted', text: 'Measured in 8.1.3: File instances in the c3d_run_script sandbox have no readInt(); documented readFloat/readShort/readUInt exist.' },
+  { any: ['shadow softness'], status: 'confirmed', text: 'Measured in 8.1.3 (Falcon): the light parameter shadowSoft ("Shadow softness") softens shadows (point/spot: light size, distant: angle). The light\'s radius parameter does not: renders at radius 0.5, 2 and 8 were identical (research/10 C5, C6).' },
+  { any: ['shadowmat'], status: 'refined', text: 'Measured in 8.1.3: doc.addMaterial("Shadowmat", name) makes a shadow-catcher (root node "shadow"); over a transparent background the ground renders transparent. Shadow pixels appeared with the Cheetah renderer, none with Falcon in our tests, and changing whitePoint/color had no visible effect (research/10 C14, C15).' },
+  { any: ['isanimateable'], status: 'refuted', text: 'Measured in 8.1.3: the method is Parameter.isAnimatable(); the documented spelling isAnimateable does not exist (research/10 A4).' },
+  { any: ['hditag', 'radiositytag', 'doftag', 'fogtag'], status: 'refined', text: 'Measured in 8.1.3: the constants HDRITAG, RADIOSITYTAG, DOFTAG and FOGTAG exist, but whether these legacy tags still do anything under Falcon or 8.x is untested, so c3d-mcp does not use them. The book review (written against 8.1.1, not verified here) says HDRI is now an HDRI Light object, radiosity/caustics are renderer settings, DOF is a camera plus renderer setting and fog is an object (research/10 C17).' },
+  { any: ['readint'], status: 'refined', text: 'Measured in 8.1.3: File.readInt() exists although the reference omits it (the app\'s File method table lists it; a big-endian writeInt/readInt round trip returned 123456 and -7). The earlier "absent" result came from the c3d_run_script sandbox wrapper, which lacked it until this was fixed (unreleased).' },
 ];

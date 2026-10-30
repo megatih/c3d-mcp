@@ -3,6 +3,7 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { BridgeError, ERROR_CODES, type BridgeClient, type BridgeOp, type BridgeResponse, type ErrorCode, type OpResult, type RunOpts, type SessionState } from '../toolkit.js';
 import type { AppProbe } from './appProbe.js';
+import type { Launcher } from './launcher.js';
 import { type RequestQueue } from './lock.js';
 import { type Mailbox, PROTOCOL, type BridgeRequest, type RuntimeState } from './mailbox.js';
 import type { McpPaths } from './paths.js';
@@ -28,6 +29,8 @@ export interface BridgeClientOptions {
   /** busy longer than max(deadline, this) while the app still responds => RUNTIME_STUCK (requirements 3.11). */
   stuckAfterMs?: number;
   progressIntervalMs?: number;
+  /** Starts Cheetah3D when the first press finds it not running; absent = report APP_NOT_RUNNING. */
+  launcher?: Launcher;
 }
 
 const HINTS: Partial<Record<ErrorCode, string>> = {
@@ -84,7 +87,7 @@ export class BridgeClientImpl implements BridgeClient {
     if (ops.length === 0) throw new BridgeError('INVALID_ARGUMENT', 'A bridge request needs at least one op');
     const deadlineMs = opts.deadlineMs ?? this.tun.defaultDeadlineMs;
     this.assertInstalled();
-    return this.o.queue.run(() => this.execute(ops, opts, deadlineMs), { signal: opts.signal, lockTimeoutMs: Math.max(30_000, deadlineMs) });
+    return this.o.queue.run(() => this.execute(ops, opts, deadlineMs, false), { signal: opts.signal, lockTimeoutMs: Math.max(30_000, deadlineMs) });
   }
 
   async one<T = unknown>(op: string, args: Record<string, unknown> = {}, opts?: RunOpts): Promise<T> {
@@ -104,7 +107,7 @@ export class BridgeClientImpl implements BridgeClient {
     return secret;
   }
 
-  private async execute(ops: BridgeOp[], opts: RunOpts, deadlineMs: number): Promise<BridgeResponse> {
+  private async execute(ops: BridgeOp[], opts: RunOpts, deadlineMs: number, launched: boolean): Promise<BridgeResponse> {
     const { mailbox, session } = this.o;
     const secret = this.assertInstalled();
     await this.sweepOrphans();
@@ -186,6 +189,16 @@ export class BridgeClientImpl implements BridgeClient {
                 if (err instanceof BridgeError && err.code === 'APP_NOT_RUNNING' && pressedOk > 0) {
                   await this.abandon(seq, id);
                   throw new BridgeError('APP_CRASHED', 'Cheetah3D exited after the bridge was triggered; the in-flight request was lost', 'Restart Cheetah3D, then retry.', { via: 'press' });
+                }
+                if (err instanceof BridgeError && err.code === 'APP_NOT_RUNNING' && pressedOk === 0 && !launched && this.o.launcher) {
+                  // Nothing ran yet: withdraw the request, start Cheetah3D, and run the request again with fresh deadlines (once).
+                  await mailbox.remove(seq, id);
+                  try {
+                    await this.o.launcher.ensureRunning();
+                  } catch (launchErr) {
+                    throw new BridgeError('APP_NOT_RUNNING', err.message, 'Cheetah3D is not running and could not be launched automatically (set C3D_MCP_NO_AUTOLAUNCH=1 to stop trying). Start Cheetah3D, then retry.', { autoLaunch: launchErr instanceof Error ? launchErr.message : String(launchErr) });
+                  }
+                  return await this.execute(ops, opts, deadlineMs, true);
                 }
                 const retriable = err instanceof BridgeError && err.code === 'TRIGGER_FAILED' && presses < this.tun.maxPresses;
                 if (!retriable) {

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call -- loosely typed runtime data; indices are bounds-checked by construction */
 import { z } from 'zod';
 import { BridgeError, defineTool } from '../toolkit.js';
+import { autoCheckpoint, checkpointFields } from '../lib/checkpoints.js';
 import { clean, ok } from '../lib/result.js';
 import { ObjectRef, normRef } from '../lib/schemas.js';
 
@@ -42,7 +43,7 @@ export const setFps = defineTool({
 export const takes = defineTool({
   name: 'c3d_takes',
   title: 'Manage takes',
-  description: 'Lists, adds, renames, removes or selects animation takes. Keyframes are stored per take; the current take receives c3d_set_keyframes unless take is given.',
+  description: 'Lists, adds, renames, removes or selects animation takes. Keyframes are stored per take; the current take receives c3d_set_keyframes unless take is given. Removing a take saves a checkpoint first.',
   group: 'animation',
   inputSchema: z.strictObject({
     action: z.enum(['list', 'add', 'rename', 'remove', 'select']).describe('Operation to perform.'),
@@ -57,23 +58,19 @@ export const takes = defineTool({
   async handler(i, ctx) {
     if (i.action !== 'list' && !i.name) throw new BridgeError('INVALID_ARGUMENT', `action "${i.action}" needs name.`);
     if (i.action === 'rename' && !i.new_name) throw new BridgeError('INVALID_ARGUMENT', 'rename needs new_name.');
+    const cp = i.action === 'remove' ? await autoCheckpoint(ctx, 'remove-take') : {};
     const r = await ctx.bridge.one<Record<string, any>>('takes', clean({ action: i.action, name: i.name, newName: i.new_name }));
-    return ok({ takes: r.takes ?? [], current: r.current ?? null }, `${(r.takes ?? []).length} take(s); current: ${String(r.current)}.`);
+    return ok({ takes: r.takes ?? [], current: r.current ?? null, ...checkpointFields(cp) }, `${(r.takes ?? []).length} take(s); current: ${String(r.current)}.${cp.warning ? ` WARNING: ${cp.warning}` : ''}`);
   },
 });
 
 const Interp = z.enum(['linear', 'soft', 'spline', 'flat', 'const']);
 const KeyValue = z.union([z.number(), z.array(z.number()).min(3).max(4), z.record(z.string(), z.number())]).describe('number for scalar parameters, [x,y,z] / {x,y,z} for vectors, [r,g,b,a] / {r,g,b,a} for colors.');
 
-function normValue(v: z.infer<typeof KeyValue>): unknown {
-  if (!Array.isArray(v)) return v;
-  return v.length === 3 ? { x: v[0], y: v[1], z: v[2] } : { x: v[0], y: v[1], z: v[2], w: v[3] };
-}
-
 export const setKeyframes = defineTool({
   name: 'c3d_set_keyframes',
   title: 'Set keyframes',
-  description: 'Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const. replace:true (default) clears existing keys of that parameter in the take first. Values: a number, or [x,y,z] / {x,y,z} for vectors; Vec4D parameters (colors) accept 3 components as well as 4 ([r,g,b] as well as [r,g,b,a]). Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.',
+  description: 'Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const (default soft; flat and spline are the same constant in 8.1.3 and both read back as "spline"). replace:true (default) clears existing keys of that parameter in the take first. Values: a number, or [x,y,z] / {x,y,z} for vectors; Vec4D parameters (colors) accept 3 components as well as 4 ([r,g,b] as well as [r,g,b,a]). Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.',
   group: 'animation',
   inputSchema: z.strictObject({
     ref: ObjectRef,
@@ -90,7 +87,7 @@ export const setKeyframes = defineTool({
   async handler(i, ctx) {
     const times = i.keys.map((k) => k.time);
     if (new Set(times).size !== times.length) throw new BridgeError('INVALID_ARGUMENT', 'Duplicate key times.', 'Each key needs a unique time.');
-    const r = await ctx.bridge.one<Record<string, any>>('setKeyframes', clean({ ref: normRef(i.ref), param: i.param, take: i.take, replace: i.replace ?? true, keys: i.keys.map((k) => ({ ...k, value: normValue(k.value) })) }));
+    const r = await ctx.bridge.one<Record<string, any>>('setKeyframes', clean({ ref: normRef(i.ref), param: i.param, take: i.take, replace: i.replace ?? true, keys: i.keys }));
     return ok({ param: r.param ?? i.param, components: r.components ?? [], take: r.take ?? null }, `Set ${i.keys.length} key(s) on ${i.param}.`);
   },
 });

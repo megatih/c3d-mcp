@@ -152,7 +152,7 @@
           "op": "run",
           "ok": true,
           "result": {
-           "value": "function:function:function:1.0.0"
+           "value": "function:function:function:1.0.1"
           }
          },
          {
@@ -2342,6 +2342,45 @@
           "ok": true,
           "result": {
            "value": 1,
+           "log": [],
+           "returned": "json-able"
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "sandbox: File exposes the binary readers the app's method table lists (readShort, readInt, readUInt, readFloat)",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "r",
+       "ops": [
+        {
+         "op": "run",
+         "args": {
+          "code": "var f = new File('/tmp/c3d-qa-none'); return [typeof f.readShort, typeof f.readInt, typeof f.readUInt, typeof f.readFloat].join(',');"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "r": {
+        "ok": true,
+        "protocol": 1,
+        "results": [
+         {
+          "op": "run",
+          "ok": true,
+          "result": {
+           "value": "function,function,function,function",
            "log": [],
            "returned": "json-able"
           }

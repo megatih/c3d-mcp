@@ -21,6 +21,19 @@ async function mode(path: string): Promise<number | undefined> {
 interface HelperPermissions { accessibility?: boolean; screenRecording?: boolean }
 interface HelperWindow { title?: string; role?: string; subrole?: string; main?: boolean }
 
+/** Helper app version shipped with this release (kept equal to helper/VERSION by a test). */
+export const EXPECTED_HELPER_VERSION = '0.3.1';
+
+function versionLess(a: string, b: string): boolean {
+  const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
+  const pb = b.split('.').map((n) => Number.parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d < 0;
+  }
+  return false;
+}
+
 export async function doctor(rt: Runtime): Promise<DoctorReport> {
   const checks: DoctorCheck[] = [];
   const { paths } = rt;
@@ -87,6 +100,9 @@ export async function doctor(rt: Runtime): Promise<DoctorReport> {
     try {
       const r = await rt.helper.call<{ version?: string; pid?: number }>('ping', {}, 5000);
       permissions = await rt.helper.call<HelperPermissions>('permissions', {}, 5000).catch(() => undefined);
+      if (r.version && versionLess(r.version, EXPECTED_HELPER_VERSION)) {
+        return warn('helper', `Helper reachable but old (version ${r.version}, pid ${r.pid ?? '?'}); this release ships ${EXPECTED_HELPER_VERSION}`, 'Run `c3d-mcp install` to update the helper app (newer commands such as post-processing need it); macOS may ask for Accessibility and Screen Recording again.');
+      }
       return ok('helper', `Helper reachable (version ${r.version ?? '?'}, pid ${r.pid ?? '?'})`);
     } catch (err) {
       return warn('helper', `Helper installed but unreachable: ${err instanceof Error ? err.message : String(err)}`, 'Open "C3D Bridge Helper" once, or reinstall it. Falling back to osascript.');

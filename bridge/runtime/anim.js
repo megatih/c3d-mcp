@@ -94,8 +94,13 @@
       if (!U.isNumber(value)) { U.fail('INVALID_ARGUMENT', 'keys[' + idx + '].value must be a number'); }
       return [value];
     }
-    // Vec4D given 3 components: w is filled with the parameter's current value (not 1).
-    if (n === 4 && Array.isArray(value) && value.length === 3 && U.isNumber(wFill)) { value = value.concat([wFill]); }
+    // Vec4D given 3 components ([r,g,b], {x,y,z} or {r,g,b}): w is filled with the parameter's current value (not 1).
+    if (n === 4 && U.isNumber(wFill)) {
+      if (Array.isArray(value) && value.length === 3) { value = value.concat([wFill]); }
+      else if (U.isObject(value) && value.w === undefined && value.a === undefined && (value.x !== undefined || value.r !== undefined)) {
+        value = value.r !== undefined && value.x === undefined ? [value.r, value.g, value.b, wFill] : [value.x, value.y, value.z, wFill];
+      }
+    }
     return P.numbers(value, n, 'keys[' + idx + '].value');
   }
 

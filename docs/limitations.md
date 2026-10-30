@@ -12,7 +12,7 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 | Undo | Cheetah3D Undo does not revert macro/bridge changes; no access to its undo stack | P11 | `c3d_checkpoint` / `c3d_restore_checkpoint` |
 | Console | Cheetah3D's own Console cannot be read; `c3d_get_console` returns the bridge runtime log only, `c3d_run_script` returns `print()` output in its result | P35 | - |
 | Primitives | Primitives (BOX, BALL...) cannot be edited per vertex | - | `c3d_make_editable` (experimental) or `c3d_create_mesh` |
-| Documents | Closing documents / quitting the app is not offered | - | close windows manually |
+| Documents | Closing documents / quitting the app is not offered to MCP clients (the test tooling closes its own windows, see README "Development") | - | close windows manually |
 | Geometry | Vertex colors | - | - |
 
 ## Installation
@@ -26,16 +26,16 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 |---|---|---|---|
 | `c3d_duplicate` | select, `Edit > Copy`, `Edit > Paste` via helper `pressMenu`; success verified by diffing object ids | menu enablement depends on focus; pasted object lands wherever Cheetah puts it | `method:"copy"` rebuilds from parameters/tags/children (LOSSY: no keyframes, clusters, modifier internals, tag parameters, materials by link) |
 | `c3d_make_editable` | select, `Objects > Make Editable`, read selection back | the converted object can get a new id; menu may be disabled for some types | `UNSUPPORTED` -> `c3d_create_mesh` |
-| `c3d_merge_file` | open file in a temporary window, select roots, `Edit > Copy`, raise original, `Edit > Paste`; verified by object count | cross-document paste untested; materials may not survive; extra window remains | `UNSUPPORTED` + hint to `c3d_use_document` on the opened window |
+| `c3d_merge_file` | open file in a temporary window, select roots, `Edit > Copy`, raise original, `Edit > Paste`; verified by object count | cross-document paste untested; materials may not survive; extra window remains (live tests and scripts close it afterwards) | `UNSUPPORTED` + hint to `c3d_use_document` on the opened window |
 | `c3d_import_asset` | Poly Haven FBX + textures downloaded to `<workDir>/assets/<id>/`, opened with `open -a Cheetah3D` as a NEW window | the model is not merged into the previous scene; FBX material/texture fidelity unknown | `c3d_merge_file` |
-| `c3d_look_at` | HPB math calibrated to P15 (R = Ry(H)Rx(P)Rz(B), forward = -Z); closed-loop residual read-back | light/other object forward axes unverified; parent scale/shear is ignored | `forward:"+z"` |
-| `c3d_restore_checkpoint` | reopens the checkpoint as a NEW window (extra window stays) | the original window is not touched | close the extra window manually |
+| `c3d_look_at` | HPB math calibrated to P15 (R = Ry(H)Rx(P)Rz(B), forward = -Z); closed-loop residual read-back | lights are verified through their `axis` option (research/08 "Light axis"), other object types' forward axes are unverified; parent scale/shear is ignored | `forward:"+z"` |
+| `c3d_restore_checkpoint` | reopens the checkpoint as a NEW window (extra window stays; live tests and scripts close it afterwards) | the original window is not touched | close the extra window manually |
 | `c3d_new_document` / `c3d_open_document` | helper `newDocument` / `open -a` + window adoption by title | window title heuristics | `c3d_use_document` |
 
 ## Newly possible (since the benchmark runs)
 
 * **Per-polygon materials** work: `c3d_assign_material` with `polygons` (24 polygon-selection slots per object).
-* **Gradient / image background:** `c3d_set_background` (solid, gradient generated as PNG, image) on the active camera. Experimental until verified in a live render: the exact parameter behaviour (`backgroundImage` / `backgroundColor`) is set through the generic parameter path.
+* **Gradient / image background:** `c3d_set_background` (solid, gradient generated as PNG, image) on the active camera. Kind `transparent` is verified (`backgroundColor` alpha 0 gives PNG alpha 0 in both engines, research/10 C11); gradient and image go through the generic parameter path (`backgroundImage` / `backgroundColor`) and are less tested.
 * **Post-processing (bloom, outlines, vignette, grade, posterize):** `c3d_postprocess_image` on an existing render, via the helper app (`UNSUPPORTED` with an install hint when the helper is missing or too old).
 * **Pipes, cables, partial torus arcs:** `c3d_create_pipe`.
 * **Scene statistics:** `c3d_get_scene_stats`.
@@ -51,9 +51,10 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 * **Lights** are `LIGHT` + `lightType` 0..4; `SPOTLIGHT`, `DISTANTLIGHT`, `AREALIGHT` and `SKYLIGHT` are undefined, and `POINTLIGHT` (15) exists but `addObject(POINTLIGHT)` creates a non-light object (P05/P17, research/10 B2).
 * **Keyframes** use seconds, linear by default; vector parameters create three F-curves (P14).
 * **Mesh size**: single requests are capped at 200000 vertices/polygons; `c3d_create_mesh` splits into chunks of ~4000 automatically and removes the partial object if a chunk fails.
-* **`c3d_run_script`** is advisory-linted (blocked only on error-severity findings unless `force:true`); it is not a security sandbox. Scripts that use `OS.system` or file access require confirmation; `C3D_MCP_DISABLE_EXEC`, `C3D_MCP_DISABLE_SHELL` turn them off.
+* **`c3d_run_script`** is advisory-linted (blocked only on error-severity findings unless `force:true`); it is not a security sandbox. Scripts that use `OS.system` or file access require confirmation; `C3D_MCP_DISABLE_EXEC` removes `c3d_run_script`; `C3D_MCP_DISABLE_SHELL` only refuses scripts that use `OS.system` (file writes still need a confirmation).
+* **Auto-launch:** when a call finds Cheetah3D not running, the helper app launches it (Accessibility needed), waits up to 30 s for the menu bar and uses the untitled document Cheetah3D opens (File > New if none appears), then runs the call again once. It needs the helper; the document bound to the session before the restart is forgotten; a crash in the middle of a request is still reported as `APP_CRASHED` and is never retried by relaunching. `C3D_MCP_NO_AUTOLAUNCH=1` turns it off.
 * **Assets** need network access to api.polyhaven.com / dl.polyhaven.org (HTTPS only, 100 MB cap, allow-listed extensions). `C3D_MCP_DISABLE_ASSETS=1` disables the tools.
-* **`c3d_get_parameters tag_index`** requires the bridge `getParameters` op to accept a `tag` argument (contract amendment pending).
+* **`c3d_get_parameters tag_index`** reads a tag's parameters through the bridge `getParameters` op's `tag` argument.
 
 
 ## Known security limitations (from the independent review, docs/qa/review-security.md)
@@ -71,12 +72,13 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 - **Lights:** a new light casts along its local -Y (its `axis` option defaults to 1; 0 = -X, 1 = -Y, >=2 = -Z). `look_at` on a light now switches the axis to -Z before aiming (verified by render).
 - **Rotation:** `rotation` components are x=heading, y=pitch, z=bank (default HPB order), not x/y/z axis rotations.
 - **Reparenting:** `keep_world` only works between root-level parents.
-- **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and removing a material (`doc.removeMaterial`) in the same script run that created it crashes Cheetah3D at idle (crash #2, root cause isolated by bisect in research/08). Since 0.1.2 the script `doc` refuses that case with UNSUPPORTED; removing a material created in an earlier call is safe.
+- **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and removing a material (`doc.removeMaterial`) in the same script run that created it crashes Cheetah3D at idle (crash #2, root cause isolated by bisect in research/08). Since 0.1.2 the script `doc` refuses that case with UNSUPPORTED; removing a material created in an earlier call is safe. A document reached through `obj.document()` is a fresh wrapper per call and cannot be guarded, so the lint rule `remove-material` warns about every `.removeMaterial(` instead.
 - **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1`.
 
 
 ## Measured in 8.1.3 while checking the scripting knowledge base and the book (research/10)
 - **Material tags:** 30 material (SHADERTAG) tags on one object crashed Cheetah3D (abort in `buildMaterialArray`); 24 were fine, 25-29 untested. `c3d_assign_material` refuses to go past 24 per object (`UNSUPPORTED`).
+- **OBJ export:** `doc.saveToFile(path,'obj')` crashed Cheetah3D 8.1.3 once (EXC_BAD_ACCESS in the OBJ exporter, on a scene with nested folders, a camera, materials and tags; research/08 "Crash #1"). Twelve controlled scenes did not reproduce it. `c3d_export` takes a checkpoint before every OBJ export; prefer fbx, dae or stl.
 - **No "Update Menu":** Tools › Script has no such item; new script files (including the bridge macro) need a Cheetah3D restart. Edits to existing scripts are picked up (P02).
 - **Winding:** Cheetah3D's front face is clockwise seen from outside. `c3d_create_mesh` / `c3d_create_pipe` convert the documented counter-clockwise input so normals point outward (before this fix they pointed inward: invisible in renders because the renderer is two-sided; exports, booleans and subdivision may have been affected). `c3d_get_mesh` reports the native order, so re-create such a mesh with `winding:"cw"`.
 - **Falcon `samples` = 0** means "refine until stopped" in the book; the tools refuse `samples <= 0` and the linter flags it as a precaution, because a synchronous render could then never finish. (The hang itself was not tested.)

@@ -1,5 +1,7 @@
 # Review triage (M7)
 
+> **Status note (2026-10-30):** the findings below were fixed in 0.1.x-0.3.0; the "Open" table is superseded by `docs/qa/research-traceability-audit.md`, which re-checks every finding against the code. The ids API-2..9 here correspond to the A/B ids in `review-api.md` only loosely.
+
 Reports: `review-security.md`, `review-api.md`, `review-ux.md` (independent fresh-context agents, read-only).
 
 ## Fixed

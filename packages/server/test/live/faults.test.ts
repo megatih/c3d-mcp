@@ -2,12 +2,13 @@ import { copyFileSync, writeFileSync } from 'node:fs';
 import { afterAll, afterEach, describe, expect, it } from 'vitest';
 import { BridgeError } from '../../src/toolkit.js';
 import { dismissTestDialogs } from './cleanup.js';
-import { LIVE, liveRuntime, newScratch } from './live.js';
+import { LIVE, closeWindowsAfterAll, liveRuntime, newScratch } from './live.js';
 
 const osa = (rt: ReturnType<typeof liveRuntime>, script: string) => rt.exec('osascript', ['-e', script]);
 
 describe.skipIf(!LIVE)('live fault tests', () => {
   const rt = liveRuntime();
+  closeWindowsAfterAll();
   const runtimeFile = rt.paths.runtimeFile;
   const backup = `${runtimeFile}.faultbak`;
 

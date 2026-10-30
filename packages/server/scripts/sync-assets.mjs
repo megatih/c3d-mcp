@@ -70,7 +70,6 @@ for (const f of readdirSync(need(join(kb, 'dist')))) {
 }
 for (const f of ['LICENSE', 'NOTICE.md']) if (existsSync(join(kb, f))) cpSync(join(kb, f), join(kbOut, f));
 cpSync(need(join(kb, 'reference', 'api')), join(kbOut, 'reference', 'api'), { recursive: true });
-for (const f of ['book-ch17.8-scripts.md', 'ExecuteScript.md']) if (existsSync(join(kb, 'reference', f))) cpSync(join(kb, 'reference', f), join(kbOut, 'reference', f));
 cpSync(need(join(kb, 'examples', 'official')), join(kbOut, 'examples', 'official'), { recursive: true });
 // Forum archive (low-ranked, unverified search source): transcripts + per-thread catalog reviews.
 cpSync(need(join(kb, 'forum', 'threads')), join(kbOut, 'forum', 'threads'), { recursive: true });
@@ -80,6 +79,8 @@ cpSync(need(join(kb, 'catalog', 'forum-threads.json')), join(kbOut, 'catalog', '
 const book = need(join(repo, 'vendor', 'learn3d-cheetah'));
 cpSync(need(join(book, 'book')), join(kbOut, 'book'), { recursive: true });
 cpSync(need(join(book, 'LICENSE')), join(kbOut, 'book', 'LICENSE'));
+// The author's review of the book against 8.1.1 (indexed as unverified errata).
+cpSync(need(join(book, 'reviews')), join(kbOut, 'book-reviews'), { recursive: true });
 // Project research notes (02 = API facts, 08 = probes, 10 = verification of the two external sources).
 for (const f of ['02-cheetah3d-js-api.md', '08-open-questions-and-probes.md', '10-kb-verification-8.1.3.md']) cpSync(need(join(repo, 'research', f)), join(kbOut, 'research', f));
 

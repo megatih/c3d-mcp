@@ -78,11 +78,11 @@ describe('animation', () => {
     await expectCode(runTool(takes, { action: 'add' }, t.ctx), 'INVALID_ARGUMENT');
     await expectCode(runTool(takes, { action: 'rename', name: 'Alt' }, t.ctx), 'INVALID_ARGUMENT');
   });
-  it('sets and reads vector keyframes, normalising array values', async () => {
+  it('sets and reads vector keyframes, passing arrays and objects to the runtime unchanged', async () => {
     const o = t.bridge.addObject('BALL', 'Ball');
     const r = await runTool(setKeyframes, { ref: o.id, param: 'position', keys: [{ time: 0, value: [0, 2, 0] }, { time: 1, value: [0, 0, 0], interpolation: 'soft' }, { time: 2, value: { x: 0, y: 2, z: 0 } }] }, t.ctx);
     expect(r.structured.components).toHaveLength(3);
-    expect(t.bridge.argsOf('setKeyframes')[0]).toMatchObject({ replace: true, keys: [{ value: { x: 0, y: 2, z: 0 } }, { interpolation: 'soft' }, {}] });
+    expect(t.bridge.argsOf('setKeyframes')[0]).toMatchObject({ replace: true, keys: [{ value: [0, 2, 0] }, { value: [0, 0, 0], interpolation: 'soft' }, { value: { x: 0, y: 2, z: 0 } }] });
     const g = await runTool(getKeyframes, { ref: o.id, param: 'position' }, t.ctx);
     expect((g.structured.components as any[])[1].keys.map((k: any) => k.value)).toEqual([2, 0, 2]);
   });

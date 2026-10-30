@@ -28,7 +28,8 @@ Sources: the bundled scripting knowledge base (`vendor/c3d-scripting-kb`, by Ton
   `var rnd = (function(){var s=12345;return function(){s=(s*16807)%2147483647;return s/2147483647;};})();`
 - Light objects are `LIGHT` (5) with `lightType` 0..4 (0 ambient, 1 area, 2 distant, 3 point, 4 spot; (inferred): measured only that 4 has a cone and 1/3 fall off). `SPOTLIGHT`, `DISTANTLIGHT`, `AREALIGHT`, `SKYLIGHT` are undefined (ReferenceError); `POINTLIGHT` (15) exists but `doc.addObject(POINTLIGHT)` creates a non-light object. `ENVIRONMENTLIGHT` (89) is the HDRI light.
 - Constants measured in 8.1.3: `SOFT_INTERPOL`=0 `LINEAR_INTERPOL`=1 `SPLINE_INTERPOL`=2 `FLAT_INTERPOL`=2 `CONST_INTERPOL`=3; `READ_MODE`=0 `WRITE_MODE`=1 `SEEK_SET/CUR/END`=0/1/2 `BIG_ENDIAN`=2 `LITTLE_ENDIAN`=3 (the docs misspell BIG_ENDIAM); `ROT_HPB`=6.
-- Missing or broken in 8.1.3: `Material.rib()`, `File.readInt` (absent on File instances inside `c3d_run_script`), `Vec4D.isEqual()` (throws; compare components), `instanceof` on native classes (always false), `Vec3D(...)` without `new` (TypeError).
+- `File.readInt()` exists although the reference omits it (verified by a writeInt/readInt round trip, big-endian).
+- Missing or broken in 8.1.3: `Material.rib()`, `Vec4D.isEqual()` (throws; compare components), `instanceof` on native classes (always false), `Vec3D(...)` without `new` (TypeError).
 - Keyframes: `Parameter.isAnimatable()` (not `isAnimateable`); `doc.animationFPS()` / `setAnimationFPS(n)` (default 30); `setAnimPosition` plus `setParameter` does not create keys; `keyAtIndex` returns a copy.
 - At most 24 material (SHADERTAG) tags per object: 24 were fine, 30 crashed Cheetah3D 8.1.3 (25-29 untested). Do not set Falcon `samples` to 0 (reported by the book to mean "refine until stopped"; not tested).
 - Tools › Script has no "Update Menu" item: new script files need a restart of Cheetah3D.

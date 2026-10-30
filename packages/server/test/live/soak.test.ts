@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { LIVE, liveRuntime, newScratch } from './live.js';
+import { LIVE, closeWindowsAfterAll, liveRuntime, newScratch } from './live.js';
 
 describe.skipIf(!LIVE)('live soak', () => {
   const rt = liveRuntime();
+  closeWindowsAfterAll();
 
   it('100 sequential pings: zero lost, zero duplicate', async () => {
     await newScratch(rt);

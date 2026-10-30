@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { defineTool } from '../toolkit.js';
 import { assertNotScriptType } from '../lib/scriptTypes.js';
+import { autoCheckpoint, checkpointFields } from '../lib/checkpoints.js';
 import { applyText, runApply } from '../lib/ops.js';
 import { clean, ok } from '../lib/result.js';
 import { ObjectRef, ParamMap, normParams, normRef } from '../lib/schemas.js';
@@ -43,7 +44,7 @@ export const setTagParams = defineTool({
 export const removeTag = defineTool({
   name: 'c3d_remove_tag',
   title: 'Remove tag',
-  description: 'Removes the tag at tag_index from an object. Indices of later tags shift down by one: re-read with c3d_get_object before removing several.',
+  description: 'Removes the tag at tag_index from an object. Indices of later tags shift down by one: re-read with c3d_get_object before removing several. A checkpoint is taken first (returned as checkpoint).',
   group: 'tags',
   inputSchema: z.strictObject({ ref: ObjectRef, tag_index: z.number().int().min(0).describe('Index of the tag to remove.') }),
   outputSchema: z.looseObject({ tags: TagList }),
@@ -52,8 +53,9 @@ export const removeTag = defineTool({
   idempotent: false,
   profiles: ['full'],
   async handler(i, ctx) {
+    const cp = await autoCheckpoint(ctx, 'remove-tag');
     const r = await ctx.bridge.one<Record<string, any>>('removeTag', { ref: normRef(i.ref), index: i.tag_index });
-    return ok({ tags: r.tags ?? [] }, `Removed tag ${i.tag_index}; ${(r.tags ?? []).length} tag(s) remain.`);
+    return ok({ tags: r.tags ?? [], ...checkpointFields(cp) }, `Removed tag ${i.tag_index}; ${(r.tags ?? []).length} tag(s) remain.${cp.warning ? ` WARNING: ${cp.warning}` : ''}`);
   },
 });
 

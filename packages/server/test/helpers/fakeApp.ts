@@ -45,6 +45,7 @@ export function makeTestEnv(prefix = 'c3d'): TestEnv {
     logDir: join(root, 'logs'),
     workDir: join(support, 'MCP', 'tmp'),
     trigger: 'osascript',
+    autoLaunch: true,
   };
   return { root, config, paths: mcpPaths(config) };
 }
