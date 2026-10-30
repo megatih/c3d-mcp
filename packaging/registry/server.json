@@ -6,12 +6,12 @@
     "url": "https://github.com/megatih/c3d-mcp",
     "source": "github"
   },
-  "version": "0.2.1",
+  "version": "0.3.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "c3d-mcp",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "transport": {
         "type": "stdio"
       },
@@ -33,9 +33,9 @@
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/megatih/c3d-mcp/releases/download/v0.2.1/c3d-mcp-0.2.1.mcpb",
-      "version": "0.2.1",
-      "fileSha256": "76609296b34f4e3e7ac68d25a8e97f8a16c60ce8fb51751bd88f9d620174e8af",
+      "identifier": "https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.mcpb",
+      "version": "0.3.0",
+      "fileSha256": "98596aec748acc9ad7ff197110fe926e60e0d1d3f8095bd9104b6a58bcdbcb13",
       "transport": {
         "type": "stdio"
       }

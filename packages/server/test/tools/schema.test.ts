@@ -52,7 +52,7 @@ describe('tool registry', () => {
 
   it('exposes prompts and resources', () => {
     expect(allPrompts.map((p) => p.name)).toEqual(['build_scene_from_description', 'turntable_render', 'material_study', 'debug_script']);
-    expect(allResources.map((r) => r.uri)).toEqual(['c3d://api/short', 'c3d://api/full', 'c3d://gotchas', 'c3d://templates/macro', 'c3d://templates/polygon-script', 'c3d://scene']);
+    expect(allResources.map((r) => r.uri)).toEqual(['c3d://api/short', 'c3d://api/full', 'c3d://gotchas', 'c3d://patterns', 'c3d://api/reference', 'c3d://verified', 'c3d://templates/macro', 'c3d://templates/polygon-script', 'c3d://scene']);
     for (const p of allPrompts) expect(p.build({ description: 'x', script: 'y', material: 'z' })).toMatch(/c3d_/);
   });
 });

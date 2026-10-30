@@ -61,13 +61,27 @@ const kbOut = join(assets, 'kb');
 mkdirSync(join(kbOut, 'reference'), { recursive: true });
 mkdirSync(join(kbOut, 'dist'), { recursive: true });
 mkdirSync(join(kbOut, 'research'), { recursive: true });
+mkdirSync(join(kbOut, 'examples'), { recursive: true });
+mkdirSync(join(kbOut, 'forum'), { recursive: true });
 cpSync(need(join(kb, 'knowledge')), join(kbOut, 'knowledge'), { recursive: true });
 cpSync(need(join(kb, 'reference', 'api-index.json')), join(kbOut, 'reference', 'api-index.json'));
 for (const f of readdirSync(need(join(kb, 'dist')))) {
   if (f.endsWith('.md') && statSync(join(kb, 'dist', f)).isFile()) cpSync(join(kb, 'dist', f), join(kbOut, 'dist', f));
 }
 for (const f of ['LICENSE', 'NOTICE.md']) if (existsSync(join(kb, f))) cpSync(join(kb, f), join(kbOut, f));
-cpSync(need(join(repo, 'research', '02-cheetah3d-js-api.md')), join(kbOut, 'research', '02-cheetah3d-js-api.md'));
+cpSync(need(join(kb, 'reference', 'api')), join(kbOut, 'reference', 'api'), { recursive: true });
+for (const f of ['book-ch17.8-scripts.md', 'ExecuteScript.md']) if (existsSync(join(kb, 'reference', f))) cpSync(join(kb, 'reference', f), join(kbOut, 'reference', f));
+cpSync(need(join(kb, 'examples', 'official')), join(kbOut, 'examples', 'official'), { recursive: true });
+// Forum archive (low-ranked, unverified search source): transcripts + per-thread catalog reviews.
+cpSync(need(join(kb, 'forum', 'threads')), join(kbOut, 'forum', 'threads'), { recursive: true });
+mkdirSync(join(kbOut, 'catalog'), { recursive: true });
+cpSync(need(join(kb, 'catalog', 'forum-threads.json')), join(kbOut, 'catalog', 'forum-threads.json'));
+// "Learn 3D with Cheetah 3D" (BSD-2-Clause): chapter text only.
+const book = need(join(repo, 'vendor', 'learn3d-cheetah'));
+cpSync(need(join(book, 'book')), join(kbOut, 'book'), { recursive: true });
+cpSync(need(join(book, 'LICENSE')), join(kbOut, 'book', 'LICENSE'));
+// Project research notes (02 = API facts, 08 = probes, 10 = verification of the two external sources).
+for (const f of ['02-cheetah3d-js-api.md', '08-open-questions-and-probes.md', '10-kb-verification-8.1.3.md']) cpSync(need(join(repo, 'research', f)), join(kbOut, 'research', f));
 
 // Agent skills (source of truth: <repo>/skills, validated by scripts/build-skills.mjs).
 const skillsOut = join(pkg, 'skills');

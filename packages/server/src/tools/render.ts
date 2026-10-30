@@ -31,7 +31,7 @@ async function applyResolution(ctx: ToolContext, i: { width?: number; height?: n
 export const setRenderSettings = defineTool({
   name: 'c3d_set_render_settings',
   title: 'Set render settings',
-  description: 'Configures the renderer: engine (CHEETAH or FALCON), resolution and other renderer parameters (gamma, exposure, giOn, rayDepth, antialiasingMaxSamples ...); unknown parameter names are reported in the errors list of the result. Returns the resulting resolution. Larger resolution = slower render_image.',
+  description: 'Configures the renderer: engine (CHEETAH or FALCON), resolution and other renderer parameters (gamma, exposure, giOn, rayDepth, antialiasingMaxSamples ...); unknown parameter names are reported in the errors list of the result. Renderer parameters differ (measured in 8.1.3): FALCON has samples (default 100; values <= 0 are refused), totalBounces, causticsReflection/causticsRefraction, mbCamera; CHEETAH has giOn, giType, rayDepth, antialiasingMode, photonMapOn; both have gamma, exposure, filmic and dofOn. Returns the resulting resolution. Larger resolution = slower render_image.',
   group: 'render',
   inputSchema: z.strictObject({ renderer: z.enum(['CHEETAH', 'FALCON']).optional().describe('Render engine.'), ...Res, params: ParamMap.optional().describe('Renderer parameters, e.g. {"giOn": true, "exposure": 1.2}.') }),
   outputSchema: z.looseObject({ renderer: z.string().optional(), resolution: AnyObject.optional(), applied: z.array(z.string()).optional(), errors: z.array(AnyObject).optional() }),
@@ -41,6 +41,8 @@ export const setRenderSettings = defineTool({
   async handler(i, ctx) {
     if (i.width === undefined && i.height === undefined && !i.renderer && !i.params) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to set: give renderer, width+height or params.');
     if ((i.width === undefined) !== (i.height === undefined)) throw new BridgeError('INVALID_ARGUMENT', 'Give width and height together.');
+    const samples = i.params?.samples;
+    if (typeof samples === 'number' && samples <= 0) throw new BridgeError('INVALID_ARGUMENT', `samples=${samples} is refused: the book reports that Falcon treats 0 as "refine until stopped", which could never finish a synchronous render (not tested).`, 'Use a positive sample count (the default is 100).');
     const resp = (await ctx.bridge.run([{ op: 'setRenderSettings', args: clean({ renderer: i.renderer, width: i.width, height: i.height, params: i.params }) }])).results[0];
     if (!resp) throw new BridgeError('INTERNAL', 'No result for setRenderSettings.');
     const r = (resp.result ?? {}) as Record<string, any>;

@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 (2026-10-30)
+Integration of two external knowledge sources, each claim checked against Cheetah3D 8.1.3 first (`research/10-kb-verification-8.1.3.md`).
+- **Fix:** `c3d_create_mesh` and `c3d_create_pipe` now produce OUTWARD normals. Cheetah3D's front face is clockwise; counter-clockwise polygons (the documented input) used to get inward normals, invisible in renders (two-sided) but possibly wrong for exports, booleans and subdivision. New option `winding:"cw"` sends indices unchanged.
+- **Fix:** material tags are capped at 24 per object, also through `c3d_add_tag` (30 crashed Cheetah3D 8.1.3, 24 were fine).
+- **New:** `c3d_set_light` `shadow_softness` / `visible_in_camera`; `c3d_set_camera` `projection` (perspective, orthographic) / `camera_light` (off, on, auto); `c3d_set_background` kind `transparent` (PNG alpha 0); `c3d_create_material` type `Shadowmat` (shadow catcher); Falcon `samples` <= 0 is refused.
+- **Search:** `c3d_search_api_docs` now covers per-method descriptions of the official API, the example scripts bundled with Cheetah3D, the book "Learn 3D with Cheetah 3D" and (last) the forum archive; hits carry a trust level and notes saying what was confirmed or refuted in 8.1.3; new `sources` filter. New resources `c3d://patterns`, `c3d://api/reference`, `c3d://verified`.
+- **Lint:** rules now use a table of 178 constants measured in 8.1.3; new rules `vec4-isequal`, `many-shader-tags`, `falcon-samples-zero`; corrected `selected-object-null`, `light-constants`, `ctor-without-new`; `parent()` / `rib()` are reported as missing. All 17 official example scripts lint without errors.
+- **Skills and docs:** corrected the scripting cheat sheet (no `parent()`, POINTLIGHT, constant values), look-dev (soft shadows, emission in Falcon, camera light, transparent background), scene-building (winding); README credits; limitations and troubleshooting. README tool count corrected to 60.
+- **Vendored:** `vendor/c3d-scripting-kb` extended (API pages, examples, forum archive with emails and foreign home paths removed); new `vendor/learn3d-cheetah` (book text, BSD-2-Clause).
+
 ## 0.2.1
 - **Sanitized release.** Sources, documentation and the published git history were scrubbed of personal paths and names; internal planning material, raw app dumps and third-party images were removed from the repository (the benchmark pages now link to the original video instead). Release archives (npm tarball, `.mcpb`, helper zip, installer) are built from the clean sources and scanned before publishing.
 - New `scripts/check-public.mjs` leak scanner (tree, archives, git history) wired into the mirror sync, `scripts/release.sh` and CI.

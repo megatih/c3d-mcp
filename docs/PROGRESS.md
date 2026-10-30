@@ -14,3 +14,6 @@
 
 ## M1–M7 summary (2026-10-29)
 M1 bridge+ping (live soak, faults 1/2/3/5; fault 4 manual), M2 helper (live: grant, press, modal, capture), M3–M5 tools verified live (docs/qa/live-tests.log, eval N=3), M6 safety fixes from the security review, M7 packaging + reviews + final report. See docs/FINAL_REPORT.md.
+
+## Knowledge-source integration (2026-10-30)
+c3d-scripting-kb (extended snapshot, a9008bf) and the book "Learn 3D with Cheetah 3D" (caa500d) integrated after testing their claims in Cheetah3D 8.1.3: research/10-kb-verification-8.1.3.md (confirmed / refined / refuted / not tested), probes in packages/server/scripts/kb-*.mjs, matslot-limit-probe.mjs, winding-probe.mjs, kb-hooks-live.mjs, raw data in research/raw/kb-*.json. Fixed: inward normals from c3d_create_mesh/c3d_create_pipe, unbounded material tags (crash at 30). Added: light/camera/background/material fields, trust-labelled search over official docs, examples, book and forum, verified lint tables. QA: server 538 unit tests, bridge 81 cases, live suites (22), skill templates, 8 live enhancement checks, 5 evals (all pass, $0.41), independent review. Credits: README and the project article.

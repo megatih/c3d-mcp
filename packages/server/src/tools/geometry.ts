@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { BridgeError, defineTool } from '../toolkit.js';
 import { sendMesh } from '../lib/meshSend.js';
 import { buildPipe } from '../lib/pipe.js';
+import { toCheetahWinding } from '../lib/mesh.js';
 import { clean, ok } from '../lib/result.js';
 import { Descriptor, MaterialRef, ObjectRef, Vec3, Vec3Mesh, normMat, normRef, toXyz } from '../lib/schemas.js';
 
@@ -11,7 +12,7 @@ export const createMesh = defineTool({
   name: 'c3d_create_mesh',
   title: 'Create polygon mesh',
   description:
-    'Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent counter-clockwise winding seen from outside) with optional per-corner uvs and a whole-object material. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials: assign afterwards with c3d_assign_material polygons:[...]. For tubes/cables use c3d_create_pipe. Y is up.',
+    'Builds an editable polygon object (Cheetah3D is Y-up: put heights on the y axis) from vertices ([x,y,z]) and polygons (arrays of vertex indices, 3..64 corners, n-gons allowed, consistent winding seen from outside, counter-clockwise by default) with optional per-corner uvs and a whole-object material. Cheetah3D treats CLOCKWISE as the front face (its own BOX has outward normals), so with the default winding:"ccw" the tool reverses every polygon and the result has OUTWARD normals; pass winding:"cw" to send the indices unchanged (e.g. when re-creating a mesh read with c3d_get_mesh, which reports the native order). The renderer is two-sided, so inward normals are invisible in renders but may matter for exports, booleans and subdivision. Indices are validated client-side first (bad indices crash Cheetah3D). Large meshes are sent in chunks automatically. Per-polygon materials: assign afterwards with c3d_assign_material polygons:[...]. For tubes/cables use c3d_create_pipe. Y is up.',
   group: 'geometry',
   inputSchema: z.strictObject({
     name: z.string().min(1).max(255).optional().describe('Object name.'),
@@ -23,15 +24,17 @@ export const createMesh = defineTool({
     polygons: z.array(z.array(z.number().int().min(0)).min(3).max(64)).min(1).max(200000).describe('Vertex index lists, one per polygon.'),
     uvs: z.array(z.array(z.tuple([z.number(), z.number()]))).optional().describe('Per polygon, per corner [u,v]; same shape as polygons.'),
     material: MaterialRef.optional().describe('Material to assign to the whole object.'),
+    winding: z.enum(['ccw', 'cw']).optional().describe('Winding of the polygons you pass, seen from OUTSIDE (default "ccw"). "ccw": the tool reverses each polygon so Cheetah3D gets outward normals. "cw": indices are sent unchanged (Cheetah3D native order, as returned by c3d_get_mesh).'),
   }),
   outputSchema: z.looseObject({ object: Descriptor, vertexCount: z.number().int(), polygonCount: z.number().int(), chunks: z.number().int() }),
   mutating: true,
   idempotent: false,
   profiles: ['full', 'local'],
-  localDescription: 'Create a mesh. Y is UP: height goes on the y axis, e.g. a pyramid has its base on y=0 and its apex at [0,height,0]. Vertices are [x,y,z]; polygons are vertex-index lists, counter-clockwise seen from outside.',
+  localDescription: 'Create a mesh. Y is UP: a pyramid has its base on y=0 and its apex at [0,height,0]. Vertices are [x,y,z]; polygons are vertex-index lists, counter-clockwise seen from outside (converted for you).',
   async handler(i, ctx) {
     const t = clean({ position: xyz(i.position), rotation: xyz(i.rotation), scale: xyz(i.scale) });
-    const sent = await sendMesh(ctx, { mesh: { vertices: i.vertices, polygons: i.polygons, uvs: i.uvs }, name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
+    const mesh = { vertices: i.vertices, polygons: i.polygons, ...(i.uvs ? { uvs: i.uvs } : {}) };
+    const sent = await sendMesh(ctx, { mesh: i.winding === 'cw' ? mesh : toCheetahWinding(mesh), name: i.name, parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
     const res = sent.res;
     const object: Record<string, any> = { ...res, id: sent.id };
     return ok({ object, vertexCount: res.vertexCount ?? i.vertices.length, polygonCount: res.polygonCount ?? i.polygons.length, chunks: sent.chunks }, `Created mesh "${String(object.name)}" #${sent.id}: ${res.vertexCount ?? i.vertices.length} vertices, ${res.polygonCount ?? i.polygons.length} polygons (${sent.chunks} request(s)).`);
@@ -160,7 +163,7 @@ export const createPipe = defineTool({
   async handler(i, ctx) {
     const pipe = buildPipe({ points: i.points, radius: i.radius, segments: i.segments, bendRadius: i.bend_radius, arcSteps: i.arc_steps, closed: i.closed, caps: i.caps });
     const t = clean({ position: xyz(i.position), rotation: xyz(i.rotation), scale: xyz(i.scale) });
-    const sent = await sendMesh(ctx, { mesh: { vertices: pipe.vertices, polygons: pipe.polygons }, name: i.name ?? 'Pipe', parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
+    const sent = await sendMesh(ctx, { mesh: toCheetahWinding({ vertices: pipe.vertices, polygons: pipe.polygons }), name: i.name ?? 'Pipe', parent: i.parent === undefined ? undefined : normRef(i.parent), transform: t, material: i.material === undefined ? undefined : normMat(i.material) });
     const object: Record<string, any> = { ...sent.res, id: sent.id };
     return ok({ object, vertexCount: pipe.vertices.length, polygonCount: pipe.polygons.length, ringCount: pipe.ringCount, chunks: sent.chunks }, `Created pipe "${String(object.name)}" #${sent.id}: ${pipe.ringCount} rings x ${pipe.segments} sides, ${pipe.vertices.length} vertices, ${pipe.polygons.length} polygons.`);
   },

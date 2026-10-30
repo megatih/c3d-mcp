@@ -37,6 +37,15 @@ C3D.materials = (function () {
     return out;
   }
 
+  // Cheetah3D 8.1.3 aborts (stack smash in buildMaterialArray) with many material tags on one object: 24 were fine, 30 crashed
+  // (research/10 B23). Refuse to add more than 24 SHADERTAGs to an object.
+  var MAX_SHADER_TAGS = 24;
+  function guardShaderTagCount(obj) {
+    var n = 0, i, t = CAP.constant('SHADERTAG');
+    for (i = 0; i < obj.tagCount(); i++) { if (obj.tagAtIndex(i).type() === t) { n++; } }
+    if (n >= MAX_SHADER_TAGS) { U.fail('UNSUPPORTED', 'this object already has ' + n + ' material tags; Cheetah3D 8.1.3 crashes with many more (tested up to 24)', { shaderTags: n, max: MAX_SHADER_TAGS }, 'reuse materials, split the object, or remove material tags first'); }
+  }
+
   // Whole-object shader tag: reuse the first one when replacing, else append a new tag.
   function assign(ctx, obj, mat, replace) {
     var tag = null, index = -1, i, t = CAP.constant('SHADERTAG');
@@ -45,7 +54,7 @@ C3D.materials = (function () {
         if (obj.tagAtIndex(i).type() === t && !obj.tagAtIndex(i).getParameter('shadeSelection')) { tag = obj.tagAtIndex(i); index = i; }
       }
     }
-    if (!tag) { tag = obj.addTagOfType(t); index = obj.tagCount() - 1; }
+    if (!tag) { guardShaderTagCount(obj); tag = obj.addTagOfType(t); index = obj.tagCount() - 1; }
     tag.setParameter('material', mat);
     tag.update();
     obj.update();
@@ -76,6 +85,7 @@ C3D.materials = (function () {
     core.setActivePolygonSelection(slot);
     for (p = 0; p < n; p++) { core.setPolygonSelection(p, !!set[p]); }
     core.setActivePolygonSelection(0);
+    guardShaderTagCount(obj);
     tag = obj.addTagOfType(t);
     tag.setParameter('material', mat);
     tag.setParameter('shadeSelection', slot + 1);

@@ -13,10 +13,11 @@ Researched 2026-10-29 on macOS 27.2 / Apple Silicon with Cheetah3D 8.1.3. Method
 | 07-packaging-distribution.md | mcpb, plugin, npm, Homebrew, registry, CLI |
 | 08-open-questions-and-probes.md | 30 live probes to run first |
 | 09-qa-review.md | Independent review findings → resolutions |
+| 10-kb-verification-8.1.3.md | Claims of c3d-scripting-kb and the book "Learn 3D with Cheetah 3D" tested against 8.1.3: confirmed / refined / refuted / not tested |
 | raw/ | symbols, JS method-name table, menus, prior probe dumps |
 
 ## Decision log
-1. **Build from scratch** (no prior MCP/bridge exists); **reuse** c3d-scripting-kb (docs, API index, linter) and Cheetah3DParser notes.
+1. **Build from scratch** (no prior MCP/bridge exists); **reuse** c3d-scripting-kb (docs, API index, linter) and Cheetah3DParser notes. Later (2026-10-30) both c3d-scripting-kb and the book "Learn 3D with Cheetah 3D" (same author) were integrated more deeply, but only after testing their claims in 8.1.3 (file 10).
 2. **Bridge = file mailbox + AX menu press of a tiny loader macro**; runtime hot-loaded from disk. Sockets/timers/AppleScript are impossible.
 3. **Stack = TypeScript MCP server (SDK v2, spec 2026-07-28) + Swift helper app** (user-approved).
 4. **Helper owns TCC** (Accessibility, Screen Recording); LaunchAgent/`open -g` + Unix socket; never a Node child.
