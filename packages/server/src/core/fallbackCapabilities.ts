@@ -15,7 +15,7 @@ export const FALLBACK_CAPABILITIES = {
     SOFTBODYTAG: 130, SPLINEIKTAG: 127, SHADERTAG: 102, FOGTAG: 107, RADIOSITYTAG: 108, HDRITAG: 109, DOFTAG: 110, RENDERTAG: 114,
     CAUSTICTAG: 116, SPLINETRACKINGTAG: 112, TARGETTAG: 111,
   } as Record<string, number>,
-  materialTypes: ['Material', 'Material (PBR)', 'Toon', 'Glass'],
+  materialTypes: ['Material', 'Material (PBR)', 'Toon', 'Glass', 'Shadowmat'],
   lightTypeRange: [0, 4],
   // Inferred from the manual's alphabetical list (Ambient, Area, Distant, Point, Spot) and kb spot=4; verify visually.
   lightTypes: { ambient: 0, area: 1, distant: 2, point: 3, spot: 4 },

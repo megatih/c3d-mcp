@@ -30,7 +30,7 @@
           "result": {
            "counter": 7,
            "echo": "hi",
-           "runtimeVersion": "1.0.0",
+           "runtimeVersion": "1.0.1",
            "jsc": true,
            "stateBusy": false,
            "now": {
@@ -39,7 +39,7 @@
           }
          }
         ],
-        "runtimeVersion": "1.0.0",
+        "runtimeVersion": "1.0.1",
         "startedAt": {
          "$type": "number"
         },
@@ -51,7 +51,7 @@
       "state": {
        "busy": false,
        "protocol": 1,
-       "runtimeVersion": "1.0.0",
+       "runtimeVersion": "1.0.1",
        "lastSeq": "1800000000000100",
        "document": null
       }
@@ -220,7 +220,7 @@
    "setup": {
     "state": {
      "busy": false,
-     "runtimeVersion": "1.0.0",
+     "runtimeVersion": "1.0.1",
      "lastSeq": "1800000000000900"
     }
    }
@@ -1290,7 +1290,7 @@
         "message": {
          "$type": "string"
         },
-        "macroVersion": "1.0.0",
+        "macroVersion": "1.0.1",
         "runtimePath": {
          "$re": "override\\.js$"
         },
@@ -1484,7 +1484,7 @@
           "ok": true,
           "result": {
            "apiVersion": "8.1.3",
-           "runtimeVersion": "1.0.0",
+           "runtimeVersion": "1.0.1",
            "protocol": 1,
            "objectTypes": {
             "BOX": 1,
@@ -1499,7 +1499,8 @@
             "BAKETAG": 123
            },
            "materialTypes": {
-            "$has": "Material (PBR)"
+            "$has": "Shadowmat",
+            "$len": 5
            },
            "nodeTypes": {
             "$has": "image"

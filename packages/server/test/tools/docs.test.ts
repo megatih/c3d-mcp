@@ -2,6 +2,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { allResources } from '../../src/tools/index.js';
 import { searchApiDocs } from '../../src/tools/docs.js';
+import { MACRO_TEMPLATE, POLYGON_TEMPLATE } from '../../src/resources.js';
+import { lintScript } from '../../src/services/lint.js';
 import { makeCtx, runTool, type TestCtx } from '../helpers/fakeBridge.js';
 
 let t: TestCtx;
@@ -25,6 +27,16 @@ describe('c3d_search_api_docs', () => {
     expect(r.structured.count).toBe(0);
     expect(() => searchApiDocs.inputSchema.parse({ query: 'x' })).toThrow();
     expect(() => searchApiDocs.inputSchema.parse({ query: 'abc', limit: 50 })).toThrow();
+  });
+});
+
+describe('script templates', () => {
+  it('lint without errors', () => {
+    for (const code of [MACRO_TEMPLATE, POLYGON_TEMPLATE]) expect(lintScript(code).filter((f) => f.severity === 'error')).toEqual([]);
+  });
+  it('the macro template parents its object explicitly (doc.addObject attaches under the selected object\'s parent)', () => {
+    expect(MACRO_TEMPLATE).toMatch(/addChildAtIndex\(/);
+    expect(MACRO_TEMPLATE).not.toMatch(/new Object\(\)/);
   });
 });
 

@@ -2,7 +2,7 @@
 
 > **New to c3d-mcp?** Read the friendly introduction, with install steps and two benchmark scenes (Cornell Box and Cyberpunk Diorama): **[Cheetah3D Meets AI](https://megatih.github.io/2026-10-29-cheetah3d-meets-ai-introducing-c3d-mcp/)**.
 
-Let an AI agent (Claude Code / Claude Desktop, Codex, Gemini CLI, Antigravity, Cursor, LM Studio …) **inspect, build, edit, animate, light, texture, render and export scenes in the running Cheetah3D** on macOS 27+ / Apple Silicon.
+Let an AI agent (Claude Code / Claude Desktop, Codex, Gemini CLI, Antigravity, Cursor, LM Studio …) **inspect, build, edit, animate, light, texture, render and export scenes in the running Cheetah3D** on macOS 14+ / Apple Silicon (developed and tested on macOS 27.2).
 
 Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-mcp` therefore works through three parts:
 
@@ -12,7 +12,7 @@ Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-
                               └──Unix socket──▶ C3D Bridge Helper.app (Swift) ─┘ presses the macro's menu item (Accessibility)
 ```
 
-* **Server** (`packages/server`): 60 `c3d_*` tools, resources and prompts; queue, safety checks, backups.
+* **Server** (`packages/server`): 63 `c3d_*` tools (60 scene, render and asset tools plus 3 health tools), resources and prompts; queue, safety checks, backups.
 * **Bridge** (`bridge/`): a tiny loader macro plus a runtime that Cheetah3D executes, draining a request inbox and writing results.
 * **Helper** (`helper/`): a small Accessibility app that activates Cheetah3D, presses the bridge menu item and reports dialogs. Optional (an `osascript` fallback exists) but recommended: ~3× faster, modal detection, screenshots.
 
@@ -32,7 +32,7 @@ Read it first if you like (`curl -fsSL <url> -o install.sh; less install.sh; bas
 <details><summary>Manual install</summary>
 
 > **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.3.0/c3d-mcp-0.3.0.tgz`, then run `c3d-mcp <command>`).
+> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.1/c3d-mcp-0.3.1.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.3.1/c3d-mcp-0.3.1.tgz`, then run `c3d-mcp <command>`).
 
 ```bash
 # 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app
@@ -79,7 +79,7 @@ Full reference with parameters: [docs/TOOLS.md](docs/TOOLS.md) (generated from t
 ## Profiles and switches
 
 `C3D_MCP_PROFILE=full` (default) · `local` (≤ 25 tools, short descriptions, no script execution — for small local models) · `readonly` (read tools only).
-`C3D_MCP_DISABLE_EXEC=1`, `C3D_MCP_DISABLE_ASSETS=1`, `C3D_MCP_DISABLE_SHELL=1`.
+`C3D_MCP_DISABLE_EXEC=1`, `C3D_MCP_DISABLE_ASSETS=1`, `C3D_MCP_DISABLE_SHELL=1`, `C3D_MCP_NO_AUTOLAUNCH=1` (by default the first call launches Cheetah3D when it is not running and the helper app is installed).
 
 ## Safety in one paragraph
 
@@ -100,10 +100,13 @@ render formats are png/jpg/tiff only; glTF/GLB cannot be opened (FBX/OBJ/DAE/STL
 cd packages/server && npm ci && npm run lint && npm run typecheck && npm test      # unit/contract tests (offline)
 scripts/test-bridge.sh                                                              # in-app runtime tests on a Swift JavaScriptCore harness with strict mocks
 cd helper && swift test                                                             # helper tests (fake Accessibility provider)
-C3D_LIVE=1 npm run test:live                                                        # needs Cheetah3D running + installed bridge (uses a scratch document)
+C3D_LIVE=1 npm run test:live                                                        # needs Cheetah3D running + installed bridge (uses scratch documents)
 node evals/runner/run.mjs --n=3                                                     # agent evals through `claude -p` (spends API credit; budget cap built in)
 scripts/release.sh                                                                  # builds npm tarball, .mcpb, helper zip into release/ (publishes nothing)
 ```
+
+The live suite, the `packages/server/scripts/*.mjs` dev scripts and the evals close the Cheetah3D windows they open (answering "Don't Save"), through `packages/server/scripts/window-cleanup.mjs`. Windows that were already open stay, but do not create documents by hand while a run is in progress: they would be closed too. Set `C3D_KEEP_WINDOWS=1` to keep a run's windows for inspection.
+
 
 ## Credits and knowledge sources
 

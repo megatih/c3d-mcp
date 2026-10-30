@@ -65,7 +65,7 @@ export const renderImage = defineTool({
   name: 'c3d_render_image',
   title: 'Render image',
   description:
-    'Renders the active camera of the document to a PNG/JPG/TIFF file and returns a preview (downscaled to <=1568 px and <1 MB) plus stats {width,height,blank,meanLuma}. Synchronous; large resolutions can take long. blank:true means the image is a single flat color (empty scene, camera inside geometry or no light). The full-resolution file stays in the work directory (path in the result). Only .png/.jpg/.tiff are allowed.',
+    'Renders the active camera of the document to a PNG/JPG/TIFF file and returns a preview (downscaled to <=1568 px and <1 MB) plus stats {width,height,blank,meanLuma}. Synchronous; large resolutions can take long. blank:true means the image is (almost) one flat color, a luma spread of at most 2 of 255 (empty scene, camera inside geometry or no light). The full-resolution file stays in the work directory (path in the result). Only .png/.jpg/.tiff are allowed.',
   group: 'render',
   inputSchema: z.strictObject({
     path: z.string().optional().describe('Output file (.png/.jpg/.tiff); default <workDir>/renders/render-<timestamp>.png.'),
@@ -102,7 +102,7 @@ export const renderImage = defineTool({
 export const renderSequence = defineTool({
   name: 'c3d_render_sequence',
   title: 'Render image sequence (job)',
-  description: 'Starts a background job rendering frames start..end at the document fps (one frame per bridge request, so other tools can interleave between frames; each frame still blocks Cheetah3D while it renders) into a directory as name_0001.png ... and returns a job id immediately. Poll with c3d_job_status, stop with c3d_job_cancel. The animation time is moved per frame and is NOT restored. Max 3600 frames. Only png/jpg/tiff.',
+  description: 'Starts a background job rendering frames start..end at the document fps (one frame per bridge request, so other tools can interleave between frames; each frame still blocks Cheetah3D while it renders) into a directory as name_0001.png ... and returns a job id immediately. Poll with c3d_job_status, stop with c3d_job_cancel. The animation time is set per frame and restored after each frame. Max 3600 frames. Only png/jpg/tiff.',
   group: 'render',
   inputSchema: z.strictObject({
     directory: z.string().optional().describe('Output directory (default <workDir>/sequences/<job>). Existing files are never overwritten.'),

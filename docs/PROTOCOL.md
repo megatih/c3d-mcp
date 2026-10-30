@@ -15,7 +15,7 @@ The loader macro is installed at `~/Library/Application Support/Cheetah3D/Script
 2. **I/O is ASCII-only.** `File.write` truncates non-ASCII; `File.read(n)` is byte≙char. Every JSON file read/written by the runtime is ASCII with all code points ≥ 0x7F escaped `\uXXXX`. Server writes requests the same way (JSON.stringify + replace) and decodes responses with plain `JSON.parse`.
 3. `File.contentOfDir()` → array of bare names (sorted, includes dotfiles and `.tmp`). `open(WRITE_MODE)` truncates. No rename/delete/mkdir from JS (mkDir is BANNED).
 4. `parameterInfo()` → `[[name, typeString]]` with type strings `String Bool Int Float Vec2D Vec3D Vec4D Texture Link` (`unknown` for the renderer `resolution` = Vec2D). Vec values read via `.x .y .z .w`; Texture value = path string; Link value = object or undefined.
-5. Objects are NOT name-uniquified; materials are (`name.2`). `obj.id()` is a stable integer per object (survives rename) → the primary handle (`{id}` ref). New objects are appended under the root.
+5. Objects are NOT name-uniquified; materials are (`name.2`). `obj.id()` is a stable integer per object (survives rename) → the primary handle (`{id}` ref). `doc.addObject` attaches the new object under the parent of the currently selected object (research/10 B4); the runtime therefore re-parents every created object explicitly.
 6. `doc.render(path)`: png|jpg|tiff only (other extension ⇒ blocking modal!). Synchronous. May open the Render Manager window.
 7. `saveToFile(path,type)` does not re-point the document; types: jas obj fbx dae stl 3ds usdz gltf glb dxf (obj also writes `.mtl`). Untitled documents: `fileName()` is `undefined`.
 8. `open -a Cheetah3D file` opens obj/fbx/dae/stl/3ds/usdz/dxf as a NEW document window; **glb/gltf are not supported** (modal). Menu "undo" does not revert macro changes.
@@ -47,7 +47,7 @@ Args schemas: `contracts/ops.json`. Result shapes (all `ok:true` results are pla
 | op | result |
 |---|---|
 | ping | `{counter, echo, runtimeVersion, now, jsc:true, stateBusy}` |
-| capabilities | `{apiVersion:"8.1.3", runtimeVersion, protocol, objectTypes:{NAME:id}, tagTypes:{...}, materialTypes:["Material","Material (PBR)","Toon","Glass"...], nodeTypes:[...], rotationOrders:{...}, renderers:["CHEETAH","FALCON"], renderFormats:["png","jpg","tiff"], saveTypes:[...], lightTypes:{point:0,...}, interpolation:{...}, jsFeatures:{...}, limits:{drainRequests:25,drainSeconds:8}}` |
+| capabilities | `{apiVersion:"8.1.3", runtimeVersion, protocol, objectTypes:{NAME:id}, tagTypes:{...}, materialTypes:["Material","Material (PBR)","Toon","Glass","Shadowmat"], nodeTypes:[...], rotationOrders:{...}, renderers:["CHEETAH","FALCON"], renderFormats:["png","jpg","tiff"], saveTypes:[...], lightTypes:{ambient:0,area:1,distant:2,point:3,spot:4}, interpolation:{...}, jsFeatures:{...}, limits:{drainRequests:25,drainSeconds:8}}` |
 | getLog | `{lines:[...]}` |
 | getDocumentInfo | `{fileName|null, fps, time, end, takeCount, currentTake, renderer, editMode, activeCamera:{id,name}, objectCount, materialCount, marker|null}` |
 | setMarker | `{marker, created}` |
@@ -73,7 +73,7 @@ Args schemas: `contracts/ops.json`. Result shapes (all `ok:true` results are pla
 | addMaterialNode | `{nodeId, type, inputs:[names], outputs:[names]}` |
 | connectNodes | `{connected:true}` |
 | getMaterialGraph | `{name, nodes:[{id,type,params:[{name,type,value}],inputs,outputs}], connections:[...]|"unavailable"}` |
-| assignMaterial | `{tagIndex, material}` |
+| assignMaterial | `{tagIndex, material}`; with `polygons`: `{tagIndex, material, slot, polygons}` |
 | setTexture / removeMaterial | `{path}` / `{removed:true}` |
 | setActiveCamera | `{activeCamera:{id,name}}` |
 | setKeyframes | `{param, components:[{index,keyCount}], take}` |
@@ -96,7 +96,7 @@ Commands and `result` shapes:
 * `pressBridge {requireDocTitle?, timeoutMs, menuPath?:[...]}` → performs the §2.1 sequence; `{pressed:true, activatedMs}` or error `TRIGGER_FAILED|BLOCKED_BY_MODAL|APP_NOT_RUNNING|PERMISSION_MISSING` (details = AX facts).
 * `pressMenu {path:[...], timeoutMs}` → same sequence for any menu path.
 * `listMenus` → menu tree (as research/raw/menus.json).
-* `captureWindow {title?, outPath, crop?}` (ScreenCaptureKit); `analyzeImage {path}` → `{width,height,blank,meanLuma,histogram:[...]}` (Vision/CoreImage); `downscaleImage {path,outPath,maxDim,maxBytes}` (ImageIO; keeps PNG, falls back to JPEG).
+* `captureWindow {title?, outPath, crop?}` (ScreenCaptureKit); `analyzeImage {path}` → `{width,height,blank,meanLuma,histogram:[...]}` (ImageIO/CoreGraphics luma statistics; no Vision); `downscaleImage {path,outPath,maxDim,maxBytes}` (ImageIO; keeps PNG, falls back to JPEG).
 * `dismissOwnModal {text}` clicks OK only on a dialog whose text contains `text` and which the helper registered as its own.
 Helper sets AX messaging timeout 1 s; `kAXErrorCannotComplete` after a press ⇒ treated as dispatched.
 

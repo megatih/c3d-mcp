@@ -1,0 +1,323 @@
+{
+ "cases": [
+  {
+   "name": "setKeyframes: Vec4D colors accept 3 components as [r,g,b], {x,y,z} and {r,g,b}; alpha keeps the parameter's current value (0.5), an explicit alpha wins",
+   "presses": [
+    {
+     "requests": [
+      {
+       "label": "c",
+       "ops": [
+        {
+         "op": "createObject",
+         "args": {
+          "type": "LIGHT",
+          "name": "ColorKeys"
+         },
+         "as": "l"
+        },
+        {
+         "op": "setParameters",
+         "args": {
+          "ref": "$l",
+          "params": {
+           "color": {
+            "x": 1,
+            "y": 1,
+            "z": 1,
+            "w": 0.5
+           }
+          }
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color",
+          "keys": [
+           {
+            "time": 0,
+            "value": [
+             1,
+             0,
+             0
+            ]
+           },
+           {
+            "time": 1,
+            "value": [
+             0,
+             0,
+             1
+            ]
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color"
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color",
+          "keys": [
+           {
+            "time": 0,
+            "value": {
+             "x": 1,
+             "y": 0.5,
+             "z": 0
+            }
+           },
+           {
+            "time": 1,
+            "value": {
+             "x": 0,
+             "y": 0.5,
+             "z": 1
+            }
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color"
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color",
+          "keys": [
+           {
+            "time": 0,
+            "value": {
+             "r": 1,
+             "g": 1,
+             "b": 0
+            }
+           },
+           {
+            "time": 1,
+            "value": {
+             "r": 0,
+             "g": 1,
+             "b": 1
+            }
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color"
+         }
+        },
+        {
+         "op": "setKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color",
+          "keys": [
+           {
+            "time": 0,
+            "value": [
+             1,
+             0,
+             0,
+             0.25
+            ]
+           },
+           {
+            "time": 1,
+            "value": {
+             "r": 0,
+             "g": 0,
+             "b": 1,
+             "a": 0.75
+            }
+           }
+          ]
+         }
+        },
+        {
+         "op": "getKeyframes",
+         "args": {
+          "ref": "$l",
+          "param": "color"
+         }
+        }
+       ]
+      }
+     ],
+     "expect": {
+      "responses": {
+       "c": {
+        "ok": true,
+        "results": [
+         {
+          "op": "createObject",
+          "ok": true
+         },
+         {
+          "op": "setParameters",
+          "ok": true
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0
+            },
+            {
+             "index": 1
+            },
+            {
+             "index": 2
+            },
+            {
+             "index": 3,
+             "keys": [
+              {
+               "time": 0,
+               "value": 0.5
+              },
+              {
+               "time": 1,
+               "value": 0.5
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0
+            },
+            {
+             "index": 1
+            },
+            {
+             "index": 2
+            },
+            {
+             "index": 3,
+             "keys": [
+              {
+               "time": 0,
+               "value": 0.5
+              },
+              {
+               "time": 1,
+               "value": 0.5
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0
+            },
+            {
+             "index": 1
+            },
+            {
+             "index": 2
+            },
+            {
+             "index": 3,
+             "keys": [
+              {
+               "time": 0,
+               "value": 0.5
+              },
+              {
+               "time": 1,
+               "value": 0.5
+              }
+             ]
+            }
+           ]
+          }
+         },
+         {
+          "op": "setKeyframes",
+          "ok": true
+         },
+         {
+          "op": "getKeyframes",
+          "ok": true,
+          "result": {
+           "components": [
+            {
+             "index": 0
+            },
+            {
+             "index": 1
+            },
+            {
+             "index": 2
+            },
+            {
+             "index": 3,
+             "keys": [
+              {
+               "time": 0,
+               "value": 0.25
+              },
+              {
+               "time": 1,
+               "value": 0.75
+              }
+             ]
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

@@ -3,8 +3,9 @@
   var U = C3D.util, S = C3D.scene;
   var RealFunction = Function;
   var RealOS = OS;
+  // readInt is not in the manual but is in the app's own File method table (research/raw/mwm_js_method_table_strings.txt), like its writeInt twin.
   var FILE_METHODS = ['close', 'contentOfDir', 'copyTo', 'directory', 'exist', 'extension', 'getpos', 'isDir', 'isOpen', 'lastPathComponent', 'mkDir',
-    'open', 'read', 'readFloat', 'readShort', 'readUInt', 'readln', 'seek', 'setpos', 'size', 'write', 'writeFloat', 'writeInt', 'writeShort', 'writeUInt', 'writeln'];
+    'open', 'read', 'readFloat', 'readInt', 'readShort', 'readUInt', 'readln', 'seek', 'setpos', 'size', 'write', 'writeFloat', 'writeInt', 'writeShort', 'writeUInt', 'writeln'];
   var WRITE_METHODS = ['write', 'writeFloat', 'writeInt', 'writeShort', 'writeUInt', 'writeln'];
   var NOT_JSON = {};
 

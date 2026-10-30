@@ -18,7 +18,7 @@ Every tool error carries `{code, message, hint, details}`. All codes:
 
 | Code | Meaning | What to do |
 |---|---|---|
-| `APP_NOT_RUNNING` | Cheetah3D is not running | Launch it (`open -a Cheetah3D`). |
+| `APP_NOT_RUNNING` | Cheetah3D is not running and could not be launched automatically (no helper app, no Accessibility permission, or `C3D_MCP_NO_AUTOLAUNCH=1`); `details.autoLaunch` has the reason | Launch it (`open -a Cheetah3D`) or fix the helper (`c3d_doctor`). |
 | `APP_CRASHED` | Cheetah3D exited while a request was in flight | Relaunch; use `c3d_restore_checkpoint` (checkpoints live in `<workDir>/checkpoints`). |
 | `APP_BUSY` | A long operation (render, import) is running, or the app does not answer Accessibility | Wait and retry; renders need a larger client timeout. |
 | `TRIGGER_FAILED` | The bridge macro could not be started or never ran. Typical causes: the **menu item is missing** (the bridge was installed but Cheetah3D was not restarted), the item is disabled (another app is frontmost, a non-document window such as Render Manager is key, no document window is open), or Accessibility is not granted | Restart Cheetah3D after `install`; open or raise a document window; grant Accessibility to *C3D Bridge Helper*; run `c3d-mcp doctor`. |

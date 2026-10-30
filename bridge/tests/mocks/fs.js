@@ -52,7 +52,7 @@ File.prototype.writeln = function (str) { this.write(String(str) + '\n'); };
 File.prototype.getpos = function () { return this._pos; };
 File.prototype.setpos = function (p) { this._pos = p; };
 File.prototype.seek = function (off, basis) { this._pos = basis === SEEK_SET ? off : (basis === SEEK_CUR ? this._pos + off : this._data.length + off); };
-['readFloat', 'readShort', 'readUInt', 'writeFloat', 'writeInt', 'writeShort', 'writeUInt'].forEach(function (m) {
+['readFloat', 'readInt', 'readShort', 'readUInt', 'writeFloat', 'writeInt', 'writeShort', 'writeUInt'].forEach(function (m) {
   File.prototype[m] = function () { throw new Error('mock: File.' + m + ' is not implemented'); };
 });
 

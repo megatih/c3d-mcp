@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BridgeError, defineTool } from '../toolkit.js';
+import { autoCheckpoint, checkpointFields } from '../lib/checkpoints.js';
 import { sendMesh } from '../lib/meshSend.js';
 import { buildPipe } from '../lib/pipe.js';
 import { toCheetahWinding } from '../lib/mesh.js';
@@ -66,7 +67,7 @@ export const getMesh = defineTool({
 export const editMesh = defineTool({
   name: 'c3d_edit_mesh',
   title: 'Edit mesh',
-  description: 'In-place edits on an editable polygon object: move vertices (set_vertices), delete polygons by index, flip polygon winding, and weld vertices closer than merge_distance. Order: set_vertices, flip_winding, delete_polygons, merge. Indices are those from c3d_get_mesh; deleting shifts later polygon indices. Primitives are not editable: c3d_make_editable first.',
+  description: 'In-place edits on an editable polygon object: move vertices (set_vertices), delete polygons by index, flip polygon winding, and weld vertices closer than merge_distance. Order: set_vertices, flip_winding, delete_polygons, merge. Indices are those from c3d_get_mesh; deleting shifts later polygon indices. Primitives are not editable: c3d_make_editable first. delete_polygons and merge_distance save a checkpoint first.',
   group: 'geometry',
   inputSchema: z.strictObject({
     ref: ObjectRef,
@@ -82,8 +83,10 @@ export const editMesh = defineTool({
   profiles: ['full'],
   async handler(i, ctx) {
     if (!i.set_vertices && !i.delete_polygons && !i.flip_winding && i.merge_distance === undefined) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to do: give set_vertices, delete_polygons, flip_winding or merge_distance.');
+    // Deleting polygons and welding vertices lose geometry; moving vertices and flipping windings are cheap to repeat and are not checkpointed.
+    const cp = i.delete_polygons || i.merge_distance !== undefined ? await autoCheckpoint(ctx, 'edit-mesh') : {};
     const r = await ctx.bridge.one<Record<string, any>>('editMesh', clean({ ref: normRef(i.ref), setVertices: i.set_vertices?.map((v) => ({ index: v.index, position: xyz(v.position) })), deletePolygons: i.delete_polygons, flipWinding: i.flip_winding, mergeVertices: i.merge_distance }));
-    return ok({ vertexCount: r.vertexCount, polygonCount: r.polygonCount }, `Mesh now has ${r.vertexCount} vertices, ${r.polygonCount} polygons.`);
+    return ok({ vertexCount: r.vertexCount, polygonCount: r.polygonCount, ...checkpointFields(cp) }, `Mesh now has ${r.vertexCount} vertices, ${r.polygonCount} polygons.${cp.warning ? ` WARNING: ${cp.warning}` : ''}`);
   },
 });
 

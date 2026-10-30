@@ -27,12 +27,15 @@ describe('loadConfig', () => {
 
   it('reads every environment variable', () => {
     const c = loadConfig({ C3D_MCP_PROFILE: 'Local', C3D_MCP_DISABLE_EXEC: '1', C3D_MCP_DISABLE_ASSETS: 'true', C3D_MCP_DISABLE_SHELL: 'YES', C3D_MCP_AUTO_CONFIRM: '1', C3D_MCP_DIR: '/m', C3D_CHEETAH_SUPPORT_DIR: '/s', C3D_MCP_WORKDIR: '/w', C3D_MCP_LOG_DIR: '/l', C3D_MCP_TRIGGER: 'osascript' }, '/h');
-    expect(c).toEqual({ profile: 'local', disableExec: true, disableAssets: true, disableShell: true, autoConfirm: true, mcpDir: '/m', cheetahSupportDir: '/s', workDir: '/w', logDir: '/l', trigger: 'osascript' });
+    expect(c).toEqual({ profile: 'local', disableExec: true, disableAssets: true, disableShell: true, autoConfirm: true, mcpDir: '/m', cheetahSupportDir: '/s', workDir: '/w', logDir: '/l', trigger: 'osascript', autoLaunch: true });
   });
 
   it('treats other flag values as off and rejects invalid enums', () => {
     expect(loadConfig({ C3D_MCP_DISABLE_EXEC: '0' }, '/h').disableExec).toBe(false);
     expect(loadConfig({}, '/h').autoConfirm).toBe(false); // unattended confirmation is strictly opt-in
+    expect(loadConfig({}, '/h').autoLaunch).toBe(true); // launching Cheetah3D is on by default, off with C3D_MCP_NO_AUTOLAUNCH
+    expect(loadConfig({ C3D_MCP_NO_AUTOLAUNCH: '1' }, '/h').autoLaunch).toBe(false);
+    expect(loadConfig({ C3D_MCP_NO_AUTOLAUNCH: '0' }, '/h').autoLaunch).toBe(true);
     expect(() => loadConfig({ C3D_MCP_PROFILE: 'admin' }, '/h')).toThrow(/C3D_MCP_PROFILE/);
     expect(() => loadConfig({ C3D_MCP_TRIGGER: 'magic' }, '/h')).toThrow(/C3D_MCP_TRIGGER/);
   });

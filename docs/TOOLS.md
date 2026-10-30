@@ -204,7 +204,7 @@ Local profile hint: _List the scene tree (ids, names, types)._
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `root` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | no | Subtree root (default: whole scene). |
-| `depth` | integer (>=0, <=32) | no | Max depth below root (default 4). |
+| `depth` | integer (>=0, <=32) | no | Max depth below root (default 4; 0 = direct children only). |
 | `offset` | integer (>=0, <=9007199254740991) | no | Pagination offset (default 0). |
 | `limit` | integer (>=1, <=500) | no | Page size (default 100, max 500). |
 | `response_format` | `concise` \| `detailed` | no | concise (default): short fields only; detailed: everything the runtime returns. |
@@ -222,7 +222,7 @@ Local profile hint: _Inspect one object (tags, parameters, bbox)._
 | Parameter | Type | Required | Description |
 |---|---|---|---|
 | `ref` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | yes | Object reference: integer id (preferred), "/Path/Name", {id}, {path}, {indexPath:[..]} or {selected:true}. |
-| `include` | `parameters` \| `tags` \| `children` \| `bbox` \| `worldMatrix` \| `materials`[] | no | Sections to include (overrides response_format). |
+| `include` | `parameters` \| `tags` \| `children` \| `bbox` \| `worldMatrix` \| `materials`[] | no | Sections to include (overrides response_format). bbox is the local-space vertex bounds, not transformed by the object or its parents. |
 | `response_format` | `concise` \| `detailed` | no | concise (default): short fields only; detailed: everything the runtime returns. |
 
 **Output fields:** `object` (object)
@@ -307,7 +307,7 @@ EXPERIMENTAL. Duplicates an object with its children. method "menu" selects it a
 | `ref` | integer (>=-9007199254740991, <=9007199254740991) \| string \| object | yes | Object reference: integer id (preferred), "/Path/Name", {id}, {path}, {indexPath:[..]} or {selected:true}. |
 | `count` | integer (>=1, <=50) | no | Number of copies (default 1). |
 | `method` | `auto` \| `menu` \| `copy` | no | Default auto. |
-| `offset` | any[] \| object | no | World offset applied cumulatively to each copy (position += offset * n). |
+| `offset` | any[] \| object | no | Offset added to each copy's LOCAL position (the parent's space), cumulative per copy (position += offset * n). With method "menu" every object the paste created is offset, including descendants of a duplicated group (not verified live). |
 
 **Output fields:** `method` (`menu` \| `copy`), `copies` (object[]), `lossy` (boolean), `notes` (string[])
 
@@ -452,7 +452,7 @@ Reads vertices, polygons and uvs of an editable polygon object in pages (primiti
 
 **Edit mesh** - writes, destructive. Profiles: full.
 
-In-place edits on an editable polygon object: move vertices (set_vertices), delete polygons by index, flip polygon winding, and weld vertices closer than merge_distance. Order: set_vertices, flip_winding, delete_polygons, merge. Indices are those from c3d_get_mesh; deleting shifts later polygon indices. Primitives are not editable: c3d_make_editable first.
+In-place edits on an editable polygon object: move vertices (set_vertices), delete polygons by index, flip polygon winding, and weld vertices closer than merge_distance. Order: set_vertices, flip_winding, delete_polygons, merge. Indices are those from c3d_get_mesh; deleting shifts later polygon indices. Primitives are not editable: c3d_make_editable first. delete_polygons and merge_distance save a checkpoint first.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -618,7 +618,7 @@ Returns a material's node graph: nodes with ids, types, parameters, input/output
 
 **Assign material** - writes. Profiles: full, local.
 
-Assigns a material to the whole object by adding a SHADERTAG (replace_existing swaps the previous whole-object material), or - with polygons - only to those polygon indices of an EDITABLE polygon object (use c3d_make_editable first on primitives). Per-polygon assignment uses one of the object's 24 polygon-selection slots per material group (returned as slot); the polygon indices come from c3d_get_mesh.
+Assigns a material to the whole object by adding a SHADERTAG (replace_existing swaps the previous whole-object material), or - with polygons - only to those polygon indices of an EDITABLE polygon object (use c3d_make_editable first on primitives). Per-polygon assignment uses one of the object's 24 polygon-selection slots per material group (returned as slot); the polygon indices come from c3d_get_mesh. An object holds at most 24 material (SHADERTAG) tags: more crashed Cheetah3D 8.1.3, so the tool refuses the 25th with UNSUPPORTED.
 
 Local profile hint: _Assign a material (by name) to a whole object, or to only some polygons via polygons:[indices] of an editable mesh._
 
@@ -681,7 +681,7 @@ Writes parameters on one tag of an object (tag_index from c3d_get_object tags). 
 
 **Remove tag** - writes, destructive. Profiles: full.
 
-Removes the tag at tag_index from an object. Indices of later tags shift down by one: re-read with c3d_get_object before removing several.
+Removes the tag at tag_index from an object. Indices of later tags shift down by one: re-read with c3d_get_object before removing several. A checkpoint is taken first (returned as checkpoint).
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -793,7 +793,7 @@ Sets the document frame rate (default 30). Keyframe times stay in seconds. Set i
 
 **Manage takes** - writes, destructive. Profiles: full.
 
-Lists, adds, renames, removes or selects animation takes. Keyframes are stored per take; the current take receives c3d_set_keyframes unless take is given.
+Lists, adds, renames, removes or selects animation takes. Keyframes are stored per take; the current take receives c3d_set_keyframes unless take is given. Removing a take saves a checkpoint first.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -807,7 +807,7 @@ Lists, adds, renames, removes or selects animation takes. Keyframes are stored p
 
 **Set keyframes** - writes, idempotent. Profiles: full, local.
 
-Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const. replace:true (default) clears existing keys of that parameter in the take first. Values: a number, or [x,y,z] / {x,y,z} for vectors; Vec4D parameters (colors) accept 3 components as well as 4 ([r,g,b] as well as [r,g,b,a]). Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.
+Writes keyframes for one animatable parameter (e.g. "position", "rotation", "scale", "intensity") on an object. Times are SECONDS. One F-curve per vector component is created; interpolation per key: linear, soft, spline, flat, const (default soft; flat and spline are the same constant in 8.1.3 and both read back as "spline"). replace:true (default) clears existing keys of that parameter in the take first. Values: a number, or [x,y,z] / {x,y,z} for vectors; Vec4D parameters (colors) accept 3 components as well as 4 ([r,g,b] as well as [r,g,b,a]). Verify with c3d_get_keyframes or c3d_set_time + c3d_get_parameters.
 
 Local profile hint: _Keyframe a parameter (e.g. position) with [{time(s), value}]._
 
@@ -856,7 +856,7 @@ Configures the renderer: engine (CHEETAH or FALCON), resolution and other render
 
 **Render image** - writes. Profiles: full, local.
 
-Renders the active camera of the document to a PNG/JPG/TIFF file and returns a preview (downscaled to <=1568 px and <1 MB) plus stats {width,height,blank,meanLuma}. Synchronous; large resolutions can take long. blank:true means the image is a single flat color (empty scene, camera inside geometry or no light). The full-resolution file stays in the work directory (path in the result). Only .png/.jpg/.tiff are allowed.
+Renders the active camera of the document to a PNG/JPG/TIFF file and returns a preview (downscaled to <=1568 px and <1 MB) plus stats {width,height,blank,meanLuma}. Synchronous; large resolutions can take long. blank:true means the image is (almost) one flat color, a luma spread of at most 2 of 255 (empty scene, camera inside geometry or no light). The full-resolution file stays in the work directory (path in the result). Only .png/.jpg/.tiff are allowed.
 
 Local profile hint: _Render the scene to an image and show a preview._
 
@@ -875,7 +875,7 @@ Local profile hint: _Render the scene to an image and show a preview._
 
 **Render image sequence (job)** - writes. Profiles: full.
 
-Starts a background job rendering frames start..end at the document fps (one frame per bridge request, so other tools can interleave between frames; each frame still blocks Cheetah3D while it renders) into a directory as name_0001.png ... and returns a job id immediately. Poll with c3d_job_status, stop with c3d_job_cancel. The animation time is moved per frame and is NOT restored. Max 3600 frames. Only png/jpg/tiff.
+Starts a background job rendering frames start..end at the document fps (one frame per bridge request, so other tools can interleave between frames; each frame still blocks Cheetah3D while it renders) into a directory as name_0001.png ... and returns a job id immediately. Poll with c3d_job_status, stop with c3d_job_cancel. The animation time is set per frame and restored after each frame. Max 3600 frames. Only png/jpg/tiff.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -998,7 +998,7 @@ EXPERIMENTAL. Brings the top-level objects of a file (jas, obj, fbx, dae, stl, 3
 
 **Run JavaScript in Cheetah3D** - writes, destructive, open-world (network). Profiles: full.
 
-Runs a JavaScript snippet inside Cheetah3D with the full scripting API (doc, ES5-style; JSC engine). Use only when no dedicated tool fits. Search c3d_search_api_docs first. The code is linted first and blocked on error-severity findings unless force:true. Code touching OS.system or files needs confirmation. An automatic checkpoint is saved first (changes cannot be undone otherwise). print() output is returned in log; use an explicit return to send a JSON-able value back. doc.addObject puts the new object under the parent of the currently selected object, so parent every new object explicitly with parent.addChildAtIndex(obj, parent.childCount()). A script that throws keeps the geometry it already created (check c3d_list_scene, restore the checkpoint if needed). No setTimeout/require; never call File.mkDir; always obj.update() after core edits.
+Runs a JavaScript snippet inside Cheetah3D with the full scripting API (doc, ES5-style; JSC engine). Use only when no dedicated tool fits. Search c3d_search_api_docs first. The code is linted first and blocked on error-severity findings unless force:true. Code touching OS.system or files needs confirmation. An automatic checkpoint is saved first (changes cannot be undone otherwise). print() output is returned in log; use an explicit return to send a JSON-able value back. doc.addObject puts the new object under the parent of the currently selected object, so parent every new object explicitly with parent.addChildAtIndex(obj, parent.childCount()). A script that throws keeps the geometry it already created (check c3d_list_scene, restore the checkpoint if needed). The code runs in strict mode (undeclared variables throw). No setTimeout/require; never call File.mkDir; always obj.update() after core edits.
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|

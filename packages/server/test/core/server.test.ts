@@ -32,9 +32,14 @@ const tool = (name: string, over: Partial<ToolDef> = {}): ToolDef =>
     ...over,
   } as never);
 
-async function connect(tools: ToolDef[], extra: { prompts?: PromptDef[]; resources?: ResourceDef[]; caps?: Record<string, unknown> } = {}): Promise<{ client: Client; mcp: McpServer; names: string[] }> {
+async function connect(tools: ToolDef[], extra: { prompts?: PromptDef[]; resources?: ResourceDef[]; caps?: Record<string, unknown>; spy?: (msg: { method?: string; params?: { message?: string } }) => void } = {}): Promise<{ client: Client; mcp: McpServer; names: string[] }> {
   const built = buildServer({ rt: h.rt, tools, prompts: extra.prompts ?? [], resources: extra.resources ?? [] });
   const [a, b] = InMemoryTransport.createLinkedPair();
+  if (extra.spy) {
+    const send = a.send.bind(a);
+    const spy = extra.spy;
+    a.send = (msg, opts) => { spy(msg as never); return send(msg, opts); };
+  }
   await built.mcp.connect(a);
   const client = new Client({ name: 'test', version: '1' }, { capabilities: extra.caps ?? {} });
   await client.connect(b);
@@ -220,6 +225,24 @@ describe('calling tools over MCP', () => {
     const events: { progress: number; message?: string }[] = [];
     await client.callTool({ name: 'c3d_prog', arguments: {} }, { onprogress: (p) => events.push({ progress: p.progress, message: p.message }) });
     expect(events).toEqual([{ progress: 0.5, message: 'half' }, { progress: 1, message: 'done' }]);
+  });
+
+  it('keeps progress strictly increasing when messages with and without a fraction are mixed (bridge heartbeats vs mesh chunks)', async () => {
+    const prog = tool('c3d_prog', { handler: (_i: unknown, ctx: { services: { progress(m: string, f?: number): void } }) => { ctx.services.progress('chunk', 1); ctx.services.progress('waiting'); ctx.services.progress('waiting again'); ctx.services.progress('chunk', 0.2); return Promise.resolve({ structured: { n: 1 } }); } } as never);
+    const { client } = await connect([prog]);
+    const events: number[] = [];
+    await client.callTool({ name: 'c3d_prog', arguments: {} }, { onprogress: (p) => events.push(p.progress) });
+    expect(events).toHaveLength(4);
+    for (let i = 1; i < events.length; i++) expect(events[i]!).toBeGreaterThan(events[i - 1]!);
+  });
+
+  it('does not send progress that a background task reports after the request has finished', async () => {
+    const sent: string[] = [];
+    const prog = tool('c3d_prog', { handler: (_i: unknown, ctx: { services: { progress(m: string, f?: number): void } }) => { setTimeout(() => ctx.services.progress('late'), 40); ctx.services.progress('during'); return Promise.resolve({ structured: { n: 1 } }); } } as never);
+    const { client } = await connect([prog], { spy: (m) => { if (m.method === 'notifications/progress') sent.push(m.params?.message ?? ''); } });
+    await client.callTool({ name: 'c3d_prog', arguments: {} }, { onprogress: () => undefined });
+    await new Promise((r) => setTimeout(r, 200));
+    expect(sent).toEqual(['during']);
   });
 
   it('does not emit progress without a token (no throw)', async () => {

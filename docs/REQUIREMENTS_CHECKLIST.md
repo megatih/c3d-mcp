@@ -1,5 +1,7 @@
 # Requirements "Done" checklist — evidence (2026-10-29)
 
+> **Snapshot of the 0.1.0 delivery (2026-10-29).** Evidence paths and counts (59 tools, 412 tests, `release/c3d-mcp-0.1.0.tgz`) are historical; the 0.1.0 artifacts were withdrawn. See `CHANGELOG.md` for the current release and `docs/qa/research-traceability-audit.md` for the latest audit.
+
 | §1 item | Status | Evidence |
 |---|---|---|
 | M0–M7 acceptance; every probe has `RESULT:` | met | `research/08-open-questions-and-probes.md` (P21/P22 recorded as not needed; P25/P26 verified live: capture works, helper is its own TCC subject); `docs/PROGRESS.md` |

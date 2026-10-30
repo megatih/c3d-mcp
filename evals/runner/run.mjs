@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Eval runner: for each task x N, prepares a fixture document, runs `claude -p` against the c3d MCP server, dumps the scene
 // through the same tools, scores the assertions and records spend. Stops when the budget cap is hit.
-import { spawn, execFileSync } from 'node:child_process';
+import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 import { createConnection } from 'node:net';
@@ -10,6 +10,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { connect } from '../../packages/server/scripts/live-driver.mjs';
+import { closeNewWindows, trackWindows, windowTitles } from '../../packages/server/scripts/window-cleanup.mjs';
 import { evaluate, knownAssertionTypes } from './assertions.mjs';
 import { runLocalAgent } from './mlx-agent.mjs';
 import { dumpScene } from './scene.mjs';
@@ -32,6 +33,10 @@ const tasks = readdirSync(join(repo, 'evals', 'tasks')).filter((f) => f.endsWith
   .filter((t) => (!onlyProfile || t.profile === onlyProfile) && (!onlyTasks || onlyTasks.includes(t.id)));
 for (const t of tasks) for (const a of t.assertions) if (!knownAssertionTypes.includes(a.type)) throw new Error(`task ${t.id}: unknown assertion ${a.type}`);
 
+// GUI automation needs an awake display: with the display asleep Cheetah3D's windows are invisible to Accessibility and the runs fail
+// ("window not found" while opening the fixture). caffeinate exits with this process.
+try { spawn('caffeinate', ['-d', '-i', '-w', String(process.pid)], { stdio: 'ignore', detached: true }).unref(); } catch { /* not macOS */ }
+
 const SOCK = join(homedir(), 'Library/Application Support/Cheetah3D/MCP/helper.sock');
 function helperCall(cmd, a = {}) {
   return new Promise((res, rej) => {
@@ -42,24 +47,6 @@ function helperCall(cmd, a = {}) {
   });
 }
 const analyze = async (path) => { try { const r = await helperCall('analyzeImage', { path }); return r.ok ? r.result : null; } catch { return null; } };
-const osa = (s) => { try { return execFileSync('osascript', ['-e', s], { encoding: 'utf8' }).trim(); } catch { return ''; } };
-const windowTitles = () => osa('tell application "System Events" to tell process "Cheetah3D" to get name of every window').split(', ').filter(Boolean);
-
-/** Closes document windows that appeared during a run (our own documents), answering "Don't Save" for them only. */
-function closeNewWindows(before) {
-  for (const t of windowTitles()) {
-    if (before.includes(t) || t === 'Render Manager' || t === '') continue;
-    osa(`tell application "System Events" to tell process "Cheetah3D"
-      try
-        set w to first window whose name is ${JSON.stringify(t)}
-        click button 1 of w
-        delay 0.6
-        if (count of sheets of w) > 0 then click (first button of sheet 1 of w whose name contains "Don")
-      end try
-    end tell`);
-  }
-}
-
 const sha = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 let spent = 0; const rows = [];
 
@@ -125,11 +112,12 @@ async function runOnce(task, rep) {
     return { cost, turns, calls: transcript.length, results, pass: results.every((r) => r.pass), score: results.filter((r) => r.pass).length / results.length };
   } finally {
     await srv.close();
-    closeNewWindows(before);
+    closeNewWindows(before, { keepRenderManager: true });
     await new Promise((r) => setTimeout(r, 2500));
   }
 }
 
+const sweepWindows = trackWindows(); // the document window ensureDocumentWindow() may create is closed after the last task
 for (const task of tasks) {
   for (let rep = 1; rep <= N; rep++) {
     if (spent >= BUDGET) { console.log(`BUDGET CAP REACHED ($${spent.toFixed(2)} >= $${BUDGET}); stopping. PAUSE and report.`); break; }
@@ -141,6 +129,7 @@ for (const task of tasks) {
     writeFileSync(join(outDir, 'summary.json'), JSON.stringify({ model: MODEL, N, spent, rows }, null, 1));
   }
 }
+sweepWindows();
 const ran = rows.filter((r) => r.results);
 const pass = ran.filter((r) => r.pass).length;
 console.log(`\nTOTAL runs=${ran.length} pass=${pass} (${ran.length ? ((100 * pass) / ran.length).toFixed(1) : 0}%) spent=$${spent.toFixed(2)} out=${outDir}`);

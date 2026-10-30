@@ -39,6 +39,21 @@ describe('knowledge sources, trust levels and measured notes', () => {
     const sel = searchDocs('selectedObject', 2, ['official']).find((x) => x.title === 'Document.selectedObject')!;
     expect(sel.note).toMatch(/undefined/);
   });
+  it('attaches the measured shadow-softness fact (shadowSoft works, radius does not) to book hits', () => {
+    const r = searchDocs('shadow softness', 10, ['book']);
+    expect(r.some((h) => /shadowSoft/.test(h.note ?? '') && /radius/.test(h.note ?? ''))).toBe(true);
+  });
+  it('annotates Shadowmat, the misspelt isAnimateable and the legacy render tags', () => {
+    expect(searchDocs('Shadowmat', 10).some((h) => /shadow-catcher|root node/.test(h.note ?? ''))).toBe(true);
+    expect(searchDocs('isAnimateable', 10).some((h) => /isAnimatable/.test(h.note ?? ''))).toBe(true);
+    expect(searchDocs('HDRITAG RADIOSITYTAG DOFTAG FOGTAG', 10).some((h) => /legacy|untested/i.test(h.note ?? ''))).toBe(true);
+  });
+  it('indexes the book review (errata against 8.1.1) with an explicit not-verified label', () => {
+    const r = searchDocs('v6-era book says 8.1.1 reality HDRI tag', 12, ['book']);
+    const hit = r.find((h) => h.source.startsWith('book-review/'));
+    expect(hit).toBeTruthy();
+    expect(hit!.title).toMatch(/not verified in 8\.1\.3/);
+  });
   it('indexes the bundled example scripts', () => {
     const r = searchDocs('RotateObject rotating object images', 3, ['example']);
     expect(r[0]!.trust).toBe('example');

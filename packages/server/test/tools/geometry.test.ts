@@ -72,7 +72,7 @@ describe('c3d_get_mesh / c3d_edit_mesh', () => {
   it('edits vertices and deletes polygons', async () => {
     const id = ((await runTool(createMesh, quad, t.ctx)).structured.object as any).id;
     const r = await runTool(editMesh, { ref: id, set_vertices: [{ index: 0, position: [5, 5, 5] }], delete_polygons: [0] }, t.ctx);
-    expect(r.structured).toEqual({ vertexCount: 4, polygonCount: 0 });
+    expect(r.structured).toEqual({ vertexCount: 4, polygonCount: 0, checkpoint: 'cp1' }); // deleting polygons is lossy: checkpointed first
     expect(t.bridge.objects.get(id)!.mesh!.vertices[0]).toEqual([5, 5, 5]);
     expect(t.bridge.argsOf('editMesh')[0]).toMatchObject({ setVertices: [{ index: 0, position: { x: 5, y: 5, z: 5 } }], deletePolygons: [0] });
   });

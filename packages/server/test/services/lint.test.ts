@@ -77,6 +77,24 @@ describe('lint knows what was measured in 8.1.3 (research/10)', () => {
   it('treats samples=0 as an error because a synchronous render would never finish', () => {
     expect(lintScript('r.setParameter("samples", 0);')[0]).toMatchObject({ rule: 'falcon-samples-zero', severity: 'error' });
   });
+  it('flags negative and zero Falcon sample counts but not positive ones', () => {
+    expect(rules('r.setParameter("samples", -1);')).toContain('falcon-samples-zero');
+    expect(rules('r.setParameter("samples", 0.0);')).toContain('falcon-samples-zero');
+    expect(rules('r.setParameter("samples", 100);')).not.toContain('falcon-samples-zero');
+    expect(rules('r.setParameter("samples", 0.5);')).not.toContain('falcon-samples-zero');
+  });
+  it('warns about removeMaterial reached through obj.document() and says it is not guarded', () => {
+    const f = lintScript('var d = o.document(); d.removeMaterial(m);').find((x) => x.rule === 'remove-material');
+    expect(f?.message).toMatch(/obj\.document\(\)/);
+  });
+  it('accepts File.readInt (undocumented but present in 8.1.3)', () => {
+    expect(rules('var f = new File("/x"); f.open(READ_MODE, BIG_ENDIAN); var a = f.readInt();')).not.toContain('unknown-method');
+  });
+  it('flags the misspelt isAnimateable (the method is isAnimatable)', () => {
+    const f = lintScript('var a = p.isAnimateable();').filter((x) => x.rule === 'unknown-method');
+    expect(f.map((x) => x.message).join(' ')).toMatch(/isAnimatable/);
+    expect(rules('var a = p.isAnimatable();')).not.toContain('unknown-method');
+  });
   it('lints every official example script without errors', async () => {
     const fs = await import('node:fs');
     const path = await import('node:path');

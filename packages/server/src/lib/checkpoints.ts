@@ -55,3 +55,8 @@ export async function autoCheckpoint(ctx: ToolContext, label: string): Promise<{
     return { warning: `Automatic checkpoint before ${label} failed (${e instanceof Error ? e.message : String(e)}); this change cannot be undone.` };
   }
 }
+
+/** Output fields describing an automatic checkpoint: spread into a tool's structured result. */
+export function checkpointFields(cp: { checkpoint?: Checkpoint; warning?: string }): Record<string, unknown> {
+  return { ...(cp.checkpoint ? { checkpoint: cp.checkpoint.id } : {}), ...(cp.warning ? { warning: cp.warning } : {}) };
+}

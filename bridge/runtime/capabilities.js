@@ -2,7 +2,7 @@
 C3D.capabilities = (function () {
   var U = C3D.util;
   // Candidate names; only those defined at runtime are reported. POINTLIGHT/MATERIAL are deliberately absent:
-  // addObject(POINTLIGHT) throws (P17), lights use LIGHT + lightType.
+  // addObject(POINTLIGHT) returns a non-light object (type 0, no lightType; research/10 B2), lights use LIGHT + lightType.
   var OBJECT_NAMES = ['BALL', 'BOX', 'DISC', 'CONE', 'CAPSULE', 'CYLINDER', 'FRACTAL', 'PLANE', 'POLYGONOBJ', 'POLYHEDRA', 'TORUS', 'TUBE',
     'SCRIPTPOLY', 'STAIR', 'CIRCLE', 'COG', 'FLOWER', 'HELIX', 'LINE', 'NEDGE', 'RECT', 'SCRIPTSPLINE', 'SPLINE', 'STAR', 'TEXT',
     'BLUEPRINT', 'CAMERA', 'FOLDER', 'BOOLEAN', 'CHAIN', 'EXTRUDE', 'ISOSURFACE', 'LATHE', 'POLYPLANE', 'RELIEF', 'SUBDIV', 'SWEEP', 'SYMMETRY',
@@ -18,7 +18,7 @@ C3D.capabilities = (function () {
   var ROT_NAMES = ['XYZ', 'XZY', 'YXZ', 'YZX', 'ZXY', 'ZYX', 'HPB'];
   var EDIT_MODES = ['POINT_MODE', 'EDGE_MODE', 'POLY_MODE', 'OBJECT_MODE', 'PIVOT_MODE'];
   var INTERP_NAMES = { linear: 'LINEAR_INTERPOL', soft: 'SOFT_INTERPOL', spline: 'SPLINE_INTERPOL', flat: 'FLAT_INTERPOL', 'const': 'CONST_INTERPOL' };
-  var MATERIAL_TYPES = ['Material', 'Material (PBR)', 'Toon', 'Glass']; // P19
+  var MATERIAL_TYPES = ['Material', 'Material (PBR)', 'Toon', 'Glass', 'Shadowmat']; // P19, C14 (Shadowmat -> root node shadow)
   var NODE_TYPES = ['carpaint', 'dielectric', 'material', 'membrane', 'metal', 'pbrmetal', 'shadow', 'solid', 'toon', 'velvet', 'brick',
     'cellnoise', 'checkerboard', 'directional', 'dots', 'fractal', 'image', 'marble', 'noise', 'reptile', 'turbulence', 'voronoi', 'wireframe',
     'wood', 'abs', 'add', 'cosine', 'crossprod', 'divide', 'dotprod', 'float2vec', 'mix', 'modulo', 'multiply', 'multiplyadd', 'norm', 'power',

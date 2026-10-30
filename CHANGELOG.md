@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.1 (2026-10-30)
+Research-to-code audit (details and evidence: `docs/qa/research-traceability-audit.md`). Runtime 1.0.1 (content changed since 1.0.0; capabilities are cached per runtime version). All components are versioned 0.3.1 (server, helper app, `.mcpb`, plugin, marketplace, registry, cask); the in-app runtime keeps its own protocol version (1.0.1: the server refuses a runtime with a different major).
+- **New:** auto-launch. When a call finds Cheetah3D not running, the helper app launches it, waits for its menu bar, uses the untitled document it opens (File > New if none) and runs the call again once; a crash in the middle of a request is still `APP_CRASHED`. Needs the helper; `C3D_MCP_NO_AUTOLAUNCH=1` turns it off. Verified live (opt-out: immediate `APP_NOT_RUNNING`; default: launched and answered in 1.5 s).
+- **Evals:** the five tasks added or flaky since the last full run pass 15/15 (N=3); the eval runner keeps the display awake (a sleeping display hides Cheetah3D's windows from Accessibility).
+- **Fix:** `c3d_set_keyframes` with a 3-component colour (`[r,g,b]`, `{r,g,b}`, `{x,y,z}`) no longer fails; the alpha keeps the parameter's current value.
+- **Fix:** `Shadowmat` is listed in `c3d_capabilities`; `File.readInt` (present in 8.1.3, missing from the sandbox wrapper) works in `c3d_run_script` and is no longer flagged by the linter.
+- **Fix:** the live-test window cleanup now closes edited scratch documents on macOS 27 ("Do you want to keep this new document?" -> Delete) and reports only windows that really closed.
+- **New:** long calls forward the "Waiting for Cheetah3D (Ns)" heartbeat as MCP progress (stops when the request ends); `c3d_remove_tag`, `c3d_takes remove` and lossy `c3d_edit_mesh` take an automatic checkpoint first; `c3d_doctor` warns about a helper older than the one this release ships; `.mcpb` option `disable_shell`.
+- **Lint:** `isAnimateable` is flagged (the method is `isAnimatable`); Falcon `samples` of 0 or below (incl. negatives) is an error; the `removeMaterial` warning now says `obj.document()` cannot be guarded.
+- **Knowledge:** the book's 8.1.1 errata are searchable (labelled not verified in 8.1.3); measured notes for shadow softness, Shadowmat, `isAnimateable` and the legacy tags; `c3d://templates/macro` parents its object.
+- **Docs:** corrected statements about default interpolation (`soft`), `flat` = `spline`, sequence time, duplicate offsets, parenting, light axes and the Vision claim; research/10 section F.
+- **Tests:** the live vitest suite, the `packages/server/scripts/*.mjs` dev scripts and the eval runner close the Cheetah3D windows they open (answering "Don't Save"; windows that existed before are left alone), through the shared `packages/server/scripts/window-cleanup.mjs`. `C3D_KEEP_WINDOWS=1` keeps them for inspection.
+
 ## 0.3.0 (2026-10-30)
 Integration of two external knowledge sources, each claim checked against Cheetah3D 8.1.3 first (`research/10-kb-verification-8.1.3.md`).
 - **Fix:** `c3d_create_mesh` and `c3d_create_pipe` now produce OUTWARD normals. Cheetah3D's front face is clockwise; counter-clockwise polygons (the documented input) used to get inward normals, invisible in renders (two-sided) but possibly wrong for exports, booleans and subdivision. New option `winding:"cw"` sends indices unchanged.

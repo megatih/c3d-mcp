@@ -67,6 +67,10 @@ Unknown assertion types must FAIL the task (never silently pass).
 | `fixtures/lamp.jas` | one LIGHT named `Lamp` |
 | `fixtures/pyramid.jas` | polygon object `Pyramid` (5 vertices, apex at y=1.5) |
 
+## Window cleanup
+
+The runner snapshots the Cheetah3D window titles before each run and, afterwards, closes every new window with `closeNewWindows` from `packages/server/scripts/window-cleanup.mjs`, answering "Don't Save" on the sheet (the Render Manager is left alone). A final sweep after the last task closes the document window the runner may have created itself. Set `C3D_KEEP_WINDOWS=1` to keep the windows of the final sweep.
+
 ## Profiles and reporting
 
 Run every `profile: full` task against `C3D_MCP_PROFILE=full`, and the `local` ones (plus optionally all) against `local`. Report pass rate per profile and per tag, mean tool calls and cost per task; `scene_unchanged` tasks double as read-only safety checks.

@@ -1,6 +1,6 @@
 cask "c3d-bridge-helper" do
-  version "0.3.0"
-  sha256 "d5b481b2a4c26563f56b4ee3b1623d45758240fb11e804fbf3afe1ec9bed7d61"
+  version "0.3.1"
+  sha256 "d8636094bab2fd3364de289cdc38c58fa0d87e76d137344ead69c03e9a67cdfd"
 
   url "https://github.com/megatih/c3d-mcp/releases/download/v#{version}/C3D-Bridge-Helper-#{version}.zip"
   name "C3D Bridge Helper"

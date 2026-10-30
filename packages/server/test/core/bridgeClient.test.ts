@@ -261,6 +261,74 @@ describe('fault classification', () => {
     await expect(h.rt.bridge.one('ping')).rejects.toMatchObject({ code: 'APP_NOT_RUNNING' });
   });
 
+  describe('auto-launch', () => {
+    const timing = { pressGraceMs: 300, pollMinMs: 5, pollMaxMs: 20, progressIntervalMs: 50, defaultDeadlineMs: 3000 };
+    const notRunning = (): BridgeError => new BridgeError('APP_NOT_RUNNING', 'Cheetah3D is not running');
+
+    it('launches Cheetah3D once, withdraws the unexecuted request and runs it again', async () => {
+      let launches = 0;
+      let running = false;
+      h = makeHarness({ bridge: { ...timing, launcher: { ensureRunning: () => { launches++; running = true; return Promise.resolve(); } } } });
+      const press = h.app.trigger.press.bind(h.app.trigger);
+      h.app.trigger.press = (o) => (running ? press(o) : Promise.reject(notRunning()));
+      expect(await h.rt.bridge.one('ping', { echo: 'up' })).toMatchObject({ echo: 'up' });
+      expect(launches).toBe(1);
+      expect(h.app.macroRuns).toBe(1); // the first request was never executed
+      expect(files(h.env.paths.inbox)).toEqual([]);
+    });
+
+    it('reports the original APP_NOT_RUNNING (with the launch error) when launching fails', async () => {
+      h = makeHarness({ bridge: { ...timing, launcher: { ensureRunning: () => Promise.reject(new BridgeError('PERMISSION_MISSING', 'no accessibility')) } } });
+      h.app.trigger.press = () => Promise.reject(notRunning());
+      const err = await catchErr(h.rt.bridge.one('ping'));
+      expect(err.code).toBe('APP_NOT_RUNNING');
+      expect(JSON.stringify(err.details)).toContain('no accessibility');
+      expect(files(h.env.paths.inbox)).toEqual([]);
+    });
+
+    it('tries to launch only once per request even if the app still is not running', async () => {
+      let launches = 0;
+      h = makeHarness({ bridge: { ...timing, launcher: { ensureRunning: () => { launches++; return Promise.resolve(); } } } });
+      h.app.trigger.press = () => Promise.reject(notRunning());
+      await expect(h.rt.bridge.one('ping')).rejects.toMatchObject({ code: 'APP_NOT_RUNNING' });
+      expect(launches).toBe(1);
+    });
+
+    it('is wired from the runtime: the helper launches the app unless auto-launch is off', async () => {
+      const calls: string[] = [];
+      const fakeHelper = { available: () => true, installedApp: () => undefined, call: (cmd: string) => { calls.push(cmd); return Promise.resolve(cmd === 'windows' ? [{ title: 'Untitled', subrole: 'AXStandardWindow' }] : {}) as never; } };
+      for (const autoLaunch of [true, false]) {
+        calls.length = 0;
+        h = makeHarness({ helper: fakeHelper }, { config: { autoLaunch } });
+        let running = false;
+        const press = h.app.trigger.press.bind(h.app.trigger);
+        h.app.trigger.press = (o) => (running ? press(o) : Promise.reject(notRunning()));
+        if (autoLaunch) {
+          // the launcher only runs after a launchApp call; simulate the app starting when the helper is asked to
+          const call = fakeHelper.call;
+          fakeHelper.call = (cmd: string) => { if (cmd === 'launchApp') running = true; return call(cmd); };
+          await h.rt.bridge.one('ping');
+          fakeHelper.call = call;
+          expect(calls).toContain('launchApp');
+        } else {
+          await expect(h.rt.bridge.one('ping')).rejects.toMatchObject({ code: 'APP_NOT_RUNNING' });
+          expect(calls).not.toContain('launchApp');
+        }
+        rmSync(h.env.root, { recursive: true, force: true });
+      }
+    });
+
+    it('never relaunches after the app died mid-request (APP_CRASHED stays)', async () => {
+      let launches = 0;
+      h = makeHarness({ bridge: { ...timing, launcher: { ensureRunning: () => { launches++; return Promise.resolve(); } } } });
+      let pressed = 0;
+      h.app.trigger.press = () => { pressed++; return pressed === 1 ? Promise.resolve() : Promise.reject(notRunning()); };
+      const err = await catchErr(h.rt.bridge.one('ping', {}, { deadlineMs: 1500 }));
+      expect(err.code).toBe('APP_CRASHED');
+      expect(launches).toBe(0);
+    });
+  });
+
   it('APP_CRASHED when the process disappears after a successful press', async () => {
     h = makeHarness();
     h.app.behavior = 'crash';

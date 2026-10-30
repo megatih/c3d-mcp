@@ -82,7 +82,7 @@ function failureFrom(stderr: string): BridgeError {
   if (marker) {
     const code = marker[1] as 'APP_NOT_RUNNING' | 'BLOCKED_BY_MODAL' | 'TRIGGER_FAILED';
     const hints: Record<string, string> = {
-      APP_NOT_RUNNING: 'Start Cheetah3D (or use a tool that launches it) and retry.',
+      APP_NOT_RUNNING: 'Start Cheetah3D and retry (with the helper app installed c3d-mcp launches it by itself unless C3D_MCP_NO_AUTOLAUNCH=1).',
       BLOCKED_BY_MODAL: 'Dismiss the dialog in Cheetah3D, then retry.',
       TRIGGER_FAILED: 'Open a document window, close the Render Manager, or run `c3d-mcp doctor`; a newly installed macro needs a Cheetah3D restart.',
     };

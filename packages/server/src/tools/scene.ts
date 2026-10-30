@@ -21,7 +21,7 @@ export const listScene = defineTool({
   group: 'scene',
   inputSchema: z.strictObject({
     root: ObjectRef.optional().describe('Subtree root (default: whole scene).'),
-    depth: z.number().int().min(0).max(32).optional().describe('Max depth below root (default 4).'),
+    depth: z.number().int().min(0).max(32).optional().describe('Max depth below root (default 4; 0 = direct children only).'),
     offset: Offset,
     limit: Limit(500, 100),
     response_format: ResponseFormat,
@@ -47,7 +47,7 @@ export const getObject = defineTool({
   group: 'scene',
   inputSchema: z.strictObject({
     ref: ObjectRef,
-    include: z.array(Include).max(6).optional().describe('Sections to include (overrides response_format).'),
+    include: z.array(Include).max(6).optional().describe('Sections to include (overrides response_format). bbox is the local-space vertex bounds, not transformed by the object or its parents.'),
     response_format: ResponseFormat,
   }),
   outputSchema: z.looseObject({ object: Descriptor }),
@@ -194,7 +194,7 @@ export const duplicate = defineTool({
     ref: ObjectRef,
     count: z.number().int().min(1).max(50).optional().describe('Number of copies (default 1).'),
     method: z.enum(['auto', 'menu', 'copy']).optional().describe('Default auto.'),
-    offset: Vec3.optional().describe('World offset applied cumulatively to each copy (position += offset * n).'),
+    offset: Vec3.optional().describe('Offset added to each copy\'s LOCAL position (the parent\'s space), cumulative per copy (position += offset * n). With method "menu" every object the paste created is offset, including descendants of a duplicated group (not verified live).'),
   }),
   outputSchema: z.looseObject({ method: z.enum(['menu', 'copy']), copies: z.array(Descriptor), lossy: z.boolean(), notes: z.array(z.string()) }),
   mutating: true,

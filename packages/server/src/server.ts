@@ -6,7 +6,7 @@ import { packageVersion } from './core/assets.js';
 import { toErrorPayload } from './core/errors.js';
 import { Mutex } from './core/lock.js';
 import { createRuntime, type Runtime, type RuntimeOverrides } from './core/runtime.js';
-import { CapabilitiesCache, ConfirmationNeeded, createToolServices } from './core/toolServices.js';
+import { CapabilitiesCache, ConfirmationNeeded, createToolServices, scopeProgress, withProgress } from './core/toolServices.js';
 import { createLogger } from './logging.js';
 import { createStaticServices } from './services/index.js';
 import { createHealthTools } from './tools/health.js';
@@ -101,17 +101,13 @@ export function buildServer(opts: BuildOptions): BuiltServer {
       },
       async (args: unknown, call: ServerContext) => {
         const started = Date.now();
+        let endProgress = (): void => undefined;
         try {
           const input = tool.inputSchema.parse(args ?? {});
           const timeoutMs = opts.toolTimeoutMs ?? TIMEOUT_MS[tool.group] ?? DEFAULT_TIMEOUT_MS;
           const signal = AbortSignal.any([call.mcpReq.signal, AbortSignal.timeout(timeoutMs)]);
-          const ctx: ToolContext = {
-            bridge: rt.bridge,
-            helper: rt.helper,
-            config,
-            session: rt.session,
-            signal,
-            services: createToolServices(
+          const scoped = scopeProgress(
+            createToolServices(
               {
                 capabilities: () => caps.get(),
                 statics,
@@ -121,6 +117,15 @@ export function buildServer(opts: BuildOptions): BuiltServer {
               },
               call,
             ),
+          );
+          endProgress = (): void => { scoped.end(); };
+          const ctx: ToolContext = {
+            bridge: withProgress(rt.bridge, scoped.services),
+            helper: rt.helper,
+            config,
+            session: rt.session,
+            signal,
+            services: scoped.services,
           };
           const run = (): Promise<Awaited<ReturnType<ToolDef['handler']>>> => tool.handler(input, ctx);
           const timedOut = new Promise<never>((_, reject) => {
@@ -142,6 +147,8 @@ export function buildServer(opts: BuildOptions): BuiltServer {
           if (payload.code === 'INTERNAL') rt.logger.error('tool failed', { tool: tool.name, error: err instanceof Error ? (err.stack ?? err.message) : String(err) });
           else rt.logger.info('tool error', { tool: tool.name, code: payload.code });
           return { isError: true, content: [{ type: 'text' as const, text: JSON.stringify(payload) }], structuredContent: payload as unknown as Record<string, unknown> };
+        } finally {
+          endProgress();
         }
       },
     );

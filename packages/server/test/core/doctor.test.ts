@@ -1,6 +1,8 @@
-import { chmodSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
-import { doctor } from '../../src/core/doctor.js';
+import { doctor, EXPECTED_HELPER_VERSION } from '../../src/core/doctor.js';
 import type { Executor } from '../../src/core/platform.js';
 import { BridgeError, type HelperClient } from '../../src/toolkit.js';
 import { makeHarness, type Harness } from '../helpers/runtime.js';
@@ -103,7 +105,7 @@ describe('doctor', () => {
 
   it('uses the helper for permissions, windows and modal state', async () => {
     const helper = helperWith({
-      ping: { version: '0.1.0', pid: 7 },
+      ping: { version: EXPECTED_HELPER_VERSION, pid: 7 },
       permissions: { accessibility: true, screenRecording: false },
       windows: [{ title: 'Doc A', subrole: 'AXStandardWindow' }, { title: 'Panel', subrole: 'AXFloatingWindow' }],
       modalState: { open: false, dialogs: [] },
@@ -119,6 +121,30 @@ describe('doctor', () => {
     expect(r.checks.find((c) => c.name === 'document-windows')?.detail).toContain('Doc A');
     expect(status(r, 'modal')).toBe('ok');
     expect(status(r, 'cheetah-frontmost')).toBe('ok');
+  });
+
+  it('warns when the running helper is older than the one this release ships', async () => {
+    const helper = helperWith({
+      ping: { version: '0.1.1', pid: 7 },
+      permissions: { accessibility: true, screenRecording: true },
+      windows: [{ title: 'Doc A', subrole: 'AXStandardWindow' }],
+      modalState: { open: false, dialogs: [] },
+      status: { cheetah: { running: true, pid: 5, frontmost: true, version: '8.1.3', responsive: true } },
+    });
+    h = makeHarness({ exec, helper });
+    h.app.trigger.press = () => h.app.runMacro();
+    h.rt.probe.inspect = () => Promise.resolve({ running: true, version: '8.1.3', frontmost: true, source: 'helper' });
+    const r = await doctor(h.rt);
+    const c = r.checks.find((x) => x.name === 'helper');
+    expect(c?.status).toBe('warn');
+    expect(c?.detail).toContain('0.1.1');
+    expect(c?.detail).toContain(EXPECTED_HELPER_VERSION);
+    expect(c?.fix).toMatch(/c3d-mcp install/);
+  });
+
+  it('EXPECTED_HELPER_VERSION matches helper/VERSION', () => {
+    const file = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', 'helper', 'VERSION');
+    expect(EXPECTED_HELPER_VERSION).toBe(readFileSync(file, 'utf8').trim());
   });
 
   it('fails accessibility when the helper lacks it and reports an open modal', async () => {

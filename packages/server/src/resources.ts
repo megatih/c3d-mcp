@@ -9,8 +9,9 @@ function main(doc) {
   var root = doc.root();
   doc.retainRedrawLock();
   try {
-    var box = new Object();           // placeholder: create objects with doc.addObject(BOX)
-    box = doc.addObject(BOX);
+    var box = doc.addObject(BOX);
+    // doc.addObject attaches under the parent of the SELECTED object: always parent explicitly.
+    root.addChildAtIndex(box, root.childCount());
     box.setParameter("name", "Example");
     box.setParameter("position", new Vec3D(0, 0.5, 0));
     box.update();

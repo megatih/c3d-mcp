@@ -136,6 +136,14 @@ function bookDocs(): Raw[] {
     const src = fs.readFileSync(path.join(root, f), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
     for (const r of chunkMarkdown(src, `book/${f}`, 'book', 1400, chapter)) out.push({ ...r, trust: UNREVIEWED.test(r.text) ? 'book-unreviewed' : 'book' });
   }
+  // The author's page-by-page review of the book against Cheetah3D 8.1.1: where the book is outdated. Suggestions, not measurements.
+  const reviews = [path.join(root, '..', 'reviews'), path.join(root, '..', 'book-reviews')].find((d) => fs.existsSync(d));
+  if (reviews) {
+    for (const f of fs.readdirSync(reviews).filter((x) => x.endsWith('.md')).sort()) {
+      const src = fs.readFileSync(path.join(reviews, f), 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+      for (const r of chunkMarkdown(src, `book-review/${f}`, 'book-unreviewed', 1400, 'Book errata (author review vs 8.1.1, not verified in 8.1.3)')) out.push(r);
+    }
+  }
   return out;
 }
 

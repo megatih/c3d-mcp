@@ -1,5 +1,7 @@
 # c3d-mcp — final report (2026-10-29)
 
+> **Snapshot of the 0.1.0 delivery (2026-10-29).** Counts here (59 tools, local profile 24, 412 tests) are historical. Current state: 63 tools (60 + 3 health), see `README.md`, `docs/TOOLS.md` and `CHANGELOG.md`; later findings are in `research/10-kb-verification-8.1.3.md` and `docs/qa/research-traceability-audit.md`. Light `axis` is no longer open (research/08 "Light axis").
+
 ## What shipped
 * **59 MCP tools** (`c3d_*`: 3 health + 56 others), 6 resources (`c3d://…`), 4 prompts; profiles `full` (59) / `local` (24) / `readonly`; opt-outs for exec/assets/shell. Reference: `docs/TOOLS.md`. Every requirements section 6 row exists; `c3d_use_document` is one addition (selecting which open window the agent works on).
 * **In-app bridge** (`bridge/`): ES5 runtime (41 ops) + loader macro, file-mailbox protocol with seq/lastSeq/`.done`/deadline/cancel idempotency (`docs/PROTOCOL.md`).
