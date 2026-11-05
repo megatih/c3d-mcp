@@ -8,7 +8,7 @@ jobs:
   check:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with: { fetch-depth: 0 } # the history scan below needs every commit
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
@@ -32,7 +32,7 @@ jobs:
   swift:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Helper library, app model and app target (without the Sparkle updater)
         working-directory: helper
         run: |
