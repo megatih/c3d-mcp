@@ -88,15 +88,34 @@ describe('scanLegacy', () => {
   it('finds every kind of older install and nothing that is not ours', async () => {
     seedEverything();
     const found = await scanLegacy(opts());
-    expect(new Set(kinds(found))).toEqual(new Set(['install-sh', 'shell-path', 'npm-global', 'npx-cache', 'helper-app', 'cask', 'launchagent', 'bridge', 'client', 'claude-plugin', 'desktop-extension', 'skills', 'unmarked-skills', 'logs', 'permissions']));
+    expect(new Set(kinds(found))).toEqual(new Set(['install-sh', 'shell-path', 'npm-global', 'npx-cache', 'helper-app', 'cask', 'launchagent', 'bridge', 'client', 'claude-plugin', 'desktop-extension', 'permissions']));
     expect(found.filter((f) => f.kind === 'helper-app')).toHaveLength(2); // the unrelated Other.app is ignored
     expect(found.filter((f) => f.kind === 'client').map((f) => f.data?.client).sort()).toEqual(['claude-code', 'claude-desktop', 'codex', 'cursor', 'lm-studio']);
-    expect(found.find((f) => f.kind === 'unmarked-skills')?.removable).toBe(false);
     const bridge = found.find((f) => f.kind === 'bridge');
     expect(bridge?.needsQuit).toBe('Cheetah3D');
     expect(bridge?.paths.some((p) => p.endsWith('copy.js'))).toBe(true); // hand copy found by content
     expect(bridge?.paths.some((p) => p.endsWith('mine.js'))).toBe(false);
     expect(bridge?.paths.some((p) => p.includes('MCP-backups'))).toBe(false);
+    expect(bridge?.paths).toHaveLength(1); // only the stray copy, nothing of the standard install
+  });
+
+  it('never offers the working install of the current app: the standard loader macro, the MCP folder, the skills and the logs are not leftovers', async () => {
+    seedEverything();
+    const found = await scanLegacy(opts());
+    const all = found.flatMap((f) => f.paths).join('\n');
+    for (const mine of [join(support, 'Scripts', 'Macro', 'C3D-MCP'), join(support, 'MCP', 'inbox'), join(support, 'MCP', 'secret'), join(support, 'MCP', 'state.json'), join(home, '.claude', 'skills'), join(home, 'Library', 'Logs', 'c3d-mcp')]) {
+      expect(all.includes(mine), `${mine} must not be reported`).toBe(false);
+    }
+    // a Mac whose only c3d-mcp is the current app's install has nothing to clean up
+    rmSync(root, { recursive: true, force: true });
+    mkdirSync(home, { recursive: true });
+    mkdirSync(sys, { recursive: true });
+    put(join(support, 'Scripts', 'Macro', 'C3D-MCP', 'C3D-MCP Bridge.js'), '// c3d-mcp bridge loader 0.4.1\nfunction main(doc){}');
+    for (const f of ['state.json', 'secret', 'install-manifest.json', 'helper.sock']) put(join(support, 'MCP', f), '{}');
+    mkdirSync(join(support, 'MCP', 'inbox'), { recursive: true });
+    put(join(home, '.claude', 'skills', 'c3d-setup', '.c3d-mcp-skill'));
+    put(join(home, 'Library', 'Logs', 'c3d-mcp', 'helper.log'), 'log');
+    expect(await scanLegacy(opts())).toEqual([]);
   });
 
   it('never reports entries and apps that belong to the current app (keepPaths)', async () => {
@@ -142,16 +161,16 @@ describe('removeLegacy', () => {
     const results = await removeLegacy(found, opts());
     const bad = results.filter((r) => r.status !== 'removed' && r.status !== 'skipped');
     expect(bad).toEqual([]);
-    const left = await scanLegacy(opts());
-    expect(left.map((f) => f.kind)).toEqual(['unmarked-skills']); // only what needs a human decision
+    expect(await scanLegacy(opts())).toEqual([]);
 
     // trashed, not deleted
     expect(existsSync(join(home, '.Trash', 'app'))).toBe(true);
-    expect(existsSync(join(home, '.Trash', 'C3D-MCP'))).toBe(true);
+    expect(existsSync(join(home, '.Trash', 'copy.js'))).toBe(true);
     expect(existsSync(join(home, '.c3d-mcp'))).toBe(false);
-    // the bridge secret is deleted, never trashed
-    expect(readdirSync(join(home, '.Trash')).includes('secret')).toBe(false);
-    expect(existsSync(join(support, 'MCP'))).toBe(false);
+    // the working bridge, the skills and the logs of the current install are not touched
+    for (const keep of [join(support, 'Scripts', 'Macro', 'C3D-MCP', 'C3D-MCP Bridge.js'), join(support, 'MCP', 'secret'), join(support, 'MCP', 'state.json'), join(home, '.claude', 'skills', 'c3d-setup', '.c3d-mcp-skill'), join(home, 'Library', 'Logs', 'c3d-mcp', 'helper.log')]) expect(existsSync(keep), `${keep} must stay`).toBe(true);
+    expect(existsSync(join(support, 'MCP', 'helper'))).toBe(false); // the old helper app's folder is gone with it
+    expect(existsSync(join(support, 'Scripts', 'Macro', 'Mine', 'copy.js'))).toBe(false); // the stray copy of the loader is trashed
     // user data untouched
     expect(readFileSync(join(support, 'MCP-backups', 'scripts-1', 'keep.js'), 'utf8')).toBe('precious');
     expect(existsSync(join(support, 'Scripts', 'Macro', 'Mine', 'mine.js'))).toBe(true);
@@ -189,7 +208,7 @@ describe('removeLegacy', () => {
     expect(results.find((r) => r.kind === 'bridge')?.status).toBe('blocked');
     expect(results.find((r) => r.kind === 'desktop-extension')?.status).toBe('blocked');
     expect(results.filter((r) => r.kind === 'client').find((r) => r.id === 'client:claude-desktop')?.status).toBe('blocked');
-    expect(existsSync(join(support, 'MCP', 'secret'))).toBe(true);
+    expect(existsSync(join(support, 'Scripts', 'Macro', 'Mine', 'copy.js'))).toBe(true);
   });
 
   it('re-checks a client entry at removal time and leaves one that now belongs to the new app', async () => {
@@ -202,13 +221,15 @@ describe('removeLegacy', () => {
     expect(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).toContain('C3D MCP.app');
   });
 
-  it('reports non-removable findings as skipped and writes a report', async () => {
+  it('reports non-removable findings as skipped and writes a report next to the logs', async () => {
     seedEverything();
     const found = await scanLegacy(opts());
-    const results = await removeLegacy(found.filter((f) => f.kind === 'unmarked-skills' || f.kind === 'logs'), opts());
-    expect(results.find((r) => r.kind === 'unmarked-skills')?.status).toBe('skipped');
+    const hand = found.find((f) => f.kind === 'shell-path');
+    expect(hand).toBeDefined();
+    const results = await removeLegacy(hand ? [{ ...hand, removable: false }] : [], opts());
+    expect(results.map((r) => r.status)).toEqual(['skipped']);
     const file = await writeCleanupReport(home, results, found);
-    expect(readFileSync(file, 'utf8')).toContain('Old c3d-mcp logs');
-    expect(existsSync(join(home, 'Library', 'Logs', 'c3d-mcp'))).toBe(true); // the report keeps the folder alive
+    expect(readFileSync(file, 'utf8')).toContain('PATH line');
+    expect(existsSync(join(home, 'Library', 'Logs', 'c3d-mcp', 'helper.log'))).toBe(true);
   });
 });

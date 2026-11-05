@@ -1,16 +1,16 @@
-import { lstatSync, readdirSync, readFileSync, readlinkSync, rmdirSync, rmSync } from 'node:fs';
+import { lstatSync, readdirSync, readFileSync, readlinkSync, rmdirSync } from 'node:fs';
 import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { backup, lmStudioConfigPath, unconfigureClient, unconfigureLmStudio, type SetupClient } from './clientConfigs.js';
 import { MACRO_DIR_NAME } from './paths.js';
 import { systemExec, type Executor } from './platform.js';
-import { SKILL_MARKER, SKILL_TARGETS, targetDir } from './skillsInstall.js';
 
 /**
  * Finds and removes every earlier c3d-mcp installation, whatever installed it (install.sh, npm, npx, Homebrew cask, the Claude Desktop extension,
- * the Claude Code plugin, a hand copy). Works on files directly: no Homebrew, npm or Node needed. Removed files go to the Trash, except the bridge
- * secret, which is deleted. Nothing outside what is positively identified as c3d-mcp is touched; git checkouts of the source are never scanned.
+ * the Claude Code plugin, a hand copy). Works on files directly: no Homebrew, npm or Node needed. Removed files go to the Trash. Nothing outside
+ * what is positively identified as c3d-mcp is touched; git checkouts of the source are never scanned.
+ * NOT reported: anything the current app itself uses (the bridge macro and MCP folder, the skills, the logs).
  */
 
 export const OLD_HELPER_BUNDLE_ID = 'dev.c3dmcp.helper';
@@ -19,7 +19,7 @@ const LOADER_MARKER = '// c3d-mcp bridge loader';
 
 export type LegacyKind =
   | 'install-sh' | 'shell-path' | 'npm-global' | 'npx-cache' | 'helper-app' | 'cask' | 'launchagent'
-  | 'bridge' | 'client' | 'claude-plugin' | 'desktop-extension' | 'skills' | 'unmarked-skills' | 'logs' | 'permissions';
+  | 'bridge' | 'client' | 'claude-plugin' | 'desktop-extension' | 'permissions';
 
 export type QuitApp = 'Cheetah3D' | 'Claude Desktop' | 'Claude Code';
 
@@ -223,27 +223,22 @@ function scanLaunchAgent(home: string): LegacyFinding[] {
   return [{ id: `launchagent:${plist}`, kind: 'launchagent', label: 'Helper LaunchAgent', installedBy: 'helper/install-launchagent.sh', paths: [plist], evidence: plist.replace(home, '~'), removable: true, data: { label: OLD_LAUNCHAGENT_LABEL } }];
 }
 
-const MCP_FILES = ['state.json', 'secret', 'helper.sock', 'lock', 'install-manifest.json'];
-const MCP_DIRS = ['inbox', 'outbox', 'cancel', 'runtime', 'log', 'tmp'];
-
-function scanBridge(support: string): LegacyFinding[] {
-  const out: LegacyFinding[] = [];
-  const root = join(support, 'MCP');
+/**
+ * The bridge itself (the loader macro in Scripts/Macro/C3D-MCP and the MCP mailbox folder), the agent skills and the logs are NOT leftovers:
+ * every version, including this app, uses the same ones, so an install made by an older method is simply taken over and updated by
+ * Bridge > Install or update. Offering to remove them would also offer to remove the working install of the current app. Only a loader
+ * macro copied somewhere else by hand is reported, because a second copy would add a second menu entry in Cheetah3D.
+ */
+function scanLoaderCopies(support: string): LegacyFinding[] {
   const macroRoot = join(support, 'Scripts', 'Macro');
-  const macros: string[] = [];
-  const macroDir = join(macroRoot, MACRO_DIR_NAME);
-  if (exists(macroDir) && ls(macroDir).some((f) => f.endsWith('.js') && readText(join(macroDir, f))?.startsWith(LOADER_MARKER))) macros.push(macroDir);
-  // A loader copied somewhere else under Scripts/ by hand: found by its first line, never by name.
+  const copies: string[] = [];
   for (const folder of ls(macroRoot)) {
+    if (folder === MACRO_DIR_NAME) continue;
     const dir = join(macroRoot, folder);
-    if (dir === macroDir) continue;
-    for (const f of ls(dir)) if (f.endsWith('.js') && readText(join(dir, f))?.startsWith(LOADER_MARKER)) macros.push(join(dir, f));
+    for (const f of ls(dir)) if (f.endsWith('.js') && readText(join(dir, f))?.startsWith(LOADER_MARKER)) copies.push(join(dir, f));
   }
-  const rootParts = [...MCP_DIRS.map((d) => join(root, d)), ...MCP_FILES.map((f) => join(root, f))].filter(exists);
-  if (macros.length > 0 || rootParts.length > 0) {
-    out.push({ id: `bridge:${support}`, kind: 'bridge', label: 'Cheetah3D bridge (loader macro + MCP mailbox folder)', installedBy: 'c3d-mcp install / c3d_install_bridge / hand copy', paths: [...macros, ...rootParts], evidence: [...macros, ...rootParts].map((p) => p.replace(support, '…')).join(', '), removable: true, needsQuit: 'Cheetah3D', data: { root } });
-  }
-  return out;
+  if (copies.length === 0) return [];
+  return [{ id: `bridge:${support}`, kind: 'bridge', label: 'Copy of the bridge loader macro outside the C3D-MCP folder', installedBy: 'copied by hand', paths: copies, evidence: copies.map((p) => p.replace(support, '…')).join(', '), removable: true, needsQuit: 'Cheetah3D' }];
 }
 
 export const CLIENT_NAMES: readonly (SetupClient | 'lm-studio')[] = ['claude-desktop', 'claude-code', 'codex', 'antigravity', 'gemini-cli', 'cursor', 'lm-studio'];
@@ -320,29 +315,6 @@ function scanDesktopExtension(home: string): LegacyFinding[] {
   return [{ id: 'desktop-extension:user', kind: 'desktop-extension', label: 'Claude Desktop extension (c3d-mcp .mcpb)', installedBy: 'c3d-mcp.mcpb', paths: [...dirs, ...settingsFiles, ...(ids.length ? [reg] : [])], evidence: [...ids, ...dirs.map((d) => basename(d))].join(', '), removable: true, needsQuit: 'Claude Desktop', data: { ids: ids.join(',') } }];
 }
 
-function scanSkills(home: string): LegacyFinding[] {
-  const marked: string[] = [];
-  const unmarked: string[] = [];
-  for (const target of SKILL_TARGETS) {
-    const root = targetDir(target, { home });
-    for (const d of ls(root)) {
-      const dir = join(root, d);
-      if (exists(join(dir, SKILL_MARKER))) marked.push(dir);
-      else if (/^c3d-/.test(d) && /c3d_|Cheetah3D/.test(readText(join(dir, 'SKILL.md')) ?? '')) unmarked.push(dir);
-    }
-  }
-  const out: LegacyFinding[] = [];
-  if (marked.length) out.push({ id: 'skills:marked', kind: 'skills', label: `Agent skills installed by c3d-mcp (${marked.length})`, installedBy: 'c3d-mcp skills install', paths: marked, evidence: marked.map((p) => p.replace(home, '~')).join(', '), removable: true });
-  if (unmarked.length) out.push({ id: 'skills:unmarked', kind: 'unmarked-skills', label: `c3d-* skill folders without our marker (${unmarked.length})`, installedBy: 'copied by hand', paths: unmarked, evidence: unmarked.map((p) => p.replace(home, '~')).join(', '), removable: false });
-  return out;
-}
-
-function scanLogs(home: string): LegacyFinding[] {
-  const dir = join(home, 'Library', 'Logs', 'c3d-mcp');
-  const files = ls(dir).filter((f) => !f.startsWith('cleanup-')).map((f) => join(dir, f));
-  return files.length ? [{ id: `logs:${dir}`, kind: 'logs', label: 'Old c3d-mcp logs', installedBy: 'c3d-mcp', paths: files, evidence: dir.replace(home, '~'), removable: true }] : [];
-}
-
 /** Lists everything left behind by earlier installs. Read-only. */
 export async function scanLegacy(o: ScanOptions = {}): Promise<LegacyFinding[]> {
   const { home, support } = paths(o);
@@ -356,12 +328,10 @@ export async function scanLegacy(o: ScanOptions = {}): Promise<LegacyFinding[]> 
     ...(await scanHelperApps(home, support, sys, o, exec)),
     ...scanCask(sys),
     ...scanLaunchAgent(home),
-    ...scanBridge(support),
+    ...scanLoaderCopies(support),
     ...(await scanClients(home, o, exec)),
     ...scanClaudePlugin(home),
     ...scanDesktopExtension(home),
-    ...scanSkills(home),
-    ...scanLogs(home),
   ];
   if (findings.some((f) => f.kind === 'helper-app' || f.kind === 'cask' || f.kind === 'launchagent')) {
     findings.push({ id: `permissions:${OLD_HELPER_BUNDLE_ID}`, kind: 'permissions', label: 'Old Accessibility / Screen Recording grants of the previous helper', installedBy: 'macOS (System Settings › Privacy & Security)', paths: [], evidence: `grants for ${OLD_HELPER_BUNDLE_ID}`, removable: true, data: { bundle: OLD_HELPER_BUNDLE_ID } });
@@ -462,18 +432,11 @@ async function removeOne(f: LegacyFinding, c: Ctx): Promise<Outcome> {
     case 'install-sh':
     case 'npm-global':
     case 'npx-cache':
-    case 'cask':
-    case 'logs':
-    case 'unmarked-skills':
-    case 'skills': {
+    case 'cask': {
       const trashed = await c.trashAll(f.paths);
       if (f.kind === 'install-sh') {
         const prefix = f.data?.prefix ?? '';
         if (prefix !== '' && prefix !== c.home) for (const d of [join(prefix, 'bin'), prefix]) if (exists(d) && ls(d).length === 0) rmdirSync(d);
-      }
-      if (f.kind === 'logs') {
-        const dir = dirname(f.paths[0] ?? '');
-        if (dir && exists(dir) && ls(dir).length === 0) rmdirSync(dir);
       }
       return done(trashed);
     }
@@ -498,27 +461,16 @@ async function removeOne(f: LegacyFinding, c: Ctx): Promise<Outcome> {
       const app = f.data?.app ?? f.paths[0] ?? '';
       await c.exec('/usr/bin/pkill', ['-f', join(app, 'Contents', 'MacOS')], { timeoutMs: 10_000 }).catch(() => undefined);
       await new Promise((r) => setTimeout(r, 300));
-      return done(await c.trashAll([app]));
+      const trashedApp = await c.trashAll([app]);
+      const parent = dirname(app);
+      if (basename(parent) === 'helper' && exists(parent) && ls(parent).length === 0) rmdirSync(parent); // MCP/helper, left empty
+      return done(trashedApp);
     }
     case 'launchagent': {
       await c.exec('/bin/launchctl', ['bootout', `gui/${String(process.getuid?.() ?? 501)}/${f.data?.label ?? OLD_LAUNCHAGENT_LABEL}`], { timeoutMs: 15_000 }).catch(() => undefined);
       return done(await c.trashAll(f.paths));
     }
-    case 'bridge': {
-      const root = f.data?.root ?? '';
-      const trashed: string[] = [];
-      for (const p of f.paths) {
-        if (basename(p) === 'secret') {
-          rmSync(p, { force: true }); // never leave the bridge secret in the Trash
-          continue;
-        }
-        trashed.push(...(await c.trashAll([p])));
-      }
-      const helperDir = join(root, 'helper');
-      if (root && exists(helperDir) && ls(helperDir).length === 0) rmdirSync(helperDir); // left behind once the old helper app is gone
-      if (root && exists(root) && ls(root).length === 0) rmdirSync(root);
-      return done(trashed);
-    }
+    case 'bridge': return done(await c.trashAll(f.paths));
     case 'client': {
       const client = (f.data?.client ?? '') as SetupClient | 'lm-studio';
       const current = await clientEntry(client, c.home, c.exec);

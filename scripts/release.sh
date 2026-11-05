@@ -20,7 +20,19 @@ fi
 [ ! -e "$OUT/app/C3D MCP.app/Contents/Resources/server/assets/helper" ] || { echo "assets/helper must not ship" >&2; exit 1; }
 
 echo "==> leak scan of every artifact"
-node scripts/check-public.mjs --archive "$OUT"/c3d-skills-*.zip "$OUT"/app/C3D-MCP-[0-9]*.zip "$OUT"/app/C3D-MCP-[0-9]*.dmg "$OUT"/app/get-c3d-mcp.sh "$OUT"/app/appcast.xml
+# The dmg is not scanned as raw bytes (its compressed image has no file paths, so third-party strings inside the bundled Node.js and node_modules
+# would be flagged as ours); it holds the same app as the zip, which is scanned file by file. The check below ties the two together.
+node scripts/check-public.mjs --archive "$OUT"/c3d-skills-*.zip "$OUT"/app/C3D-MCP-[0-9]*.zip "$OUT"/app/get-c3d-mcp.sh "$OUT"/app/appcast.xml
+
+echo "==> the dmg contains the app that was scanned (same signature, same version)"
+MNT=$(mktemp -d "${TMPDIR:-/tmp}/c3d-dmg-check.XXXXXX")
+hdiutil attach -nobrowse -readonly -mountpoint "$MNT" "$OUT"/app/C3D-MCP-[0-9]*.dmg >/dev/null 2>&1
+DMG_DR=$(codesign -dr - "$MNT/C3D MCP.app" 2>&1 | sed -n 's/^designated => //p'); DMG_VER=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$MNT/C3D MCP.app/Contents/Info.plist")
+codesign --verify --deep --strict "$MNT/C3D MCP.app" || { hdiutil detach "$MNT" >/dev/null 2>&1; echo "the app in the dmg fails its signature check" >&2; exit 1; }
+ls "$MNT" | grep -q "Read me first" || { hdiutil detach "$MNT" >/dev/null 2>&1; echo "dmg is missing its Open Anyway guide" >&2; exit 1; }
+hdiutil detach "$MNT" >/dev/null 2>&1; rmdir "$MNT"
+APP_DR=$(codesign -dr - "$OUT/app/C3D MCP.app" 2>&1 | sed -n 's/^designated => //p')
+[ "$DMG_VER" = "$VERSION" ] && [ "$DMG_DR" = "$APP_DR" ] || { echo "dmg and app differ (version $DMG_VER, requirement $DMG_DR)" >&2; exit 1; }
 
 echo "==> checksums"
 (cd "$OUT" && shasum -a 256 c3d-skills-*.zip skills/*.zip app/C3D-MCP-[0-9]*.dmg app/C3D-MCP-[0-9]*.zip app/C3D-MCP-latest.zip app/C3D-MCP-latest.zip.sha256 app/get-c3d-mcp.sh app/appcast.xml > SHA256SUMS && cat SHA256SUMS)

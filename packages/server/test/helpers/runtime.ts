@@ -10,7 +10,7 @@ import { FakeApp, makeTestEnv, seedBridgeFiles, type TestEnv } from './fakeApp.j
  * temp directories are blocked. A test that really launched or killed the helper, started launchd jobs or talked to the developer's
  * claude CLI would change the machine it runs on (an early draft of an uninstall test once left helper processes running).
  */
-const BLOCKED = new Set(['open', 'kill', 'launchctl', 'claude']);
+const BLOCKED = new Set(['open', 'kill', 'launchctl', 'claude', 'osascript']); // osascript: System Events lookups of an app that is not running take ~10 s each
 export const safeExec: Executor = (cmd, args, o) => (BLOCKED.has(cmd) ? Promise.resolve({ code: 127, stdout: '', stderr: `${cmd}: blocked in tests (pass your own fake exec)` }) : systemExec(cmd, args, o));
 
 export const noHelper: HelperClient & { installedApp(): undefined } = {

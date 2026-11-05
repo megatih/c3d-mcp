@@ -25,6 +25,8 @@ final class AppModel: ObservableObject {
     @Published var logText = ""
     @Published var showMigration = false
     @Published var lastReport: String?
+    /// The sidebar page. Lives in the model (not in the view) so that tests and "show me the Cleanup tab" can drive it.
+    @Published var selectedSection: Section? = .overview
 
     struct Banner: Identifiable, Equatable {
         enum Kind { case info, success, error }

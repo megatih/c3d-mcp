@@ -23,7 +23,7 @@ interface HelperPermissions { accessibility?: boolean; screenRecording?: boolean
 interface HelperWindow { title?: string; role?: string; subrole?: string; main?: boolean }
 
 /** Helper version shipped with this release: the helper is part of C3D MCP.app, so it equals the package version (checked by a test). */
-export const EXPECTED_HELPER_VERSION = '0.4.0';
+export const EXPECTED_HELPER_VERSION = '0.4.1';
 
 function versionLess(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);

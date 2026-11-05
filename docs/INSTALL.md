@@ -18,7 +18,9 @@ One download, a graphical control panel, nothing to type. You need **macOS 14 or
 5. **Uninstalling**: *Bridge › Uninstall everything* removes the bridge, the agent skills and the client entries (your Cheetah3D scripts and backups stay); then drag the app to the Trash.
 
 ### Coming from an older install?
-The app finds installs made by any earlier method, including manual ones, and removes them (everything goes to the Trash, your scripts and `MCP-backups` are kept): the `install.sh` install in `~/.c3d-mcp`, `npm i -g` and the npx cache, the separate *C3D Bridge Helper* app (any folder, also a Homebrew cask copy), its LaunchAgent, the Claude Desktop extension, the Claude Code plugin, client entries and agent skills. It offers this on first launch and any time under **Cleanup**. Command line: `c3d-mcp legacy scan` / `c3d-mcp legacy remove` (with `--ids`, `--dry-run`, `--yes`).
+The app finds installs made by any earlier method, including manual ones, and removes them (everything goes to the Trash, your scripts and `MCP-backups` are kept): the `install.sh` install in `~/.c3d-mcp` and its PATH line, `npm i -g` and the npx cache, the separate *C3D Bridge Helper* app (any folder, also a Homebrew cask copy), its LaunchAgent and old permission entry, the Claude Desktop extension, the Claude Code plugin, `c3d` entries in client configs that still launch an old install, and a copy of the loader macro placed outside the `C3D-MCP` folder. It opens by itself on first launch when it finds something, and any time under **Cleanup**; command line: `c3d-mcp legacy scan` / `c3d-mcp legacy remove` (with `--ids`, `--dry-run`, `--yes`).
+
+**What it keeps:** the bridge in Cheetah3D (the `C3D-MCP` macro and the `MCP` folder), the agent skills and the logs are shared by every version, including this app, so an older install is simply taken over and updated by **Bridge › Install or update**. Cleanup never lists them, so it can never remove a working install.
 
 ## What the app puts where
 | Where | What | Removed by |

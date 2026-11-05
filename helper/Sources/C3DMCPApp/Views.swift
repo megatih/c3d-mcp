@@ -19,20 +19,24 @@ enum Section: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @ObservedObject var model: AppModel
     @ObservedObject var updates: UpdateController
-    @State private var selection: Section? = .overview
 
     var body: some View {
         NavigationSplitView {
-            List(Section.allCases, selection: $selection) { s in
-                Label(s.rawValue, systemImage: s.symbol)
-                    .badge(s == .cleanup ? model.legacy.filter(\.removable).count : 0)
+            // Each row needs an explicit .tag(s): List(data, selection:) would tag rows with their String `id`, which can never match
+            // a Section? selection, so clicks would change nothing (the bug of 0.4.0; see SidebarTests).
+            List(selection: $model.selectedSection) {
+                ForEach(Section.allCases) { s in
+                    Label(s.rawValue, systemImage: s.symbol)
+                        .badge(s == .cleanup ? model.legacy.filter(\.removable).count : 0)
+                        .tag(s)
+                }
             }
             .navigationSplitViewColumnWidth(min: 170, ideal: 190)
         } detail: {
             VStack(spacing: 0) {
                 if let b = model.banner { BannerView(banner: b) { model.banner = nil } }
                 Group {
-                    switch selection ?? .overview {
+                    switch model.selectedSection ?? .overview {
                     case .overview: OverviewView(model: model, updates: updates)
                     case .components: ComponentsView(model: model)
                     case .clients: ClientsView(model: model)
@@ -55,9 +59,10 @@ struct ContentView: View {
         }
         // A modal sheet would block Quit (and Sparkle's quit-and-install), so the offer lives in the Cleanup tab instead.
         .onChange(of: model.showMigration) { _, show in
-            if show { selection = .cleanup; model.showMigration = false }
+            if show { model.selectedSection = .cleanup; model.showMigration = false }
         }
-        .task { await model.refresh() }
+        // Let the first view update finish before refresh() starts publishing ("Publishing changes from within view updates").
+        .task { await Task.yield(); await model.refresh() }
         .frame(minWidth: 760, minHeight: 500)
     }
 }

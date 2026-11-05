@@ -22,6 +22,7 @@ let package = Package(
         .executableTarget(name: "C3DMCPApp", dependencies: ["HelperCore", "AppCore"] + (hasSparkle ? ["Sparkle"] : [])),
         .testTarget(name: "HelperCoreTests", dependencies: ["HelperCore"]),
         .testTarget(name: "AppCoreTests", dependencies: ["AppCore"]),
+        .testTarget(name: "C3DMCPAppTests", dependencies: ["C3DMCPApp", "AppCore"]),
     ],
     swiftLanguageModes: [.v6]
 )
