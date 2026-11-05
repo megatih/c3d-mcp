@@ -16,14 +16,14 @@ macOS 14+ on Apple Silicon and Cheetah3D 8.1.3 (installed and launched once). No
 3. In the app: **Bridge** > Install or update (backs up Cheetah3D's `Scripts/` first, installs the macro and runtime, installs the agent skills), then **restart Cheetah3D once**: macros are scanned only at launch. The macro appears under Tools > Script > Macro Script > C3D-MCP > C3D-MCP Bridge.js; never run it by hand, the helper presses it.
 4. **AI clients** > connect the clients in use (Claude Desktop, Claude Code, Codex, Antigravity, Gemini CLI, Cursor), then restart those clients. The app writes absolute paths into the app, so no `npx` or shell PATH is involved.
 5. **Permissions** > Grant Accessibility to C3D MCP (macOS may ask to quit and reopen the app). Screen Recording is needed only for `c3d_capture_viewport`. Optionally choose the confirmation level and press *Allow all c3d tools* for Claude Code.
-6. Verify: the app's **Overview** health check, or `c3d_doctor` in chat.
+6. Verify: the app's **Overview** (a Setup list ticks the four steps off and the health check re-checks by itself when Cheetah3D starts; **Re-check** runs it now), or `c3d_doctor` in chat.
 
 Updates arrive inside the app (Overview > Updates). Every release is signed with the same certificate, so macOS should keep the grants; if it asks again, switch C3D MCP off and on under Accessibility.
 
 When the tools are already connected, `c3d_doctor` is the in-chat health check, and `c3d_install_bridge` repeats the bridge install (`mode`: auto, repair or reinstall; `dry_run` previews; a restart of Cheetah3D is still the user's job). `c3d_capabilities` lists the object, tag, material and light types and the tools active in the current profile.
 
 ## Older installs
-If the user installed an earlier version some other way (install script, npm or npx, a Homebrew cask, the separate "C3D Bridge Helper" app, the Claude Desktop extension, the Claude Code plugin, a hand copy), tell them to open the app's **Cleanup** tab: it finds and removes those (files go to the Trash, scripts and backups are kept). Nothing else is needed.
+If the user installed an earlier version some other way (install script, npm or npx, a Homebrew cask, the separate "C3D Bridge Helper" app, the Claude Desktop extension, the Claude Code plugin, a hand copy), tell them to open the app's **Cleanup** tab: it finds and removes those (files go to the Trash, scripts and backups are kept). Old `c3d` entries in AI clients are not part of Cleanup: **AI clients** shows them as "Connected to an older install" or "Connected to another copy of C3D MCP" with *Switch to this app* and *Disconnect*.
 
 ## Command line (optional)
 The bundled server is a normal CLI: `"/Applications/C3D MCP.app/Contents/Resources/node/bin/node" "/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js" <command>` with `status`, `doctor` (`--brief`, `--json`), `install [--repair|--reinstall|--dry-run]`, `clients list|add|remove`, `permissions allow|revoke`, `legacy scan|remove`, `skills install|uninstall`, `uninstall [--all]`, `config <client>`. Details: [clients](references/clients.md).

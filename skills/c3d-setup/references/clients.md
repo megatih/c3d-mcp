@@ -47,4 +47,4 @@ Same JSON object as Gemini CLI, in `~/.gemini/config/mcp_config.json`. Some buil
 `config` copies `C3D_MCP_PROFILE` from the current shell environment into the snippet, so `C3D_MCP_PROFILE=readonly c3d-mcp config cursor` yields a read-only entry.
 
 ## Verify
-Restart the client, then ask it to run `c3d_doctor`. All checks ok means the setup is complete. If a client shows "Connected to an older install" in the app, press *Switch to this app*.
+Restart the client, then ask it to run `c3d_doctor`. All checks ok means the setup is complete. If a client shows "Connected to an older install" (npx, npm, old script) or "Connected to another copy of C3D MCP" (the app was moved or reinstalled) in the app, press *Switch to this app*, or *Disconnect* if the user no longer uses that client. Cleanup never edits client entries.

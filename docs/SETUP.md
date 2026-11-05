@@ -8,13 +8,13 @@ All clients launch the same stdio server: the Node.js and server that live insid
 "/Applications/C3D MCP.app/Contents/Resources/node/bin/node"  "/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js"  serve
 ```
 
-(If you put the app in `~/Applications` or elsewhere, use that path. Absolute paths mean no `npx`, no npm registry and no login `PATH` are involved, which is why Claude Desktop and other GUI clients work without tinkering.) If you move or rename the app, open **AI clients**: entries that point at the old location are shown as "Connected to an older install" and *Switch to this app* rewrites them.
+(If you put the app in `~/Applications` or elsewhere, use that path. Absolute paths mean no `npx`, no npm registry and no login `PATH` are involved, which is why Claude Desktop and other GUI clients work without tinkering.) If you move or rename the app, open **AI clients**: entries that point at the old location are shown as "Connected to another copy of C3D MCP" (an entry that still uses `npx`, npm or the old install script shows "Connected to an older install"); *Switch to this app* rewrites them and *Disconnect* removes them. Cleanup never touches these entries.
 
 ## What the app does for you
 ```bash
 APP="/Applications/C3D MCP.app/Contents/Resources"
 alias c3d-mcp='"$APP/node/bin/node" "$APP/server/bin/c3d-mcp.js"'
-c3d-mcp clients list                      # per client: none | current | legacy | foreign
+c3d-mcp clients list                      # per client: none | current | moved (another copy of the app) | legacy (npx, npm, old script) | foreign
 c3d-mcp clients add cursor codex --yes    # the same as ticking them in the app
 c3d-mcp clients remove all
 c3d-mcp config <client>                   # print a ready-to-paste snippet (claude-desktop, claude-code, codex, gemini-cli, antigravity, cursor, lm-studio); --raw prints only the snippet

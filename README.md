@@ -21,7 +21,7 @@ macOS 14+ on Apple Silicon (developed on macOS 27.2) and Cheetah3D 8.1.3. That i
 
 ## Quickstart
 
-**Download the app.** `C3D-MCP-<version>.dmg` from the [latest release](https://github.com/megatih/c3d-mcp/releases/latest): drag **C3D MCP** to Applications and open it. In the control panel: **Bridge** › install (then restart Cheetah3D once), **AI clients** › connect Claude Desktop/Code, Codex, Antigravity, Gemini CLI or Cursor, **Permissions** › grant Accessibility (Screen Recording is optional) and choose how often c3d-mcp asks for confirmation. **Overview** shows a health check and updates, **Activity** the helper log, **Cleanup** removes older installs.
+**Download the app.** `C3D-MCP-<version>.dmg` from the [latest release](https://github.com/megatih/c3d-mcp/releases/latest): drag **C3D MCP** to Applications and open it. In the control panel: **Bridge** › install (then restart Cheetah3D once), **AI clients** › connect Claude Desktop/Code, Codex, Antigravity, Gemini CLI or Cursor, **Permissions** › grant Accessibility (Screen Recording is optional) and choose how often c3d-mcp asks for confirmation. **Overview** shows a Setup checklist and a health check that re-checks by itself when Cheetah3D starts, plus updates, **Activity** the helper log, **Cleanup** removes older installs.
 
 The app is signed with its own certificate (there is no paid Apple Developer ID behind it), so macOS asks you **once** to confirm: *System Settings › Privacy & Security › Open Anyway*. To skip that prompt, one line downloads the same app without it (it only downloads, verifies the SHA-256, copies the app to Applications and opens it):
 
