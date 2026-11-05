@@ -88,6 +88,7 @@ export function buildServer(opts: BuildOptions): BuiltServer {
   const statics = opts.statics ?? createStaticServices({ bridge: rt.bridge, helper: rt.helper, config });
   const caps = new CapabilitiesCache(rt.bridge, () => rt.bridge.lastRuntimeVersion);
   const writeGate = new Mutex();
+  const approvals = new Set<string>(); // prompts the user accepted in this process (C3D_MCP_APPROVAL=session)
 
   for (const tool of enabled) {
     mcp.registerTool(
@@ -112,6 +113,8 @@ export function buildServer(opts: BuildOptions): BuiltServer {
                 capabilities: () => caps.get(),
                 statics,
                 autoConfirm: config.autoConfirm,
+                approval: config.approval,
+                approvals,
                 // eslint-disable-next-line @typescript-eslint/no-deprecated -- only source of initialize-declared capabilities on 2025-era connections
                 legacyClientCapabilities: () => mcp.server.getClientCapabilities(),
               },

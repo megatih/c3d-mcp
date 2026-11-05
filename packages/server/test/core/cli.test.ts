@@ -1,4 +1,4 @@
-import { mkdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import { main, type CliIO } from '../../src/cli/index.js';
@@ -148,28 +148,13 @@ describe('cli', () => {
     expect(JSON.parse(json.out)).toHaveProperty('removed');
   });
 
-  it('setup validates its options and needs --yes without a TTY', async () => {
-    expect(await main(['setup', '--clients', 'vim'], harness().io)).toBe(2);
-    expect(await main(['setup', '--node-path', 'node'], harness().io)).toBe(2);
+  it('has no setup wizard any more; help lists the app-driven commands', async () => {
     const c = harness();
     expect(await main(['setup'], c.io)).toBe(2);
-    expect(c.err).toContain('--yes');
     const help = harness();
     await main(['--help'], help.io);
-    expect(help.out).toContain('setup');
-    expect(help.out).toContain('--no-skills');
-  });
-
-  it('setup --dry-run --json prints a structured report', async () => {
-    const c = harness();
-    const home = join(env?.root ?? '', 'home');
-    mkdirSync(home);
-    c.io.env = { ...c.io.env, HOME: home };
-    const code = await main(['setup', '--dry-run', '--json', '--clients', 'none', '--no-skills'], c.io);
-    const report = JSON.parse(c.out) as { dryRun: boolean; requirements: { rows: unknown[] }; steps: unknown[] };
-    expect(report.dryRun).toBe(true);
-    expect(report.requirements.rows.length).toBeGreaterThan(5);
-    expect(code === 0 || code === 1).toBe(true);
+    for (const word of ['clients', 'legacy', 'permissions', 'status', 'doctor']) expect(help.out).toContain(word);
+    expect(help.out).not.toContain('Guided setup');
   });
 });
 
@@ -194,7 +179,7 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
     expect(fresh.code).toBe(0);
     expect(fresh.out).toMatch(/Detected: fresh install/);
     expect(fresh.out).toMatch(/c3d-mcp install/);
-    expect(await main(['install', '--no-helper'], c.io)).toBe(0);
+    expect(await main(['install'], c.io)).toBe(0);
     const json = await run(c, ['status', '--json']);
     const state = JSON.parse(json.out) as { kind: string; recommended: string; components: { name: string; status: string }[] };
     expect(state.kind).toBe('current');
@@ -205,7 +190,7 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
 
   it('install --dry-run prints what it found and what it would do, and changes nothing', async () => {
     const c = prepare();
-    const r = await run(c, ['install', '--dry-run', '--no-helper']);
+    const r = await run(c, ['install', '--dry-run']);
     expect(r.code).toBe(0);
     expect(r.out).toMatch(/Detected: fresh install/);
     expect(r.out).toMatch(/create runtime/);
@@ -215,20 +200,20 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
 
   it('install --repair and --reinstall: repair fixes a broken install, reinstall rewrites it; both say what they detected', async () => {
     const c = prepare();
-    await main(['install', '--no-helper'], c.io);
+    await main(['install'], c.io);
     rmSync(env?.paths.runtimeFile ?? '');
     expect((await run(c, ['status'])).out).toMatch(/Detected: partial install/);
-    const repair = await run(c, ['install', '--repair', '--no-helper']);
+    const repair = await run(c, ['install', '--repair']);
     expect(repair.code).toBe(0);
     expect(repair.out).toMatch(/Detected: partial/);
     expect((await run(c, ['status', '--json'])).out).toMatch(/"kind": "current"/);
-    const re = await run(c, ['install', '--reinstall', '--no-helper', '--json']);
+    const re = await run(c, ['install', '--reinstall', '--json']);
     expect(JSON.parse(re.out)).toMatchObject({ ok: true, mode: 'reinstall' });
   });
 
   it('install --skip-ping never pings the bridge (needed for sandboxed installs that must not touch the running app)', async () => {
     const c = prepare();
-    const r = await run(c, ['install', '--no-helper', '--skip-ping', '--json']);
+    const r = await run(c, ['install', '--skip-ping', '--json']);
     expect(r.code).toBe(0);
     const ping = (JSON.parse(r.out) as { steps: { name: string; status: string }[] }).steps.find((x) => x.name === 'ping');
     expect(ping?.status).toBe('skipped');
@@ -242,7 +227,7 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
 
   it('uninstall --dry-run lists what would be removed and removes nothing; --all names skills and client configs', async () => {
     const c = prepare();
-    await main(['install', '--no-helper'], c.io);
+    await main(['install'], c.io);
     const dry = await run(c, ['uninstall', '--dry-run']);
     expect(dry.code).toBe(0);
     expect(dry.out).toMatch(/would remove/i);
@@ -257,7 +242,7 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
 
   it('uninstall on a TTY lists the plan and asks once; --yes needs no question; refusing changes nothing', async () => {
     const no = prepare({ tty: true, answer: false });
-    await main(['install', '--no-helper'], no.io);
+    await main(['install'], no.io);
     const refused = await run(no, ['uninstall']);
     expect(refused.code).toBe(1);
     expect(refused.out).toMatch(/Aborted/);
@@ -273,6 +258,57 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
   it('help documents the lifecycle commands and flags', async () => {
     const c = prepare();
     const help = await run(c, ['--help']);
-    for (const word of ['status', '--repair', '--reinstall', '--no-helper', '--all', '--dry-run']) expect(help.out).toContain(word);
+    for (const word of ['status', '--repair', '--reinstall', '--all', '--dry-run']) expect(help.out).toContain(word);
+  });
+
+  it('legacy scan / remove: JSON output, --ids selection, confirmation required, files go to the Trash', async () => {
+    const c = harness({ envVars: { C3D_MCP_SYSTEM_ROOT: '' } });
+    const home = join(env!.root, 'home');
+    const sysRoot = join(env!.root, 'sys');
+    mkdirSync(sysRoot, { recursive: true });
+    c.io.env = { ...c.io.env, C3D_MCP_SYSTEM_ROOT: sysRoot };
+    mkdirSync(join(home, '.c3d-mcp', 'app', 'node_modules', 'c3d-mcp'), { recursive: true });
+    writeFileSync(join(home, '.c3d-mcp', 'app', 'node_modules', 'c3d-mcp', 'package.json'), '{"name":"c3d-mcp"}');
+    expect(await main(['legacy', 'scan', '--json'], c.io)).toBe(0);
+    const found = JSON.parse(c.out) as { id: string; kind: string }[];
+    const mine = found.find((f) => f.kind === 'install-sh');
+    expect(mine).toBeDefined();
+
+    const n = harness();
+    n.io.env = c.io.env;
+    expect(await main(['legacy', 'remove', '--ids', mine?.id ?? '', '--json'], n.io)).toBe(2); // not confirmed
+    expect(existsSync(join(home, '.c3d-mcp'))).toBe(true);
+
+    const y = harness();
+    y.io.env = c.io.env;
+    expect(await main(['legacy', 'remove', '--ids', mine?.id ?? '', '--yes', '--json'], y.io)).toBe(0);
+    const out = JSON.parse(y.out) as { results: { status: string }[]; report: string };
+    expect(out.results.map((r) => r.status)).toEqual(['removed']);
+    expect(existsSync(join(home, '.c3d-mcp'))).toBe(false);
+    expect(existsSync(join(home, '.Trash', 'app'))).toBe(true);
+    expect(existsSync(out.report)).toBe(true);
+  });
+
+  it('clients add / list / remove drive the client configs with the absolute launch form', async () => {
+    const c = harness();
+    const home = join(env!.root, 'home');
+    mkdirSync(join(home, '.cursor'), { recursive: true });
+    c.io.env = { ...c.io.env, PATH: '/nonexistent' };
+    const run = async (...args: string[]): Promise<{ code: number; out: string }> => {
+      const h = harness();
+      h.io.env = c.io.env;
+      const code = await main(['clients', ...args, '--json'], h.io);
+      return { code, out: h.out };
+    };
+    expect((await run('add', 'cursor', '--node-path', '/N/node', '--bin-path', '/A/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js', '--yes')).code).toBe(0);
+    const cfg = JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')) as { mcpServers: { c3d: { command: string; args: string[] } } };
+    expect(cfg.mcpServers.c3d).toEqual({ command: '/N/node', args: ['/A/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js', 'serve'] });
+    const listed = JSON.parse((await run('list', '--keep-path', '/A/C3D MCP.app')).out) as { client: string; state: string }[];
+    expect(listed.find((r) => r.client === 'cursor')?.state).toBe('current');
+    const legacy = JSON.parse((await run('list')).out) as { client: string; state: string }[];
+    expect(legacy.find((r) => r.client === 'cursor')?.state).toBe('legacy');
+    expect((await run('remove', 'cursor')).code).toBe(0);
+    expect(JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).mcpServers).toEqual({});
+    expect((await run('add', 'nope')).code).toBe(2);
   });
 });

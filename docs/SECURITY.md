@@ -15,7 +15,7 @@ c3d-mcp lets an AI agent drive a desktop application. This page states what is p
 | MCP client (Claude, Codex, ...) | user | the model's tool calls are *untrusted input* to the server |
 | `c3d-mcp serve` (Node) | user, stdio only (no network listener) | MCP client over stdio; files in the mailbox directory |
 | Loader macro + runtime (inside Cheetah3D) | user, in Cheetah3D's process | requests carrying the shared secret |
-| C3D Bridge Helper (optional Swift app) | user, own TCC grants | callers that can connect to its Unix socket |
+| C3D MCP app (Swift: control panel + helper) | user, own TCC grants | callers that can connect to its Unix socket; the c3d-mcp CLI it runs from its own bundle |
 
 The server never opens a TCP/HTTP port. Transport is stdio; stdout carries only protocol traffic.
 
@@ -28,10 +28,10 @@ The server never opens a TCP/HTTP port. Transport is stdio; stdout carries only 
 * **Document binding.** Requests carry `expectDocument` (file name and/or a session marker object); the runtime answers `WRONG_DOCUMENT` instead of editing a different front document.
 * **Cross-process lock.** `MCP/lock` (O_EXCL, PID, heartbeat, stale detection) serialises two servers. Reclaiming a stale lock is not perfectly atomic; the worst case is two servers interleaving one press, which the uuid addressing tolerates.
 
-## Helper app and socket
+## C3D MCP app (helper) and socket
 
-* The helper listens on `MCP/helper.sock` (mode `0600`, inside the `0700` directory) and speaks JSON lines. Any process of the same user that can open the socket can ask it to press menus, capture the Cheetah3D window, or read the Accessibility tree; the helper holds the TCC grants (Accessibility, Screen Recording), so treat socket access like access to those permissions.
-* The server only launches the helper with `open -g -a "<helper app>" --args --socket <path>` (never as a Node child process) and only from the known install locations (`MCP/helper/`, `~/Applications`, `/Applications`, or `C3D_HELPER_APP`). Before the first launch the bundle's code signature is checked with `codesign --verify --deep --strict`; a bundle that fails is not launched (error with a hint). Locally built, unsigned helpers need `C3D_HELPER_SKIP_VERIFY=1`.
+* The helper part of the app listens on `MCP/helper.sock` (mode `0600`, inside the `0700` directory) and speaks JSON lines. Any process of the same user that can open the socket can ask it to press menus, capture the Cheetah3D window, or read the Accessibility tree; the helper holds the TCC grants (Accessibility, Screen Recording), so treat socket access like access to those permissions.
+* The server only starts the helper with `open -g -a "<C3D MCP.app>" --args --socket <path>` (headless, never as a Node child process, so macOS attributes the permissions to the app) and only from the known locations: the app the server itself runs from, `~/Applications`, `/Applications`, or `C3D_HELPER_APP`. Before the first launch the bundle's code signature is checked with `codesign --verify --deep --strict` (integrity, not trust: the certificate is self-signed); a bundle that fails is not launched (error with a hint). Locally built, unsigned apps need `C3D_HELPER_SKIP_VERIFY=1`.
 * The helper clicks buttons only in dialogs *it* created (`dismissOwnModal`). Foreign dialogs are reported as `BLOCKED_BY_MODAL`; Save / Don't Save are never clicked.
 * Without the helper the server falls back to `osascript` + System Events, which needs Accessibility for the app that launched `c3d-mcp` (your terminal or MCP client). `doctor` reports this as degraded mode.
 * Permissions are never self-granted: c3d-mcp does not touch the TCC database or run `tccutil`.
@@ -50,22 +50,27 @@ Destructive or hard-to-undo actions (deleting more than five objects or objects 
 1. if the client declared the `elicitation` capability, the user is asked through the MCP elicitation flow (works in both the 2025 and 2026 protocol eras; the SDK answers on the server's behalf for older clients);
 2. otherwise the tool requires an explicit `confirm: true` argument and fails with `CONFIRMATION_REQUIRED` and a hint.
 
+`C3D_MCP_APPROVAL` tunes how often you are asked: `session` (default) remembers an accepted prompt per action (the same file, the same checkpoint, the same script) until the server exits; `strict` asks every time; `trusted` never asks. A declined or cancelled elicitation is a refusal and is never remembered. Files that existed before the session are refused in every mode. Scripts that use `OS.system` and bulk deletions are asked again each time in `session` mode.
+
 A declined or cancelled elicitation is a refusal. Note that `confirm: true` supplied by the model is only as trustworthy as the model; elicitation puts a human in the loop.
 
 ## Existing files, backups and checkpoints
 
 * Tools refuse to overwrite a file that existed before the session unless it was created or opened through this server and the call is confirmed. Companion files count too (the `.mtl` next to an `.obj` export); a dangling symlink counts as existing. Missing parent directories are created only inside the work directory; elsewhere the directory must already exist (`INVALID_ARGUMENT`). Files the server writes itself (gradient backgrounds) are created with exclusive `O_EXCL` creation. Files written by Cheetah3D (`saveToFile`) or the helper (post-processing) are checked beforehand but not created exclusively, so the check is not atomic.
-* `c3d-mcp install` takes a timestamped `tar.gz` of `Scripts/` into `Cheetah3D/MCP-backups/` *before* modifying anything and aborts if the backup fails. `uninstall` removes only what the install manifest lists as created by install (the loader macro only if install created it: a macro file that existed before is kept; the `MCP/` directory) and never touches `MCP-backups/` or your own scripts/macros; entries outside the managed directories are refused even if a manifest lists them.
+* Installing the bridge (Bridge › Install, or `c3d-mcp install`) takes a timestamped `tar.gz` of `Scripts/` into `Cheetah3D/MCP-backups/` *before* modifying anything and aborts if the backup fails. `uninstall` removes only what the install manifest lists as created by install (the loader macro only if install created it: a macro file that existed before is kept; the `MCP/` directory) and never touches `MCP-backups/` or your own scripts/macros; entries outside the managed directories are refused even if a manifest lists them.
 * Edit > Undo does not revert macro changes (probe P11); safety comes from file checkpoints, not undo.
 
 ## Network and downloads
 
 * The server itself makes no network connections except the asset tools (Poly Haven by default), which are optional (`C3D_MCP_DISABLE_ASSETS=1`).
 * Downloads: HTTPS only, size caps enforced while streaming (the transfer is aborted as soon as the cap is exceeded, with or without `Content-Length`; JSON API responses are capped at 8 MB), extension allow-list, SHA-256 recorded next to the file, licence/attribution recorded. Downloaded files are untrusted data and are only ever opened by Cheetah3D as geometry/images, never executed.
-* The optional helper download at install time must be HTTPS with a pinned SHA-256; the installer step is injectable so offline installs never touch the network. Nothing is published or uploaded by c3d-mcp.
+* The app checks for updates at the release feed (HTTPS) and installs one only if its EdDSA signature verifies against the public key built into the app. Nothing is published or uploaded by c3d-mcp.
 
-## Installer (`install.sh`, `c3d-mcp setup`)
-Never uses `sudo` and never pipes anything into a privileged shell. It downloads only from nodejs.org (Node.js) and this project's GitHub releases, and verifies every download against a SHA-256 (the Node tarball against nodejs.org's `SHASUMS256.txt`, the c3d-mcp tarball against the checksum stamped into the script or the release's `SHA256SUMS`); a mismatch aborts before anything is installed. Files it writes: `~/.c3d-mcp` (or `--prefix`), optionally a PATH line in `~/.zprofile` (asked), the bridge and helper under Cheetah3D's support folders (with a backup of your Scripts folder), and, only after asking per client, one `c3d` entry in each client's config (timestamped backup next to it; existing entries are never overwritten). It opens System Settings but never changes privacy permissions itself. Inspect the script before running it (`curl -fsSL <url> -o install.sh; less install.sh`). Note that a script fetched with `curl | bash` is only as trustworthy as the channel (GitHub over HTTPS) and cannot check its own checksum; the download-then-read form is the cautious path.
+## The app: install, cleanup and update
+* **Install.** The app never uses `sudo`. It writes: the bridge under Cheetah3D's support folders (after a backup of your Scripts folder), `MCP/settings.json`, and, only for clients you tick, one `c3d` entry in that client's config (timestamped backup next to it; a different existing entry is never overwritten without your explicit confirmation). It opens System Settings but never changes privacy permissions itself: macOS shows its own prompts.
+* **Claude Code allow rule.** *Allow all c3d tools* adds `mcp__c3d` to `permissions.allow` in `~/.claude/settings.json` only after asking, with a backup, and *Ask again* removes it. That rule lets Claude Code run every c3d tool, including `c3d_run_script`, without asking: use `C3D_MCP_DISABLE_EXEC=1` if you do not want that.
+* **Cleanup of older installs.** The scan is read-only. Removal moves files to the Trash (the bridge secret is deleted instead), backs up every config it edits, never touches `MCP-backups`, your scripts or a git checkout of this project, re-checks each client entry at removal time, and writes a report to `~/Library/Logs/c3d-mcp/cleanup-<date>.txt`. It can quit Cheetah3D and Claude Desktop (never Claude Code) when a removal needs them closed.
+* **Updates.** See "Network and downloads". The bundled Node.js is the official build, verified against nodejs.org's `SHASUMS256.txt` when the app is built.
 
 ## Logging
 
@@ -98,4 +103,4 @@ Open a private security advisory on the GitHub repository (Security → Advisori
 Before deleting more than 5 objects (or objects with children), overwriting a file, restoring a checkpoint, or running a script that touches files or the shell, the server asks you: through MCP elicitation if your client supports it, otherwise the tool refuses until the agent repeats the call with `confirm:true` (which your client may in turn show you for approval).
 
 ## Unattended runs
-`C3D_MCP_AUTO_CONFIRM=1` makes the server accept `confirm:true` from the model without asking a human, even if the client supports elicitation. Use it only for headless/automation runs on a scratch Cheetah3D document; it is deliberately off by default and not set by any client config snippet.
+`C3D_MCP_APPROVAL=trusted` (or the older `C3D_MCP_AUTO_CONFIRM=1`) stops the server asking at all; with the older flag it accepts `confirm:true` from the model without asking a human, even if the client supports elicitation. Use it only for headless/automation runs on a scratch Cheetah3D document; it is deliberately off by default and not set by any client config snippet.

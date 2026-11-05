@@ -181,7 +181,7 @@ describe('updateHelper', () => {
     const rt = { ...h.rt, helper: { ...h.rt.helper, installedApp: () => cask } };
     const r = await updateHelper(rt, { sources: { app: [source], zip: [] }, backupsDir: join(dir, 'backups'), settleMs: 1 });
     expect(r.action).toBe('skipped');
-    expect(r.detail).toMatch(/brew upgrade/);
+    expect(r.detail).toMatch(/not managed by c3d-mcp/);
     expect(readAppVersion(cask)).toBe('0.3.1');
   });
 

@@ -10,7 +10,6 @@ Researched 2026-10-29 on macOS 27.2 / Apple Silicon with Cheetah3D 8.1.3. Method
 | 04-mcp-spec-and-best-practices.md | Spec 2026-07-28, SDKs, tool design, security |
 | 05-macos-automation-tcc-capture.md | AX, TCC responsibility, ScreenCaptureKit, signing |
 | 06-models-frontier-vs-mlx.md | Frontier vs local MLX; Vision/BM25 |
-| 07-packaging-distribution.md | mcpb, plugin, npm, Homebrew, registry, CLI |
 | 08-open-questions-and-probes.md | 30 live probes to run first |
 | 09-qa-review.md | Independent review findings → resolutions |
 | 10-kb-verification-8.1.3.md | Claims of c3d-scripting-kb and the book "Learn 3D with Cheetah 3D" tested against 8.1.3: confirmed / refined / refuted / not tested |

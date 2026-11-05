@@ -1,17 +1,15 @@
-# C3D Bridge Helper
+# The helper inside C3D MCP.app
 
 ## For users
-The helper is a small background app (no Dock icon) that the server starts automatically (`open -g -a`, socket `~/Library/Application Support/Cheetah3D/MCP/helper.sock`). It brings Cheetah3D to the front for a moment, presses the bridge menu item, reports open dialogs, can screenshot the Cheetah3D window and downscale renders, then restores the app you were using.
+The helper is the part of **C3D MCP.app** that does everything needing macOS Accessibility or Screen Recording. When an AI client starts the server, the server starts the app headless (no window, no Dock icon: `open -g -a "C3D MCP.app" --args --socket ~/Library/Application Support/Cheetah3D/MCP/helper.sock`). The helper brings Cheetah3D to the front for a moment, presses the bridge menu item, reports open dialogs, can screenshot the Cheetah3D window and downscale renders, then restores the app you were using. If you open the app yourself you get the control panel and the same helper runs inside that window's process; closing the window keeps it running in the menu bar, quitting it (menu bar item or Cmd-Q) stops it.
 
-* Installed by `c3d-mcp install` to `~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app` (or via the Homebrew cask `c3d-bridge-helper`). `c3d-mcp install` also **updates** it: an older or damaged helper is replaced (the old app is backed up in `MCP-backups/helper-<time>/`, and put back automatically if the new one does not start). A helper from the Homebrew cask is never replaced by c3d-mcp: use `brew upgrade --cask c3d-bridge-helper`.
-* Needs **Accessibility** (and optionally **Screen Recording**): add the app with **+** in System Settings → Privacy & Security — see `docs/TROUBLESHOOTING.md#granting-permissions`.
-* Remove it with `c3d-mcp uninstall` (it stops the helper process and removes its LaunchAgent first, if one of ours exists). It only talks to the Unix socket owned by your user.
-* After an update macOS asks for Accessibility (and Screen Recording) again, because the downloadable helper is ad-hoc signed and each build counts as a new app. A helper you built and signed with your own stable certificate keeps its grants.
+* Needs **Accessibility** (and optionally **Screen Recording**), granted to *C3D MCP* once from the app's Permissions tab. See `docs/TROUBLESHOOTING.md#granting-permissions`.
+* Every release is signed with the same certificate, so macOS should keep the grants across updates.
+* The old separate "C3D Bridge Helper" app (0.3.x) is not used any more; the app's Cleanup tab finds and removes it, together with its LaunchAgent and old permission grants. It only talks to the Unix socket owned by your user.
 
 The rest of this file is developer documentation (architecture, command reference, live-verification notes).
 
-
-Swift app (`dev.c3dmcp.helper`) that performs everything needing macOS Accessibility or Screen Recording on behalf
+Swift code (bundle id `dev.c3dmcp.app`) that performs everything needing macOS Accessibility or Screen Recording on behalf
 of the c3d-mcp server: pressing Cheetah3D menu items, window/dialog inspection, window capture, image tooling.
 Authoritative spec: `docs/PROTOCOL.md` section 2 and 6; wire schema `contracts/helper-ipc.schema.json`.
 
@@ -19,15 +17,15 @@ Authoritative spec: `docs/PROTOCOL.md` section 2 and 6; wire schema `contracts/h
 
 ```
 helper/Package.swift            SwiftPM (Swift 6 mode, macOS 14+)
-helper/Sources/HelperCore       library: all logic
-helper/Sources/C3DBridgeHelper  executable (LSUIElement agent)
+helper/Sources/HelperCore       library: all helper logic
+helper/Sources/AppCore          library: engine runner (node + c3d-mcp.js), JSON models, settings.json
+helper/Sources/C3DMCPApp        the app: control panel (SwiftUI), helper host, Sparkle updater
 helper/Sources/c3d-helper-ctl   diagnostics CLI
 helper/Tests/HelperCoreTests    XCTests (offline, use FakeAX)
-helper/build-app.sh             builds + signs helper/build/C3D Bridge Helper.app
-helper/install-launchagent.sh   install / uninstall / start the LaunchAgent (scripts only)
-packaging/sign-dev.sh           signing (ad-hoc or $C3D_SIGN_IDENTITY) + verify
-packaging/notarize.sh           notarytool + stapler (--dry-run prints only)
-packaging/launchagent/          dev.c3dmcp.helper.plist.template
+helper/Tests/AppCoreTests       XCTests for the engine runner and models
+scripts/build-app.sh            builds, assembles and signs release/app/C3D MCP.app, the dmg, zip and appcast
+packaging/sign-app.sh           signing (self-signed identity from ~/.c3d-mcp-signing, else ad-hoc) + verify
+packaging/notarize.sh           notarytool + stapler for a future Developer ID (--dry-run prints only)
 ```
 
 HelperCore pieces: `AXProvider` (OS abstraction; `RealAX` = AppKit + ApplicationServices, `FakeAX` = scripted
@@ -39,29 +37,27 @@ in-memory Cheetah3D with a virtual clock), `MenuWalker` (title-path resolution, 
 ## Running it
 
 ```sh
-helper/build-app.sh                                  # -> helper/build/C3D Bridge Helper.app (universal if possible)
-open -g -a "C3D Bridge Helper.app" --args --socket "$HOME/Library/Application Support/Cheetah3D/MCP/helper.sock"
-# from the repo: open -g -a "$PWD/helper/build/C3D Bridge Helper.app" --args --socket <path>
+scripts/build-app.sh                                  # -> release/app/C3D MCP.app (arm64, signed)
+open -g -a "$PWD/release/app/C3D MCP.app" --args --socket "$HOME/Library/Application Support/Cheetah3D/MCP/helper.sock"
 ```
 
-* `--socket <path>` is required. The parent directory must already exist (the helper never creates it; Node does).
-* A stale socket file is removed; if a live instance answers on it the new process exits with code **3**; a
+* `--socket <path>` starts the headless helper; without arguments the app opens the control panel (and serves the default socket if nobody else does).
+* The parent directory of the socket is created with mode 0700 if missing.
+* A stale socket file is removed; if a live instance answers on it the new process exits with code **3** (the control panel then runs without serving and says "another helper is already running"); a
   non-socket file at the path is never touched (exit 1).
 * Socket mode is 0600. SIGTERM/SIGINT: closes connections, unlinks the socket, exit 0.
 * `--version`, `--selftest` (FakeAX self test, touches no real app, exit 0 on success).
 * Logs: stderr and `~/Library/Logs/c3d-mcp/helper.log` (rotated at 2 MB to `helper.log.1`).
 * Never spawn it as a child of Node (see "Responsible process").
 
-Diagnostics (inside the bundle, or `swift run c3d-helper-ctl`):
+Diagnostics (`swift run c3d-helper-ctl`):
 
 ```sh
-CTL="helper/build/C3D Bridge Helper.app/Contents/MacOS/c3d-helper-ctl"
-"$CTL" --socket "$SOCK" status          # also: ping permissions windows listMenus modalState
-"$CTL" --socket "$SOCK" --yes-press pressBridge   # state-changing commands need --yes-press
+swift run -c release c3d-helper-ctl --socket "$SOCK" status          # also: ping permissions windows listMenus modalState
+swift run -c release c3d-helper-ctl --socket "$SOCK" --yes-press pressBridge   # state-changing commands need --yes-press
 ```
 
-Build / test: `cd helper && swift build && swift test` (offline, ~1 s). Release bundle: `helper/build-app.sh`
-(`C3D_SIGN_IDENTITY` optional). Version comes from `helper/VERSION` into the Info.plist.
+Build / test: `cd helper && swift build && swift test` (offline, a few seconds). Without `helper/.sparkle` (fetched by `scripts/fetch-sparkle.sh`) the app target builds without the updater.
 
 ## Protocol
 
@@ -135,17 +131,18 @@ without a second user (`PeerAuthTests`).
 
 ## Permissions and TCC
 
-* The helper is its own TCC client when launched via LaunchServices (`open -g -a`) or a LaunchAgent: grant
-  **Accessibility** (and, for `captureWindow`, **Screen & System Audio Recording**) once to "C3D Bridge Helper" in
+* The app is its own TCC client when started via LaunchServices (`open -g -a`): grant
+  **Accessibility** (and, for `captureWindow`, **Screen & System Audio Recording**) once to "C3D MCP" in
   System Settings > Privacy & Security. `c3d-helper-ctl ... permissions` / `status` show the current state.
   The helper never touches TCC.db, never self-grants, and `captureWindow` is refused with `PERMISSION_MISSING`
   (it does not trigger the prompt) when `CGPreflightScreenCaptureAccess` is false.
-* **Ad-hoc signing invalidates grants on every rebuild** (designated requirement = cdhash). After a rebuild the user
-  must re-grant (remove the old entry with "-", add again). To avoid it, sign with a stable self-signed identity:
-  see the header of `packaging/sign-dev.sh` (`C3D_SIGN_IDENTITY="C3D Dev Signing" helper/build-app.sh`).
-  Quarantined downloads of an unnotarized build need right-click > Open (or "Open Anyway").
-* Hardened runtime is enabled; no entitlements are required (non-sandboxed, no JIT, no Apple Events).
-* Notarization: `packaging/notarize.sh [--dry-run]`, credentials via `C3D_NOTARY_PROFILE` (notarytool keychain profile).
+* **The grant follows the code-signing identity.** An ad-hoc signature has the cdhash as designated requirement, so every rebuild would need a re-grant.
+  Release builds are signed with the long-lived self-signed identity from `packaging/make-signing-identity.sh`; their designated requirement is
+  `identifier "dev.c3dmcp.app" and certificate leaf = H"<sha1>"`, identical across builds (checked with `codesign -dr -`), so macOS should keep the grant across updates.
+  The bundle id changed from `dev.c3dmcp.helper` (0.3.x), so 0.3.x users grant once more.
+* A browser download of the unnotarized app needs *System Settings › Privacy & Security › Open Anyway* once; `packaging/get-c3d-mcp.sh` avoids that (curl downloads are not quarantined).
+* No hardened runtime (it only matters for notarization and would add library validation against the embedded Sparkle framework); no entitlements (non-sandboxed, no JIT).
+* Notarization (only with a paid Developer ID): `packaging/notarize.sh [--dry-run]`, credentials via `C3D_NOTARY_PROFILE`.
 
 ### Responsible-process spike (P26)
 
@@ -155,20 +152,19 @@ the spawner disclaims responsibility (`responsibility_spawnattrs_setdisclaim`, a
 
 | launch method | responsible process (expected) | notes |
 |---|---|---|
-| `open -g -a "C3D Bridge Helper.app" --args --socket ...` | the helper (LaunchServices starts it as its own app) | recommended; `-g` keeps it in the background; survives the terminal |
-| LaunchAgent (`launchctl bootstrap gui/$UID`, `LimitLoadToSessionType Aqua`) | the helper (launchd job, Aqua session) | needs the plist's absolute app path; `RunAtLoad false`, start with `launchctl kickstart` |
+| `open -g -a "C3D MCP.app" --args --socket ...` | the app (LaunchServices starts it as its own app) | what the server does; `-g` keeps it in the background; survives the terminal |
 | `child_process.spawn` from Node | inherited from Node's ancestor (Terminal / VS Code / Claude Desktop, or Node itself if disclaimed) | **do not use**: grants would be attributed to the wrong app |
-| executed by hand in a shell (`.../MacOS/C3DBridgeHelper --socket ...`) | the terminal / host app | handy for dev only |
+| executed by hand in a shell (`.../MacOS/C3DMCP --socket ...`) | the terminal / host app | handy for dev only |
 
 Observed without touching TCC: running the freshly built, never-granted ad-hoc helper binary directly from the
 agent's shell reported `accessibility:true, screenRecording:true` in `status`, i.e. the checks were answered for the
 *parent* (host) process - consistent with the inheritance rule above and with the table's last row.
 
-Still to verify live (lead): (1) launch via `open -g -a` and confirm `permissions` reports **false** until the helper
-itself is granted, then true after granting; (2) same via LaunchAgent `kickstart`; (3) which entry appears in the
-Settings lists; (4) `log stream --predicate 'subsystem == "com.apple.TCC"'` while calling `permissions`/`pressBridge`
-to read the attributed `responsible` identity (reading the log does not touch TCC.db); (5) whether a self-signed
-identity keeps the grant across a rebuild.
+Still to verify live: (1) launch via `open -g -a` and confirm `permissions` reports **false** until the app
+itself is granted, then true after granting; (2) which entry appears in the
+Settings lists; (3) `log stream --predicate 'subsystem == "com.apple.TCC"'` while calling `permissions`/`pressBridge`
+to read the attributed `responsible` identity (reading the log does not touch TCC.db); (4) whether the self-signed
+identity keeps the grant across an update (the designated requirement is unchanged; the macOS behaviour was not observed).
 
 ## Live-verification checklist (nothing below was exercised against the real Cheetah3D menu)
 
@@ -186,7 +182,7 @@ identity keeps the grant across a rebuild.
 
 | symptom | cause / fix |
 |---|---|
-| `PERMISSION_MISSING` | grant Accessibility (or Screen Recording) to the helper; after any rebuild re-grant (ad-hoc cdhash changed) |
+| `PERMISSION_MISSING` | grant Accessibility (or Screen Recording) to C3D MCP in the Permissions tab; an ad-hoc dev build needs a re-grant after every rebuild |
 | `permissions` says true but you expected false | the helper was started from a shell and is riding on the terminal's grant (see P26) |
 | `APP_NOT_RUNNING` | start Cheetah3D (`launchApp`) |
 | `BLOCKED_BY_MODAL` | read `details.dialogs`; dismiss manually (never auto-clicked) |

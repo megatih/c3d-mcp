@@ -49,7 +49,7 @@ Never call a phase done while the draft is visibly less sophisticated than the r
 ## Crash recovery
 Cheetah3D 8.1.3 can crash (a script removing a material it just made; OBJ export). All windows are lost.
 1. Relaunch Cheetah3D, run `c3d_doctor`.
-2. `c3d_restore_checkpoint list_only:true`, then restore the latest checkpoint taken before the crash (opens as a new window; needs confirmation, unattended runs need `C3D_MCP_AUTO_CONFIRM=1`).
+2. `c3d_restore_checkpoint list_only:true`, then restore the latest checkpoint taken before the crash (opens as a new window; needs confirmation, unattended runs need `C3D_MCP_AUTO_CONFIRM=1` or `C3D_MCP_APPROVAL=trusted`).
 3. Re-read the scene with `c3d_list_scene`, rebuild the id table (ids may change), redo only the lost calls. Record the crash and its triggering call for the report.
 Checkpoint before every risky step (large scripts, material graph surgery, exports).
 
@@ -66,6 +66,6 @@ State what Cheetah3D cannot do instead of faking it: no inked/inverted-hull outl
 - Rotation convention was the commonest mistake (tilted boxes instead of yawed). Verify with a render.
 - Distant-light aim: if a light shines the wrong way, check its `axis` (0 = -X, 1 = -Y default, >=2 = -Z); `look_at` on a light sets -Z. Verify by render, not by the residual number.
 - After a server restart, re-list checkpoints with `c3d_restore_checkpoint list_only:true` before relying on remembered ids.
-- Unattended runs: `confirm:true` is ignored by elicitation-capable clients unless the server has `C3D_MCP_AUTO_CONFIRM=1`.
+- Unattended runs: `confirm:true` is ignored by elicitation-capable clients unless the server has `C3D_MCP_AUTO_CONFIRM=1` or `C3D_MCP_APPROVAL=trusted`.
 - `BLOCKED_BY_MODAL`: report the dialog text to the user and wait; do not retry blindly.
 - A 1,100-object scene renders at 1456x816 with GI in a few seconds; object count is rarely the bottleneck, GI samples are.

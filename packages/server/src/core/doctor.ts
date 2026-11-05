@@ -22,8 +22,8 @@ async function mode(path: string): Promise<number | undefined> {
 interface HelperPermissions { accessibility?: boolean; screenRecording?: boolean }
 interface HelperWindow { title?: string; role?: string; subrole?: string; main?: boolean }
 
-/** Helper app version shipped with this release (kept equal to helper/VERSION by a test). */
-export const EXPECTED_HELPER_VERSION = '0.3.2';
+/** Helper version shipped with this release: the helper is part of C3D MCP.app, so it equals the package version (checked by a test). */
+export const EXPECTED_HELPER_VERSION = '0.4.0';
 
 function versionLess(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
@@ -106,29 +106,29 @@ export async function doctor(rt: Runtime): Promise<DoctorReport> {
   const helperUp = rt.helper.available();
   let permissions: HelperPermissions | undefined;
   await guarded('helper', async () => {
-    if (!helperUp) return warn('helper', 'C3D Bridge Helper not available: degraded mode (osascript trigger)', 'Install the helper app (`c3d-mcp install`), then grant it Accessibility and Screen Recording.');
+    if (!helperUp) return warn('helper', 'The C3D MCP app (which runs the helper) is not running: degraded mode (osascript trigger)', 'Open C3D MCP from Applications, then grant it Accessibility and Screen Recording in its Permissions tab.');
     try {
       const r = await rt.helper.call<{ version?: string; pid?: number }>('ping', {}, 5000);
       permissions = await rt.helper.call<HelperPermissions>('permissions', {}, 5000).catch(() => undefined);
       if (r.version && versionLess(r.version, EXPECTED_HELPER_VERSION)) {
-        return warn('helper', `Helper reachable but old (version ${r.version}, pid ${r.pid ?? '?'}); this release ships ${EXPECTED_HELPER_VERSION}`, 'Run `c3d-mcp install`: it replaces an older helper app (newer commands such as post-processing need it) and restarts it; macOS may ask for Accessibility and Screen Recording again.');
+        return warn('helper', `Helper reachable but old (version ${r.version}, pid ${r.pid ?? '?'}); this release ships ${EXPECTED_HELPER_VERSION}`, 'Update C3D MCP (Overview > Updates, or download the latest DMG): newer commands such as post-processing need the current app.');
       }
       return ok('helper', `Helper reachable (version ${r.version ?? '?'}, pid ${r.pid ?? '?'})`);
     } catch (err) {
-      return warn('helper', `Helper installed but unreachable: ${err instanceof Error ? err.message : String(err)}`, 'Open "C3D Bridge Helper" once, or reinstall it. Falling back to osascript.');
+      return warn('helper', `Helper installed but unreachable: ${err instanceof Error ? err.message : String(err)}`, 'Open the C3D MCP app once, or restart it. Falling back to osascript.');
     }
   });
   checks.push(
     permissions
       ? permissions.accessibility
         ? ok('accessibility', 'Accessibility granted to the helper')
-        : bad('accessibility', 'Accessibility NOT granted to the helper', 'System Settings > Privacy & Security > Accessibility: enable "C3D Bridge Helper".')
-      : warn('accessibility', 'Unknown without the helper (the osascript fallback needs Accessibility for the app that launched c3d-mcp)', 'Install the helper, or grant Accessibility to your terminal / MCP client.'),
+        : bad('accessibility', 'Accessibility NOT granted to the helper', 'System Settings > Privacy & Security > Accessibility: enable "C3D MCP".')
+      : warn('accessibility', 'Unknown without the helper (the osascript fallback needs Accessibility for the app that launched c3d-mcp)', 'Open the C3D MCP app, or grant Accessibility to your terminal / MCP client.'),
     permissions
       ? permissions.screenRecording
         ? ok('screen-recording', 'Screen Recording granted to the helper')
-        : warn('screen-recording', 'Screen Recording NOT granted (only c3d_capture_viewport needs it)', 'System Settings > Privacy & Security > Screen Recording: enable "C3D Bridge Helper".')
-      : warn('screen-recording', 'Unknown without the helper', 'Install the helper to enable viewport capture.'),
+        : warn('screen-recording', 'Screen Recording NOT granted (only c3d_capture_viewport needs it)', 'System Settings > Privacy & Security > Screen Recording: enable "C3D MCP".')
+      : warn('screen-recording', 'Unknown without the helper', 'Open the C3D MCP app to enable viewport capture.'),
   );
 
   await guarded('document-windows', async () => {

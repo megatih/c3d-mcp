@@ -89,7 +89,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
 /** Copies the file next to itself; never overwrites an earlier backup (two edits in the same second get -2, -3, ...). */
-async function backup(path: string, now: Date): Promise<string> {
+export async function backup(path: string, now: Date): Promise<string> {
   const base = `${path}.c3d-backup-${timestamp(now)}`;
   let dest = base;
   for (let n = 2; await readIfExists(dest) !== undefined; n++) dest = `${base}-${n}`;
@@ -213,7 +213,7 @@ export async function configureClient(client: SetupClient, o: ConfigureOptions):
 
 export type UnconfigureStatus = 'removed' | 'absent' | 'foreign' | 'would-remove' | 'refused' | 'failed';
 export interface UnconfigureResult {
-  client: SetupClient;
+  client: SetupClient | 'lm-studio';
   status: UnconfigureStatus;
   target: string;
   backup?: string;
@@ -224,7 +224,7 @@ export interface UnconfigureOptions { home: string; dryRun?: boolean; exec?: Exe
 /** An entry is ours only if it launches c3d-mcp (npx package name, installed bin path or release tarball). */
 const launchesC3d = (text: string): boolean => /c3d-mcp/.test(text);
 
-async function unconfigureJson(client: SetupClient, target: string, o: UnconfigureOptions): Promise<UnconfigureResult> {
+async function unconfigureJson(client: SetupClient | 'lm-studio', target: string, o: UnconfigureOptions): Promise<UnconfigureResult> {
   const text = await readIfExists(target);
   if (text === undefined || text.trim() === '') return { client, status: 'absent', target, detail: 'no config file' };
   let doc: unknown;
@@ -278,6 +278,17 @@ async function unconfigureClaudeCode(o: UnconfigureOptions): Promise<Unconfigure
   if (o.dryRun) return { client, status: 'would-remove', target: shown, detail: `would run: ${shown}` };
   const r = await exec('claude', ['mcp', 'remove', '--scope', 'user', SERVER], { timeoutMs: 60_000 });
   return r.code === 0 ? { client, status: 'removed', target: shown, detail: 'unregistered with `claude mcp remove` (user scope)' } : { client, status: 'failed', target: shown, detail: `claude mcp remove failed: ${(r.stderr || r.stdout).trim().slice(0, 200) || `exit ${String(r.code)}`}` };
+}
+
+/** LM Studio is not auto-configured by setup, but older hand-made entries in ~/.lmstudio/mcp.json are cleaned up the same way. */
+export const lmStudioConfigPath = (home: string): string => join(home, '.lmstudio', 'mcp.json');
+export async function unconfigureLmStudio(o: UnconfigureOptions): Promise<UnconfigureResult> {
+  const target = lmStudioConfigPath(o.home);
+  try {
+    return await unconfigureJson('lm-studio', target, o);
+  } catch (err) {
+    return { client: 'lm-studio', status: 'failed', target, detail: err instanceof Error ? err.message : String(err) };
+  }
 }
 
 /** Removes the `c3d` server entry that `configureClient` added, keeping every other setting; refuses entries that are not ours. */

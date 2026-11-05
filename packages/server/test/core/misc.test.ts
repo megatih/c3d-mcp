@@ -13,6 +13,26 @@ import { BridgeError } from '../../src/toolkit.js';
 const dirs: string[] = [];
 afterEach(() => { for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true }); });
 
+describe('loadConfig with the control panel settings file', () => {
+  it('reads approval from <MCP dir>/settings.json; the environment wins; a broken file is ignored', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'c3d-settings-'));
+    try {
+      writeFileSync(join(dir, 'settings.json'), '{"approval":"trusted"}');
+      expect(loadConfig({ C3D_MCP_DIR: dir }, '/h').approval).toBe('trusted');
+      expect(loadConfig({ C3D_MCP_DIR: dir, C3D_MCP_APPROVAL: 'strict' }, '/h').approval).toBe('strict');
+      writeFileSync(join(dir, 'settings.json'), '{ nope');
+      expect(loadConfig({ C3D_MCP_DIR: dir }, '/h').approval).toBe('session');
+      writeFileSync(join(dir, 'settings.json'), '{"approval":"yolo"}');
+      expect(() => loadConfig({ C3D_MCP_DIR: dir }, '/h')).toThrow(/C3D_MCP_APPROVAL/);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('loadConfig', () => {
   it('has sensible defaults under the given home', () => {
     const c = loadConfig({}, '/Users/x');
@@ -27,11 +47,15 @@ describe('loadConfig', () => {
 
   it('reads every environment variable', () => {
     const c = loadConfig({ C3D_MCP_PROFILE: 'Local', C3D_MCP_DISABLE_EXEC: '1', C3D_MCP_DISABLE_ASSETS: 'true', C3D_MCP_DISABLE_SHELL: 'YES', C3D_MCP_AUTO_CONFIRM: '1', C3D_MCP_DIR: '/m', C3D_CHEETAH_SUPPORT_DIR: '/s', C3D_MCP_WORKDIR: '/w', C3D_MCP_LOG_DIR: '/l', C3D_MCP_TRIGGER: 'osascript' }, '/h');
-    expect(c).toEqual({ profile: 'local', disableExec: true, disableAssets: true, disableShell: true, autoConfirm: true, mcpDir: '/m', cheetahSupportDir: '/s', workDir: '/w', logDir: '/l', trigger: 'osascript', autoLaunch: true });
+    expect(c).toEqual({ profile: 'local', disableExec: true, disableAssets: true, disableShell: true, autoConfirm: true, approval: 'trusted', mcpDir: '/m', cheetahSupportDir: '/s', workDir: '/w', logDir: '/l', trigger: 'osascript', autoLaunch: true });
   });
 
   it('treats other flag values as off and rejects invalid enums', () => {
     expect(loadConfig({ C3D_MCP_DISABLE_EXEC: '0' }, '/h').disableExec).toBe(false);
+    expect(loadConfig({}, '/h').approval).toBe('session');
+    expect(loadConfig({ C3D_MCP_APPROVAL: 'Strict' }, '/h').approval).toBe('strict');
+    expect(loadConfig({ C3D_MCP_AUTO_CONFIRM: '1' }, '/h').approval).toBe('trusted');
+    expect(() => loadConfig({ C3D_MCP_APPROVAL: 'yolo' }, '/h')).toThrow(/C3D_MCP_APPROVAL/);
     expect(loadConfig({}, '/h').autoConfirm).toBe(false); // unattended confirmation is strictly opt-in
     expect(loadConfig({}, '/h').autoLaunch).toBe(true); // launching Cheetah3D is on by default, off with C3D_MCP_NO_AUTOLAUNCH
     expect(loadConfig({ C3D_MCP_NO_AUTOLAUNCH: '1' }, '/h').autoLaunch).toBe(false);
@@ -64,7 +88,9 @@ describe('config snippets', () => {
     const codex = parseToml(configSnippet('codex', { home: '/h' }).text) as { mcp_servers: { c3d: { tool_timeout_sec: number } } };
     expect(codex.mcp_servers.c3d.tool_timeout_sec).toBeGreaterThanOrEqual(120);
     expect((JSON.parse(configSnippet('gemini-cli').text) as { mcpServers: { c3d: { timeout: number } } }).mcpServers.c3d.timeout).toBeGreaterThanOrEqual(120_000);
-    expect(configSnippet('claude-code').note).toContain('claude mcp add c3d -- npx -y c3d-mcp serve');
+    expect(configSnippet('claude-code', { form: 'npx' }).note).toContain('claude mcp add c3d -- npx -y c3d-mcp serve');
+    expect(configSnippet('claude-code', { form: 'absolute', nodePath: '/N/node', binPath: '/A/c3d-mcp.js' }).note).toContain('claude mcp add c3d -- /N/node /A/c3d-mcp.js serve');
+    expect(configSnippet('cursor').text).toContain(process.execPath); // absolute is the default launch form
     expect(configSnippet('claude-desktop', { home: '/h' }).location).toBe('/h/Library/Application Support/Claude/claude_desktop_config.json');
   });
 });

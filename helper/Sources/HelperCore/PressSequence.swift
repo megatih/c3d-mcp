@@ -43,7 +43,7 @@ public struct Presser: Sendable {
     public func requireRunning() throws -> RunningApp {
         guard ax.isProcessTrusted() else {
             throw HelperError(.permissionMissing, "Accessibility permission is not granted to the helper",
-                              hint: "System Settings > Privacy & Security > Accessibility: enable C3D Bridge Helper.")
+                              hint: "System Settings > Privacy & Security > Accessibility: enable C3D MCP.")
         }
         guard let app = ax.cheetahApp() else {
             throw HelperError(.appNotRunning, "Cheetah3D is not running")

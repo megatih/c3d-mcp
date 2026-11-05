@@ -223,7 +223,7 @@ public final class CommandRouter: Sendable {
     private func capture(title: String?, outPath: String, crop: CropRect?, overwrite: Bool) async throws -> JSONValue {
         guard ax.screenRecordingGranted() else {
             throw HelperError(.permissionMissing, "Screen Recording permission is not granted to the helper",
-                              hint: "System Settings > Privacy & Security > Screen & System Audio Recording: enable C3D Bridge Helper.")
+                              hint: "System Settings > Privacy & Security > Screen & System Audio Recording: enable C3D MCP.")
         }
         guard ax.cheetahApp() != nil else { throw HelperError(.appNotRunning, "Cheetah3D is not running") }
         try OutputPolicy.check(outPath: outPath, overwrite: overwrite)

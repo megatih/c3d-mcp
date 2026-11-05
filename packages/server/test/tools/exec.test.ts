@@ -1,10 +1,25 @@
  
 import { beforeEach, describe, expect, it } from 'vitest';
-import { getConsole, lintScript, runScript } from '../../src/tools/exec.js';
+import { getConsole, lintScript, runScript, touchesFiles } from '../../src/tools/exec.js';
 import { expectCode, makeCtx, runTool, type TestCtx } from '../helpers/fakeBridge.js';
 
 let t: TestCtx;
 beforeEach(() => { t = makeCtx(); });
+
+describe('touchesFiles (which scripts need a confirmation)', () => {
+  it('does not flag ordinary scene scripts that use methods named write/open/remove', () => {
+    expect(touchesFiles('var p = obj.parent(); p.remove(obj); logger.open(); logger.write("x"); doc.remove(o);')).toBe(false);
+  });
+  it('does not flag reading a file', () => {
+    expect(touchesFiles('var f = new File("/tmp/a.txt"); f.open(READ_MODE); var s = f.readln(); f.close(); new File("/x").exist();')).toBe(false);
+  });
+  it('flags writing', () => {
+    expect(touchesFiles('var f = new File("/tmp/a.txt"); f.open(WRITE_MODE);')).toBe(true);
+    expect(touchesFiles('var f = new File("/tmp/a.txt"); f.writeln("x");')).toBe(true);
+    expect(touchesFiles('new File("/tmp/d").mkDir();')).toBe(true);
+    expect(touchesFiles('File.remove("/tmp/a");')).toBe(true);
+  });
+});
 
 describe('c3d_run_script', () => {
   it('lints, checkpoints, runs and returns value and log', async () => {

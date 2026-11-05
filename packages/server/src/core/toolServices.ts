@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { CLIENT_CAPABILITIES_META_KEY, inputResponse, type ServerContext } from '@modelcontextprotocol/server';
-import type { BridgeClient, RunOpts, ToolServices } from '../toolkit.js';
+import type { ApprovalMode, BridgeClient, RunOpts, ToolServices } from '../toolkit.js';
 import { FALLBACK_CAPABILITIES } from './fallbackCapabilities.js';
 
 /** Thrown by `services.confirm` to unwind the handler; the server turns it into an MCP `input_required` (elicitation) result. */
@@ -44,6 +44,10 @@ export interface ToolServiceDeps {
   legacyClientCapabilities: () => { elicitation?: unknown } | undefined;
   /** C3D_MCP_AUTO_CONFIRM: unattended agent runs where nobody can answer an elicitation prompt. */
   autoConfirm?: boolean;
+  /** C3D_MCP_APPROVAL (default session). */
+  approval?: ApprovalMode;
+  /** Scopes the user already accepted in this server process (session mode). Shared by every call. */
+  approvals?: Set<string>;
 }
 
 /** Gives every bridge call of a tool the "Waiting for Cheetah3D (Ns)" heartbeat as MCP progress (only emitted while a call waits longer than the client's progress interval). */
@@ -72,14 +76,23 @@ export function createToolServices(deps: ToolServiceDeps, call?: ServerContext):
   return {
     capabilities: () => deps.capabilities() as Promise<Record<string, any>>,
     // eslint-disable-next-line @typescript-eslint/require-await -- must reject (not throw synchronously) with ConfirmationNeeded
-    async confirm({ message, confirmFlag }) {
+    async confirm({ message, confirmFlag, scope }) {
+      // trusted: the user opted out of server prompts (C3D_MCP_APPROVAL=trusted or the legacy C3D_MCP_AUTO_CONFIRM=1).
+      if (deps.approval === 'trusted') return true;
       if (deps.autoConfirm && confirmFlag === true) return true;
+      // session: an action the user already accepted (same scope) is not asked again. The model's confirm flag never creates one.
+      const memory = deps.approval === 'session' && scope !== undefined ? deps.approvals : undefined;
+      if (memory && scope !== undefined && memory.has(scope)) return true;
+      const accepted = (): true => {
+        if (memory && scope !== undefined) memory.add(scope);
+        return true;
+      };
       const key = `confirm-${createHash('sha256').update(message).digest('hex').slice(0, 12)}`;
       const prior = call ? inputResponse(call.mcpReq.inputResponses, key) : ({ kind: 'missing' } as const);
-      if (prior.kind === 'elicit') return prior.action === 'accept' && prior.content?.confirm === true;
+      if (prior.kind === 'elicit') return prior.action === 'accept' && prior.content?.confirm === true ? accepted() : false;
       // A client that can ask its user always does: the model-supplied confirm flag must not bypass a human prompt (security review H3).
       if (clientSupportsElicitation(call, deps.legacyClientCapabilities)) throw new ConfirmationNeeded(key, message);
-      return confirmFlag === true;
+      return confirmFlag === true ? accepted() : false;
     },
     progress(message, fraction) {
       if (!call || token === undefined) return;

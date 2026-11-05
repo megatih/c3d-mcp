@@ -4,67 +4,47 @@
 
 Let an AI agent (Claude Code / Claude Desktop, Codex, Gemini CLI, Antigravity, Cursor, LM Studio …) **inspect, build, edit, animate, light, texture, render and export scenes in the running Cheetah3D** on macOS 14+ / Apple Silicon (developed and tested on macOS 27.2).
 
-Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-mcp` therefore works through three parts:
+Cheetah3D has no network API, no AppleScript dictionary and no URL scheme. `c3d-mcp` therefore works through three parts, all delivered by one app:
 
 ```
  MCP client ──stdio──▶ c3d-mcp server (TypeScript) ──mailbox files──▶ bridge macro inside Cheetah3D (JavaScript)
                               │                                              ▲
-                              └──Unix socket──▶ C3D Bridge Helper.app (Swift) ─┘ presses the macro's menu item (Accessibility)
+                              └──Unix socket──▶ C3D MCP.app (Swift: control panel + helper) ─┘ presses the macro's menu item (Accessibility)
 ```
 
 * **Server** (`packages/server`): 63 `c3d_*` tools (60 scene, render and asset tools plus 3 health tools), resources and prompts; queue, safety checks, backups.
 * **Bridge** (`bridge/`): a tiny loader macro plus a runtime that Cheetah3D executes, draining a request inbox and writing results.
-* **Helper** (`helper/`): a small Accessibility app that activates Cheetah3D, presses the bridge menu item and reports dialogs. Optional (an `osascript` fallback exists) but recommended: ~3× faster, modal detection, screenshots.
+* **App** (`helper/`): `C3D MCP.app`, a control panel plus the Accessibility helper that activates Cheetah3D, presses the bridge menu item, reports dialogs and takes screenshots. It also carries its own Node.js and the server, so nothing else has to be installed.
 
 ## Requirements
-macOS 14+ on Apple Silicon (developed on macOS 27.2), Cheetah3D 8.1.3, Node.js ≥ 22. The helper app is optional but recommended (without it `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file`, `c3d_capture_viewport` are unavailable and everything is slower).
+macOS 14+ on Apple Silicon (developed on macOS 27.2) and Cheetah3D 8.1.3. That is all: no Node.js, Homebrew or Terminal.
 
 ## Quickstart
 
-One command on a new Mac (checks macOS, Cheetah3D 8.1.3 and Node.js 22+, offers to install what is missing, installs the bridge and helper, opens the right System Settings pane, configures your AI clients and installs the agent skills; never uses `sudo`):
+**Download the app.** `C3D-MCP-<version>.dmg` from the [latest release](https://github.com/megatih/c3d-mcp/releases/latest): drag **C3D MCP** to Applications and open it. In the control panel: **Bridge** › install (then restart Cheetah3D once), **AI clients** › connect Claude Desktop/Code, Codex, Antigravity, Gemini CLI or Cursor, **Permissions** › grant Accessibility (Screen Recording is optional) and choose how often c3d-mcp asks for confirmation. **Overview** shows a health check and updates, **Activity** the helper log, **Cleanup** removes older installs.
+
+The app is signed with its own certificate (there is no paid Apple Developer ID behind it), so macOS asks you **once** to confirm: *System Settings › Privacy & Security › Open Anyway*. To skip that prompt, one line downloads the same app without it (it only downloads, verifies the SHA-256, copies the app to Applications and opens it):
 
 ```bash
-curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/get-c3d-mcp.sh | bash
 ```
 
-Read it first if you like (`curl -fsSL <url> -o install.sh; less install.sh; bash install.sh`), or double-click `Install-c3d-mcp.command` from the [latest release](https://github.com/megatih/c3d-mcp/releases/latest). Run it again any time: it detects a fresh, current, outdated or partial install and offers update, repair, reinstall, uninstall and status (`--status`, `--update`, `--repair`, `--reinstall`, `--uninstall [--all]`; see [docs/INSTALL.md](docs/INSTALL.md)). Full walkthrough: [docs/INSTALL.md](docs/INSTALL.md).
+Already installed an older version some other way (script, npm, npx, Homebrew, the Claude Desktop extension, the Claude Code plugin, by hand)? **Cleanup** finds and removes those (files go to the Trash). Full walkthrough: [docs/INSTALL.md](docs/INSTALL.md).
 
-<details><summary>Manual install</summary>
+**Keep it healthy.** Everything is in the control panel; the same functions exist as commands of the bundled server (`"/Applications/C3D MCP.app/Contents/Resources/node/bin/node" "/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js" <command>`, add `--json` for machine-readable output):
 
-> **Status:** `c3d-mcp` is not on the npm registry yet. Until it is, use the release tarball wherever this README says `npx -y c3d-mcp`:
-> `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.2/c3d-mcp-0.3.2.tgz <command>` (or install it once: `npm i -g https://github.com/megatih/c3d-mcp/releases/download/v0.3.2/c3d-mcp-0.3.2.tgz`, then run `c3d-mcp <command>`).
+| I want to… | In the app | Command |
+|---|---|---|
+| see what is installed and whether it works | Overview, Bridge | `status`, `doctor` |
+| install, update or repair the bridge | Bridge › Install or update / Repair | `install [--repair\|--reinstall] [--dry-run]` |
+| connect or disconnect an AI client | AI clients | `clients list\|add\|remove <client>` |
+| stop Claude Code asking before every tool call | Permissions › Allow all c3d tools | `permissions allow\|revoke` |
+| choose how often c3d-mcp asks to confirm | Permissions › Confirmation prompts | `C3D_MCP_APPROVAL` (below) |
+| remove leftovers of older installs | Cleanup | `legacy scan\|remove` |
+| remove the bridge, skills and client entries | Bridge › Uninstall everything | `uninstall --all` |
+| install the agent skills | Bridge › Install agent skills | `skills install\|uninstall` |
 
-```bash
-# 1. one command: backs up your Scripts folder, installs the bridge macro + runtime and the helper app
-npx -y c3d-mcp install
-
-# 2. restart Cheetah3D once (macros are only scanned at launch)
-# 3. System Settings → Privacy & Security → Accessibility → + → add ~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app (see docs/SETUP.md)
-#    (Screen Recording is optional, only for c3d_capture_viewport)
-
-# 4. verify
-npx -y c3d-mcp doctor
-
-# 5. add the server to your client
-claude mcp add c3d -- npx -y c3d-mcp serve      # Claude Code
-npx -y c3d-mcp config codex                      # prints snippets for claude-desktop, claude-code, codex, gemini-cli, antigravity, cursor, lm-studio
-```
-
-The guided version of steps 1-5 is `c3d-mcp setup`.
-</details>
-
-**Keep it healthy.** The installer and the CLI detect a fresh, current, outdated, partial or hand-made install and pick the right action:
-
-| I want to… | Run |
-|---|---|
-| see what is installed and what to do next | `c3d-mcp status` (or `install.sh --status`) |
-| install, update or repair (auto-detected) | `c3d-mcp install` (or run `install.sh` again) |
-| fix only what is broken / rewrite everything | `c3d-mcp install --repair` / `--reinstall` |
-| preview any of the above | add `--dry-run` |
-| remove the bridge and helper | `c3d-mcp uninstall` |
-| remove everything (skills, client entries, installer prefix) | `c3d-mcp uninstall --all`, then `install.sh --uninstall --all` |
-
-An update also replaces an older helper app (with automatic rollback). The downloadable helper is ad-hoc signed, so macOS asks for Accessibility and Screen Recording again afterwards. Uninstall never touches your Cheetah3D scripts or the `MCP-backups` folder.
+Updates arrive in the app itself (Sparkle, signed with the project's update key). Uninstall never touches your Cheetah3D scripts or the `MCP-backups` folder; to remove the app, drag it to the Trash.
 
 Then ask your agent: *"Build a dining table with four legs and a wood material, light it, and render it."*
 
@@ -85,18 +65,19 @@ Per-client setup: [docs/SETUP.md](docs/SETUP.md). Something not working: [docs/T
 | Assets | `search_assets`, `import_asset` (Poly Haven, CC0, no key) , `merge_file` |
 | Scripting | `run_script` (sandboxed JS), `lint_script`, `get_console`, `search_api_docs` |
 
-**Agent skills** for Claude Code, Codex CLI, Antigravity, Claude Desktop and ChatGPT ship with every release: `c3d-mcp skills install` (see [docs/SKILLS.md](docs/SKILLS.md)).
+**Agent skills** for Claude Code, Codex CLI, Antigravity, Claude Desktop and ChatGPT ship with every release: the app installs them for the first three, and the zips on the release page upload to Claude Desktop and ChatGPT (see [docs/SKILLS.md](docs/SKILLS.md)).
 
 Full reference with parameters: [docs/TOOLS.md](docs/TOOLS.md) (generated from the schemas). Honest list of what is unsupported or experimental: [docs/limitations.md](docs/limitations.md).
 
 ## Profiles and switches
 
 `C3D_MCP_PROFILE=full` (default) · `local` (≤ 25 tools, short descriptions, no script execution — for small local models) · `readonly` (read tools only).
-`C3D_MCP_DISABLE_EXEC=1`, `C3D_MCP_DISABLE_ASSETS=1`, `C3D_MCP_DISABLE_SHELL=1`, `C3D_MCP_NO_AUTOLAUNCH=1` (by default the first call launches Cheetah3D when it is not running and the helper app is installed).
+`C3D_MCP_DISABLE_EXEC=1`, `C3D_MCP_DISABLE_ASSETS=1`, `C3D_MCP_DISABLE_SHELL=1`, `C3D_MCP_NO_AUTOLAUNCH=1` (by default the first call launches Cheetah3D when it is not running and C3D MCP is installed).
+`C3D_MCP_APPROVAL=session` (default: a confirmation you accepted is not asked again for the same action until the server restarts) · `strict` (ask every time) · `trusted` (never ask; files that existed before the session are still never overwritten). The control panel stores the choice in `MCP/settings.json`; the environment variable wins.
 
 ## Safety in one paragraph
 
-Same-user threat model. The server never overwrites a file that existed before the session, takes automatic checkpoints before destructive operations, asks for confirmation (MCP elicitation, or `confirm:true`) before deleting many objects, overwriting or running scripts that touch files/shell, and `c3d_run_script` runs with best-effort containment that is **not** a security boundary. Details: [docs/SECURITY.md](docs/SECURITY.md).
+Same-user threat model. The server never overwrites a file that existed before the session, takes automatic checkpoints before destructive operations, asks for confirmation (MCP elicitation, or `confirm:true`; see `C3D_MCP_APPROVAL` above) before deleting many objects, overwriting or running scripts that touch files/shell, and `c3d_run_script` runs with best-effort containment that is **not** a security boundary. Details: [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Things worth knowing about Cheetah3D itself
 
@@ -105,17 +86,19 @@ render formats are png/jpg/tiff only; glTF/GLB cannot be opened (FBX/OBJ/DAE/STL
 
 ## Repository layout
 
-`packages/server` TypeScript MCP server · `bridge/` in-app runtime + Swift JavaScriptCore test harness · `helper/` Swift helper app · `contracts/` JSON Schemas shared by all three · `docs/PROTOCOL.md` the bridge protocol · `evals/` task suite + runner · `plugin/` + `.claude-plugin/` Claude Code plugin & marketplace · `mcpb/` Claude Desktop extension · `packaging/` Homebrew cask, registry `server.json`, signing scripts · `research/` the research notes and live probe results (`research/10` = what was verified in 8.1.3) · `vendor/c3d-scripting-kb` pinned MIT snapshot and `vendor/learn3d-cheetah` pinned BSD-2 book text, both used for doc search, lint rules and skills.
+`packages/server` TypeScript MCP server · `bridge/` in-app runtime + Swift JavaScriptCore test harness · `helper/` Swift package: `HelperCore` (the Accessibility helper), `AppCore` + `C3DMCPApp` (the control panel app), `c3d-helper-ctl` (diagnostics) · `contracts/` JSON Schemas shared by all three · `docs/PROTOCOL.md` the bridge protocol · `evals/` task suite + runner · `packaging/` signing, update-key, appcast, DMG and the curl installer · `scripts/` build, release and leak-check scripts · `skills/` agent skills · `research/` the research notes and live probe results (`research/10` = what was verified in 8.1.3) · `vendor/c3d-scripting-kb` pinned MIT snapshot and `vendor/learn3d-cheetah` pinned BSD-2 book text, both used for doc search, lint rules and skills.
 
 ## Development
 
 ```bash
 cd packages/server && npm ci && npm run lint && npm run typecheck && npm test      # unit/contract tests (offline)
 scripts/test-bridge.sh                                                              # in-app runtime tests on a Swift JavaScriptCore harness with strict mocks
-cd helper && swift test                                                             # helper tests (fake Accessibility provider)
+cd helper && swift test                                                             # helper and app-model tests (fake Accessibility provider)
 C3D_LIVE=1 npm run test:live                                                        # needs Cheetah3D running + installed bridge (uses scratch documents)
 node evals/runner/run.mjs --n=3                                                     # agent evals through `claude -p` (spends API credit; budget cap built in)
-scripts/release.sh                                                                  # builds npm tarball, .mcpb, helper zip into release/ (publishes nothing)
+packaging/make-signing-identity.sh && packaging/make-update-key.sh                  # once: the self-signed signing identity and the update key (see the scripts' headers)
+scripts/build-app.sh                                                                # builds, signs and packs release/app/ (dmg, zip, appcast.xml, get-c3d-mcp.sh)
+scripts/release.sh                                                                  # skills zips + the app + leak scan + checksums into release/ (publishes nothing)
 ```
 
 The live suite, the `packages/server/scripts/*.mjs` dev scripts and the evals close the Cheetah3D windows they open (answering "Don't Save"), through `packages/server/scripts/window-cleanup.mjs`. Windows that were already open stay, but do not create documents by hand while a run is in progress: they would be closed too. Set `C3D_KEEP_WINDOWS=1` to keep a run's windows for inspection.

@@ -46,13 +46,8 @@ for (const f of readdirSync(macroDir)) {
   if (f.endsWith('.template')) cpSync(join(macroDir, f), join(assets, 'macro', f));
 }
 
-// Helper app (zip made by scripts/release.sh); optional so a plain `npm pack` in a fresh checkout still works.
-const helperZip = join(repo, 'helper', 'build', 'C3D-Bridge-Helper.zip');
+// No helper app here: the helper is part of C3D MCP.app. Remove a stale copy left by an older build.
 reset('helper');
-if (existsSync(helperZip)) {
-  mkdirSync(join(assets, 'helper'), { recursive: true });
-  cpSync(helperZip, join(assets, 'helper', 'C3D-Bridge-Helper.zip'));
-}
 
 // Vendored knowledge base, pruned to what the server reads at runtime, plus its licence files.
 const kb = need(join(repo, 'vendor', 'c3d-scripting-kb'));

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { doctor } from '../core/doctor.js';
-import { createHelperInstaller } from '../core/helperInstall.js';
 import { install } from '../core/install.js';
 import { packageVersion } from '../core/assets.js';
 import type { Runtime } from '../core/runtime.js';
@@ -37,11 +36,11 @@ export function createHealthTools(rt: Runtime, listEnabled: () => string[]): Too
     name: 'c3d_install_bridge',
     title: 'Install or update the Cheetah3D bridge',
     description:
-      'Detects whether the bridge is fresh, current, outdated or partially installed and does what is needed: backs up Cheetah3D Scripts/, creates the mailbox and secret, installs or repairs the runtime and loader macro (Scripts/Macro/C3D-MCP), installs or replaces an old or damaged helper app. mode: auto (default), repair (fix only what is broken) or reinstall (rewrite everything). dry_run lists the plan and changes nothing. Never downgrades a newer runtime. A new macro appears in the menu only after a Cheetah3D restart; a replaced helper needs the macOS permissions granted again. The result says what is needed.',
+      'Detects whether the bridge is fresh, current, outdated or partially installed and does what is needed: backs up Cheetah3D Scripts/, creates the mailbox and secret, installs or repairs the runtime and loader macro (Scripts/Macro/C3D-MCP). The helper that presses the Cheetah3D menu is part of the C3D MCP app and is not touched. mode: auto (default), repair (fix only what is broken) or reinstall (rewrite everything). dry_run lists the plan and changes nothing. Never downgrades a newer runtime. A new macro appears in the menu only after a Cheetah3D restart. The result says what is needed.',
     group: 'health',
     inputSchema: z.object({
       skip_ping: z.boolean().optional().describe('Do not ping the runtime after installing'),
-      mode: z.enum(['auto', 'repair', 'reinstall']).optional().describe('auto (default): do what the detected state needs; repair: fix only what is broken; reinstall: rewrite every managed file and the helper.'),
+      mode: z.enum(['auto', 'repair', 'reinstall']).optional().describe('auto (default): do what the detected state needs; repair: fix only what is broken; reinstall: rewrite every managed file.'),
       dry_run: z.boolean().optional().describe('Only report what was detected and what would change.'),
     }),
     outputSchema: z.object({
@@ -65,7 +64,7 @@ export function createHealthTools(rt: Runtime, listEnabled: () => string[]): Too
     profiles: ['full', 'local'],
     localDescription: 'Install/update the Cheetah3D bridge (idempotent).',
     async handler(input) {
-      const r = await install(rt, { skipPing: input.skip_ping, mode: input.mode ?? 'auto', dryRun: input.dry_run === true, installHelper: createHelperInstaller() });
+      const r = await install(rt, { skipPing: input.skip_ping, mode: input.mode ?? 'auto', dryRun: input.dry_run === true, installHelper: false });
       const structured = { ok: r.ok, mode: r.mode, dry_run: r.dryRun, ...(r.state ? { detected: r.state.summary } : {}), plan: r.plan, ...(r.helperUpdate ? { helper_update: { action: r.helperUpdate.action, permissions: r.helperUpdate.permissions, detail: r.helperUpdate.detail } } : {}), changed: r.changed, restart_needed: r.restartNeeded, menu: r.menu, helper: r.helper, degraded: r.degraded, steps: r.steps, guidance: r.guidance, ...(r.ping ? { ping: r.ping } : {}) };
       return { structured, text: [r.dryRun ? 'Dry run: nothing was changed.' : r.ok ? 'Bridge installed.' : 'Install failed.', ...(r.state ? [`Detected: ${r.state.summary}`] : []), ...(r.dryRun ? r.plan.map((l) => `- would ${l}`) : r.steps.map((s) => `- ${s.name}: ${s.status} ${s.detail}`)), ...r.guidance].join('\n') };
     },

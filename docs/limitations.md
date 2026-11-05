@@ -16,9 +16,11 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 | Geometry | Vertex colors | - | - |
 
 ## Installation
-- The helper app is signed with a development identity but **not notarized** (needs a Developer ID certificate): on first launch macOS may block it; see the `xattr` note in docs/INSTALL.md.
-- Cheetah3D itself cannot be installed by the installer (commercial software); Node.js can (Homebrew or a checksum-verified private copy).
-- The installer and wizard are verified on macOS 27.2; the System Settings deep links differ between macOS versions, so the wizard verifies which pane opened and otherwise shows the click path. A timed run on a truly fresh Mac is still a manual item (docs/qa/real-client-runbook.md).
+- The C3D MCP app (and the older helper) is signed with a self-signed certificate, **not** an Apple Developer ID, and is not notarized (that needs the paid Apple Developer Program). A copy downloaded in a browser is blocked once by Gatekeeper until you click *Open Anyway* (System Settings › Privacy & Security); the `curl` one-liner avoids the prompt. Because every release is signed with the same certificate, macOS should keep the Accessibility and Screen Recording grants across updates.
+- Cheetah3D itself is commercial software and has to be installed (and launched once) by you. The app needs no Node.js, Homebrew or Terminal.
+- The app is verified on macOS 27.2. How Gatekeeper treats a browser-downloaded copy on other macOS versions, and a timed run on a truly fresh Mac, were not tested by the maintainer (docs/qa/real-client-runbook.md).
+- The app is Apple Silicon only (arm64) and needs macOS 14 or newer.
+- In-app updates are verified with the project's own EdDSA key, not an Apple certificate.
 
 ## Experimental (menu automation, needs the helper and Accessibility)
 
@@ -73,7 +75,7 @@ Honest list of what the c3d-mcp tools cannot do or only do experimentally in Che
 - **Rotation:** `rotation` components are x=heading, y=pitch, z=bank (default HPB order), not x/y/z axis rotations.
 - **Reparenting:** `keep_world` only works between root-level parents.
 - **Scripts:** `doc.addObject` creates objects under the parent of the currently selected object (parent explicitly), a script that throws keeps the geometry it already created, and removing a material (`doc.removeMaterial`) in the same script run that created it crashes Cheetah3D at idle (crash #2, root cause isolated by bisect in research/08). Since 0.1.2 the script `doc` refuses that case with UNSUPPORTED; removing a material created in an earlier call is safe. A document reached through `obj.document()` is a fresh wrapper per call and cannot be guarded, so the lint rule `remove-material` warns about every `.removeMaterial(` instead.
-- **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1`.
+- **Unattended runs:** a client that supports elicitation is always asked and the model's `confirm:true` is ignored unless the server was started with `C3D_MCP_AUTO_CONFIRM=1` or `C3D_MCP_APPROVAL=trusted`. In the default `session` mode an accepted prompt is remembered for the same action until the server restarts.
 
 
 ## Measured in 8.1.3 while checking the scripting knowledge base and the book (research/10)

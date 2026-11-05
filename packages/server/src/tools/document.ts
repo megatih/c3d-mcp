@@ -90,7 +90,7 @@ export const newDocument = defineTool({
   idempotent: false,
   profiles: ['full'],
   async handler(_i, ctx) {
-    if (!ctx.helper.available()) throw new BridgeError('UNSUPPORTED', 'Creating a document needs the helper app.', 'Run c3d_doctor; as a workaround use c3d_open_document on fixtures/empty.jas.');
+    if (!ctx.helper.available()) throw new BridgeError('UNSUPPORTED', 'Creating a document needs the helper (part of the C3D MCP app).', 'Run c3d_doctor; as a workaround use c3d_open_document on fixtures/empty.jas.');
     const r = await ctx.helper.call<{ title: string }>('newDocument');
     const document = await adoptWindow(ctx, r.title);
     return ok({ window: r.title, document }, `Created "${r.title}" and bound the session to it.`);
@@ -186,7 +186,7 @@ export const restoreCheckpoint = defineTool({
     if (input.list_only) return ok({ checkpoints: cps }, `${cps.length} checkpoint(s).`);
     const cp = input.id ? cps.find((c) => c.id === input.id) : cps[cps.length - 1];
     if (!cp) throw new BridgeError('NOT_FOUND', input.id ? `No checkpoint "${input.id}".` : 'No checkpoints exist in this session.', 'Create one with c3d_checkpoint.');
-    if (!(await ctx.services.confirm({ message: `Reopen checkpoint ${cp.id} (${cp.label}) as a new window and work in it?`, confirmFlag: input.confirm })))
+    if (!(await ctx.services.confirm({ message: `Reopen checkpoint ${cp.id} (${cp.label}) as a new window and work in it?`, confirmFlag: input.confirm, scope: `restore:${cp.id}` })))
       throw new BridgeError('CONFIRMATION_REQUIRED', 'Restoring a checkpoint needs confirmation.', 'Retry with confirm:true.');
     await openWithCheetah(cp.path);
     const window = await waitForWindow(ctx, path.basename(cp.path, '.jas'));

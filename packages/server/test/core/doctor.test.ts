@@ -139,12 +139,12 @@ describe('doctor', () => {
     expect(c?.status).toBe('warn');
     expect(c?.detail).toContain('0.1.1');
     expect(c?.detail).toContain(EXPECTED_HELPER_VERSION);
-    expect(c?.fix).toMatch(/c3d-mcp install/);
+    expect(c?.fix).toMatch(/C3D MCP/);
   });
 
-  it('EXPECTED_HELPER_VERSION matches helper/VERSION', () => {
-    const file = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', 'helper', 'VERSION');
-    expect(EXPECTED_HELPER_VERSION).toBe(readFileSync(file, 'utf8').trim());
+  it('EXPECTED_HELPER_VERSION equals the package version (the helper ships inside C3D MCP.app)', () => {
+    const file = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'package.json');
+    expect(EXPECTED_HELPER_VERSION).toBe((JSON.parse(readFileSync(file, 'utf8')) as { version: string }).version);
   });
 
   it('fails accessibility when the helper lacks it and reports an open modal', async () => {

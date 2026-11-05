@@ -236,13 +236,13 @@ export async function install(rt: Runtime, opts: InstallOptions = {}): Promise<I
       helperUpdate = await (opts.updateHelper ?? updateHelper)(rt, { force: mode === 'reinstall' });
       const ok = helperUpdate.action !== 'failed' && helperUpdate.action !== 'rolled-back';
       step('helper', ok ? (helperUpdate.action === 'unchanged' || helperUpdate.action === 'skipped' ? 'unchanged' : 'done') : 'warn', helperUpdate.detail);
-      if (helperUpdate.permissions === 'regrant') guidance.push('The helper app was replaced, so macOS will ask for Accessibility (and Screen Recording for screenshots) again: grant "C3D Bridge Helper" in System Settings > Privacy & Security, or run `c3d-mcp setup`.');
+      if (helperUpdate.permissions === 'regrant') guidance.push('The helper app was replaced, so macOS will ask for Accessibility (and Screen Recording for screenshots) again: grant it in System Settings > Privacy & Security (the Permissions tab of the C3D MCP app opens the right page).');
       if (ok && helperUpdate.path && (helperUpdate.action === 'updated' || helperUpdate.action === 'repaired' || helperUpdate.action === 'installed')) helperEntry = { path: helperUpdate.path, installedByUs: true };
     } catch (err) {
       step('helper', 'warn', `Helper update failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  if (helper === 'missing') step('helper', 'warn', 'C3D Bridge Helper app not installed: degraded mode (osascript trigger; needs Accessibility for your terminal/MCP client; no Screen Recording features; image tools use a fallback).');
+  if (helper === 'missing') step('helper', 'warn', 'The C3D MCP app (which runs the helper) is not running or not installed: degraded mode (osascript trigger; needs Accessibility for your terminal/MCP client; no Screen Recording features; image tools use a fallback).');
   else if (helper === 'present' && !helperUpdate && !steps.some((s) => s.name === 'helper')) step('helper', 'unchanged', installedHelperApp(rt) ?? '');
 
   const manifest: InstallManifest = {
@@ -268,7 +268,7 @@ export async function install(rt: Runtime, opts: InstallOptions = {}): Promise<I
   if (!app.running) guidance.push('Cheetah3D is not running. Start it (macros are discovered at launch), then run `c3d-mcp doctor`.');
   else if (menu === 'absent') guidance.push('Restart Cheetah3D: the new Tools > Script > Macro Script > C3D-MCP menu only appears after a restart (there is no "Update Menu" command).');
   else if (menu === 'unknown' && macroChanges) guidance.push('Could not read the Cheetah3D menu (Accessibility permission?). If Tools > Script > Macro Script > C3D-MCP is missing, restart Cheetah3D.');
-  if (helper === 'missing') guidance.push('Optional: install the C3D Bridge Helper app for reliable window handling and screenshots, then grant it Accessibility and Screen Recording.');
+  if (helper === 'missing') guidance.push('Optional: open the C3D MCP app (it runs the helper) for reliable window handling and screenshots, and grant it Accessibility and Screen Recording in its Permissions tab.');
   if (menu === 'present' && changed) guidance.push('The macro file changed but the menu already exists: Cheetah3D picks up edits to listed macros on the next run, no restart needed.');
 
   let ping: InstallReport['ping'];

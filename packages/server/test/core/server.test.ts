@@ -258,8 +258,8 @@ describe('confirmation', () => {
     destructive: true,
     inputSchema: z.object({ confirm: z.boolean().optional() }),
     outputSchema: z.object({ done: z.boolean() }),
-    handler: async (i: { confirm?: boolean }, ctx: { services: { confirm(o: { message: string; confirmFlag?: boolean }): Promise<boolean> } }) => {
-      if (!(await ctx.services.confirm({ message: 'Delete 7 objects?', confirmFlag: i.confirm }))) throw new BridgeError('CONFIRMATION_REQUIRED', 'Needs confirmation', 'Pass confirm:true');
+    handler: async (i: { confirm?: boolean }, ctx: { services: { confirm(o: { message: string; confirmFlag?: boolean; scope?: string }): Promise<boolean> } }) => {
+      if (!(await ctx.services.confirm({ message: 'Delete 7 objects?', confirmFlag: i.confirm, scope: 'ask:7' }))) throw new BridgeError('CONFIRMATION_REQUIRED', 'Needs confirmation', 'Pass confirm:true');
       return { structured: { done: true } };
     },
   } as never);
@@ -295,6 +295,46 @@ describe('confirmation', () => {
     h.rt.config.autoConfirm = false;
     expect(r.isError).toBeFalsy();
     expect(asked).toHaveLength(0);
+  });
+
+  describe('C3D_MCP_APPROVAL', () => {
+    const elicit = { caps: { elicitation: { form: {} } } };
+    const run = async (mode: 'strict' | 'session' | 'trusted', answer: 'accept' | 'decline', calls: number) => {
+      h.rt.config.approval = mode;
+      const { client } = await connect([askTool], elicit);
+      const asked: string[] = [];
+      client.setRequestHandler('elicitation/create', (req) => { asked.push((req.params as { message: string }).message); return answer === 'accept' ? { action: 'accept', content: { confirm: true } } : { action: 'decline' }; });
+      const results = [];
+      for (let n = 0; n < calls; n++) results.push(await client.callTool({ name: 'c3d_ask', arguments: {} }));
+      h.rt.config.approval = 'strict';
+      return { asked, results };
+    };
+    it('strict asks every time', async () => {
+      expect((await run('strict', 'accept', 3)).asked).toHaveLength(3);
+    });
+    it('session asks once per scope, then remembers the acceptance', async () => {
+      const r = await run('session', 'accept', 3);
+      expect(r.asked).toHaveLength(1);
+      expect(r.results.every((x) => !x.isError)).toBe(true);
+    });
+    it('session never remembers a decline', async () => {
+      const r = await run('session', 'decline', 2);
+      expect(r.asked).toHaveLength(2);
+      expect(r.results.every((x) => x.isError)).toBe(true);
+    });
+    it('session: on a client without elicitation, confirm:true is remembered for that scope (no human to protect)', async () => {
+      h.rt.config.approval = 'session';
+      const { client } = await connect([askTool]);
+      expect((await client.callTool({ name: 'c3d_ask', arguments: { confirm: true } })).isError).toBeFalsy();
+      const again = await client.callTool({ name: 'c3d_ask', arguments: {} });
+      h.rt.config.approval = 'strict';
+      expect(again.isError).toBeFalsy();
+    });
+    it('trusted never asks', async () => {
+      const r = await run('trusted', 'decline', 2);
+      expect(r.asked).toHaveLength(0);
+      expect(r.results.every((x) => !x.isError)).toBe(true);
+    });
   });
 
   it('declined elicitation yields CONFIRMATION_REQUIRED', async () => {

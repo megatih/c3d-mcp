@@ -28,10 +28,10 @@ describe('configureClient (JSON)', () => {
   const file = (): string => clientConfigPath('cursor', home) as string;
 
   it('creates a missing file (and parent dirs) without a backup', async () => {
-    const r = await configureClient('cursor', { home, now });
+    const r = await configureClient('cursor', { home, now, launch: { form: 'absolute', nodePath: '/N/node', binPath: '/A/c3d-mcp.js' } });
     expect(r.status).toBe('added');
     expect(r.backup).toBeUndefined();
-    expect(JSON.parse(readFileSync(file(), 'utf8')).mcpServers.c3d).toEqual({ command: 'npx', args: ['-y', 'c3d-mcp', 'serve'] });
+    expect(JSON.parse(readFileSync(file(), 'utf8')).mcpServers.c3d).toEqual({ command: '/N/node', args: ['/A/c3d-mcp.js', 'serve'] });
   });
 
   it('treats an empty file as an empty object', async () => {
@@ -66,7 +66,7 @@ describe('configureClient (JSON)', () => {
     const r = await configureClient('cursor', { home, now, confirmOverwrite: () => Promise.resolve(true) });
     expect(r.status).toBe('replaced');
     expect(r.backup).toBeDefined();
-    expect(JSON.parse(readFileSync(file(), 'utf8')).mcpServers.c3d.command).toBe('npx');
+    expect(JSON.parse(readFileSync(file(), 'utf8')).mcpServers.c3d.command).toBe(process.execPath); // the default launch form pins this install's node
   });
 
   it('refuses invalid JSON and non-object roots without touching them', async () => {
@@ -138,9 +138,9 @@ describe('configureClient (Claude Code)', () => {
 
   it('runs claude mcp add when c3d is not listed', async () => {
     const r = recorder('other: npx x - Connected\n');
-    const res = await configureClient('claude-code', { home, exec: r.exec });
+    const res = await configureClient('claude-code', { home, exec: r.exec, launch: { form: 'absolute', nodePath: '/N/node', binPath: '/A/c3d-mcp.js' } });
     expect(res.status).toBe('added');
-    expect(r.calls[1]).toEqual(['mcp', 'add', '--scope', 'user', 'c3d', '--', 'npx', '-y', 'c3d-mcp', 'serve']);
+    expect(r.calls[1]).toEqual(['mcp', 'add', '--scope', 'user', 'c3d', '--', '/N/node', '/A/c3d-mcp.js', 'serve']);
   });
 
   it('skips when listed, and does nothing in a dry run', async () => {

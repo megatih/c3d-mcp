@@ -45,6 +45,7 @@ export interface HelperClient {
 }
 
 export type Profile = 'full' | 'local' | 'readonly';
+export type ApprovalMode = 'strict' | 'session' | 'trusted';
 
 export interface ServerConfig {
   profile: Profile;
@@ -53,6 +54,8 @@ export interface ServerConfig {
   disableShell: boolean;
   /** Unattended runs (C3D_MCP_AUTO_CONFIRM=1): honour `confirm:true` even when the client could ask a human. Off by default. */
   autoConfirm: boolean;
+  /** C3D_MCP_APPROVAL: strict = ask every time; session = remember an accepted prompt (per action + path) until the server exits; trusted = never ask (pre-existing files stay protected). */
+  approval: ApprovalMode;
   mcpDir: string;
   cheetahSupportDir: string;
   logDir: string;
@@ -72,8 +75,8 @@ export interface SessionState {
 export interface ToolServices {
   /** Cached capabilities from the runtime (falls back to research lists if the app is unreachable). */
   capabilities(): Promise<Record<string, any>>;
-  /** Ask the user to confirm (MCP elicitation when the client supports it, else require input.confirm === true). Returns true when confirmed. */
-  confirm(opts: { message: string; confirmFlag?: boolean }): Promise<boolean>;
+  /** `scope` identifies the action (e.g. `overwrite:<path>`): in session mode an accepted scope is not asked again. Ask the user to confirm (MCP elicitation when the client supports it, else require input.confirm === true). Returns true when confirmed. */
+  confirm(opts: { message: string; confirmFlag?: boolean; scope?: string }): Promise<boolean>;
   /** Report progress for the current tool call. */
   progress(message: string, fraction?: number): void;
   /** Search vendored docs (BM25). */

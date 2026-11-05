@@ -89,7 +89,7 @@ function failureFrom(stderr: string): BridgeError {
     return new BridgeError(code, marker[2]?.trim() || code, hints[code], { via: 'osascript' });
   }
   if (/not allowed assistive|-25211|-1719|\(-25201\)|assistive access/i.test(stderr)) {
-    return new BridgeError('PERMISSION_MISSING', 'macOS Accessibility permission is missing for the process running c3d-mcp', 'System Settings > Privacy & Security > Accessibility: allow your terminal / MCP client (or install the helper app).', { via: 'osascript' });
+    return new BridgeError('PERMISSION_MISSING', 'macOS Accessibility permission is missing for the process running c3d-mcp', 'System Settings > Privacy & Security > Accessibility: allow your terminal / MCP client (or open the C3D MCP app).', { via: 'osascript' });
   }
   return new BridgeError('TRIGGER_FAILED', `osascript failed: ${stderr.trim().slice(0, 300)}`, 'Run `c3d-mcp doctor`.', { via: 'osascript' });
 }

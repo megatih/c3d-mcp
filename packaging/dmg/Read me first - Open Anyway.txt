@@ -1,0 +1,16 @@
+C3D MCP - first launch
+======================
+
+1. Drag "C3D MCP" onto the Applications folder.
+2. Open it from Applications. macOS will say it cannot verify the app. That is expected:
+   the app is signed with its own certificate, not with an Apple Developer ID.
+3. Click "Done" (not "Move to Trash"), then open
+      System Settings > Privacy & Security
+   scroll down to the message about "C3D MCP" and click "Open Anyway". Enter your password.
+4. Open C3D MCP again and click "Open". You only do this once per Mac.
+
+Prefer not to click through? Open Terminal and paste the one-line installer from the project's
+release page. It downloads the same app straight to /Applications, and macOS does not ask.
+
+Everything else (installing the bridge in Cheetah3D, connecting Claude and other AI assistants,
+permissions, removing older versions) is done inside the app. Nothing needs Homebrew, Node or Terminal.

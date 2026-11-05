@@ -49,7 +49,7 @@ export async function guardWrite(ctx: ToolContext, abs: string, confirm: boolean
     if (!owned(p)) throw new BridgeError('INVALID_ARGUMENT', `${p} already exists and was not created by this session; ${what} will not overwrite it.`, 'Choose a different path (e.g. add a suffix or timestamp).', { path: p });
   }
   if (existing.length) {
-    const yes = await ctx.services.confirm({ message: `Overwrite ${existing.join(', ')}?`, confirmFlag: confirm });
+    const yes = await ctx.services.confirm({ message: `Overwrite ${existing.join(', ')}?`, confirmFlag: confirm, scope: `overwrite:${existing.join('|')}` });
     if (!yes) throw new BridgeError('CONFIRMATION_REQUIRED', `Overwriting ${existing.join(', ')} needs confirmation.`, 'Retry with confirm:true.', { path: abs });
   }
   const dir = path.dirname(abs);

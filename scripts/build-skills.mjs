@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-// Validates the agent skills in skills/ against the Agent Skills format and this project's rules, mirrors them into the Claude Code
-// plugin (plugin/skills) and, with --zip <dir>, writes the upload bundles (one zip per skill + one with all skills).
+// Validates the agent skills in skills/ against the Agent Skills format and this project's rules and, with --zip <dir>, writes the upload bundles (one zip per skill + one with all skills).
 //   node scripts/build-skills.mjs [--check] [--zip <outDir>]
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -92,15 +91,6 @@ if (errors.length) {
 }
 console.log(`build-skills: ${names.length} skills valid (${names.join(', ')})`);
 if (checkOnly) process.exit(0);
-
-// Mirror into the Claude Code plugin (replaces the folders of the same names; other plugin skills are not touched).
-const pluginSkills = join(repo, 'plugin', 'skills');
-mkdirSync(pluginSkills, { recursive: true });
-rmSync(join(pluginSkills, 'cheetah3d'), { recursive: true, force: true });
-for (const name of names) {
-  rmSync(join(pluginSkills, name), { recursive: true, force: true });
-  cpSync(join(skillsDir, name), join(pluginSkills, name), { recursive: true });
-}
 
 if (zipOut) {
   rmSync(join(zipOut, 'skills'), { recursive: true, force: true });

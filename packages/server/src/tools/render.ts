@@ -219,7 +219,7 @@ export const captureViewport = defineTool({
   openWorld: false,
   profiles: ['full', 'readonly'],
   async handler(i, ctx) {
-    if (!ctx.helper.available()) throw new BridgeError('PERMISSION_MISSING', 'The helper app is not available.', 'Run c3d_doctor; Screen Recording permission is granted to the helper app in System Settings.');
+    if (!ctx.helper.available()) throw new BridgeError('PERMISSION_MISSING', 'The helper app is not available.', 'Run c3d_doctor; Screen Recording permission is granted to C3D MCP in System Settings.');
     const out = path.join(ctx.config.workDir, 'captures', `viewport-${Date.now()}.png`);
     ensureDir(path.dirname(out));
     try {
@@ -244,7 +244,7 @@ export const postprocessImage = defineTool({
   name: 'c3d_postprocess_image',
   title: 'Post-process rendered image',
   description:
-    'POST-PROCESSES an existing image file (normally a c3d_render_image result) with the helper app: bloom {threshold 0..1, radius px, intensity 0..2}, outline {strength 0..1, width 0.5..4, color [r,g,b]} edge lines from luminance, vignette {intensity 0..1, radius 0..2}, grade {saturation 0..2, contrast 0.5..1.5, exposure -2..2, shadow_tint, highlight_tint [r,g,b], tint_amount 0..1}, posterize {levels 2..32}. Cheetah3D itself has NO outlines or bloom: chain it after c3d_render_image(path) and pass that path here. Writes <workDir>/post/<name>_post_<n>.png (never overwrites) and returns a preview. Needs the helper (UNSUPPORTED otherwise: run `c3d-mcp install`).',
+    'POST-PROCESSES an existing image file (normally a c3d_render_image result) with the helper app: bloom {threshold 0..1, radius px, intensity 0..2}, outline {strength 0..1, width 0.5..4, color [r,g,b]} edge lines from luminance, vignette {intensity 0..1, radius 0..2}, grade {saturation 0..2, contrast 0.5..1.5, exposure -2..2, shadow_tint, highlight_tint [r,g,b], tint_amount 0..1}, posterize {levels 2..32}. Cheetah3D itself has NO outlines or bloom: chain it after c3d_render_image(path) and pass that path here. Writes <workDir>/post/<name>_post_<n>.png (never overwrites) and returns a preview. Needs the helper that is part of the C3D MCP app (UNSUPPORTED otherwise: open the app).',
   group: 'render',
   inputSchema: z.strictObject({
     path: z.string().min(1).describe('Existing image to process (e.g. the path returned by c3d_render_image). Relative paths resolve inside <workDir>/renders.'),
@@ -264,7 +264,7 @@ export const postprocessImage = defineTool({
   async handler(i, ctx) {
     const effects = { bloom: i.bloom, outline: i.outline, vignette: i.vignette, grade: i.grade, posterize: i.posterize };
     if (!Object.values(effects).some((v) => v !== undefined)) throw new BridgeError('INVALID_ARGUMENT', 'Nothing to do: give at least one of bloom, outline, vignette, grade, posterize.');
-    if (!ctx.helper.available()) throw new BridgeError('UNSUPPORTED', 'Image post-processing needs the helper app.', 'Run `c3d-mcp install` to install or update the helper, then c3d_doctor.');
+    if (!ctx.helper.available()) throw new BridgeError('UNSUPPORTED', 'Image post-processing needs the helper app.', 'Open the C3D MCP app (update it if needed), then run c3d_doctor.');
     const src = resolveOut(ctx, i.path, 'renders');
     if (!fs.existsSync(src)) throw new BridgeError('NOT_FOUND', `Image not found: ${src}`, 'Render first with c3d_render_image and pass its path.');
     let out: string;
@@ -294,7 +294,7 @@ export const postprocessImage = defineTool({
       r = await ctx.helper.call<Record<string, any>>('postProcessImage', args, 120_000);
     } catch (e) {
       if (e instanceof BridgeError && (e.name === 'HelperUnavailableError' || /unknown (command|cmd)|unsupported command|not implemented|invalid command/i.test(e.message)))
-        throw new BridgeError('UNSUPPORTED', 'The installed helper app cannot post-process images.', 'Run `c3d-mcp install` to update the helper app, then retry.', { cause: e.message });
+        throw new BridgeError('UNSUPPORTED', 'The installed helper app cannot post-process images.', 'Update the C3D MCP app (Overview > Updates), then retry.', { cause: e.message });
       throw e;
     }
     const outFile = String(r.outPath ?? out);

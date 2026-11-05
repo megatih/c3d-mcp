@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { HelperClientImpl, HelperUnavailableError, defaultHelperAppPaths } from '../../src/core/helperClient.js';
+import { HelperClientImpl, HelperUnavailableError, defaultHelperAppPaths, enclosingApp } from '../../src/core/helperClient.js';
 import type { Executor } from '../../src/core/platform.js';
 import { FakeHelper } from '../helpers/fakeHelper.js';
 
@@ -143,5 +143,10 @@ describe('HelperClientImpl', () => {
 
   it('lists candidate app locations including the MCP dir', () => {
     expect(defaultHelperAppPaths('/m')).toContain('/m/helper/C3D Bridge Helper.app');
+    expect(defaultHelperAppPaths('/m', '/x/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js')[0]).toBe('/x/C3D MCP.app');
+    const idx = (list: string[], needle: string): number => list.findIndex((p) => p.endsWith(needle));
+    const paths = defaultHelperAppPaths('/m', '/n/a.js');
+    expect(idx(paths, '/Applications/C3D MCP.app')).toBeLessThan(idx(paths, '/m/helper/C3D Bridge Helper.app')); // the new app wins over an old helper
+    expect(enclosingApp('/n/a.js')).toBeUndefined();
   });
 });

@@ -25,7 +25,7 @@ export function createLauncher(helper: HelperClient, session: SessionState, tuni
   return {
     async ensureRunning(): Promise<void> {
       if (!helper.available()) {
-        throw new BridgeError('APP_NOT_RUNNING', 'Cheetah3D is not running and the helper app, which launches it, is not available', 'Install the helper (`c3d-mcp install`) or start Cheetah3D yourself.');
+        throw new BridgeError('APP_NOT_RUNNING', 'Cheetah3D is not running and the helper app, which launches it, is not available', 'Open the C3D MCP app (it runs the helper) or start Cheetah3D yourself.');
       }
       await helper.call('launchApp', {}, LAUNCH_TIMEOUT_MS);
       const hasDocument = async (): Promise<boolean> => {

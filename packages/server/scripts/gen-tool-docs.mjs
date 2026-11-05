@@ -59,7 +59,7 @@ md += `\n## Prompts\n\n| Name | Arguments | Description |\n|---|---|---|\n`;
 for (const p of allPrompts) md += `| \`${p.name}\` | ${Object.keys(p.args).join(', ')} | ${esc(p.description)} |\n`;
 md += `\n## Resources\n\n| URI | Description |\n|---|---|\n`;
 for (const r of allResources) md += `| \`${r.uri}\` | ${esc(r.description)} |\n`;
-md += `\n## Health tools (always available)\n\n| Tool | R/W | What it does |\n|---|---|---|\n| \`c3d_doctor\` | R | Structured health checks (Cheetah3D, bridge, helper, permissions, ping, dialogs) with a fix per failing check. |\n| \`c3d_install_bridge\` | W | Idempotent install of the bridge macro, runtime and helper app (backs up Scripts/ first); a Cheetah3D restart is needed once. Input: \`skip_ping\` (boolean). |\n| \`c3d_capabilities\` | R | Runtime type map (object/tag/material/node types, light types, formats, limits) and the active profile's tool list. |\n`;
+md += `\n## Health tools (always available)\n\n| Tool | R/W | What it does |\n|---|---|---|\n| \`c3d_doctor\` | R | Structured health checks (Cheetah3D, bridge, helper, permissions, ping, dialogs) with a fix per failing check. |\n| \`c3d_install_bridge\` | W | Idempotent install of the bridge macro and runtime (backs up Scripts/ first); a Cheetah3D restart is needed once. The helper is part of the C3D MCP app. Input: \`skip_ping\`, \`mode\`, \`dry_run\`. |\n| \`c3d_capabilities\` | R | Runtime type map (object/tag/material/node types, light types, formats, limits) and the active profile's tool list. |\n`;
 fs.mkdirSync(path.dirname(out), { recursive: true });
 fs.writeFileSync(out, md);
 console.log(`wrote ${out} (${allTools.length} tools)`);

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Leak scanner for everything that gets published: a source tree, build archives, or a git history.
 //   node scripts/check-public.mjs --tree <dir>
-//   node scripts/check-public.mjs --archive <file.tgz|.mcpb|.zip|.sh> [...]
+//   node scripts/check-public.mjs --archive <file.zip|.dmg|.sh|.xml|.tgz> [...]
 //   node scripts/check-public.mjs --history <git-repo>
 // Exit 1 when an error is found. The private patterns are assembled from fragments so this file never contains them.
 import { execFileSync } from 'node:child_process';
@@ -39,7 +39,7 @@ const add = (severity, where, label, snippet) => findings.push({ severity, where
 const GENERIC = new Set(['webmail address', 'private network address']);
 function scanText(where, text, signatureContext = false) {
   const lines = text.split('\n');
-  const vendored = /(^|\/)node_modules\//.test(where);
+  const vendored = /(^|\/)node_modules\/|\.app\/Contents\/Resources\/node\//.test(where); // the bundled Node.js runtime and its LICENSE are third-party too
   lines.forEach((line, i) => {
     for (const [label, re, sev] of RULES) {
       if (vendored && GENERIC.has(label)) continue;

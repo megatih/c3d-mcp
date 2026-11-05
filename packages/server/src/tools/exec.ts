@@ -7,7 +7,12 @@ import { Confirm } from '../lib/schemas.js';
 
 const FINDING = z.looseObject({ rule: z.string(), line: z.number().int(), message: z.string(), severity: z.enum(['error', 'warn']) });
 const SHELL = /\bOS\s*\.\s*system\b/;
-const FILE_WRITE = /\bnew\s+File\s*\(|\bFile\s*\.\s*(?:mkDir|remove|write|copy|move)\b|\.(?:write|writeln|copyTo|remove|open)\s*\(|\bWRITE_MODE\b/;
+// File objects only come from `new File(...)`, so a script that never builds one cannot call File methods. Reading (new File(p).exist(), READ_MODE)
+// does not prompt; opening for writing, or calling a mutating method on a File the script created, does.
+const FILE_WRITE_ALWAYS = /\bWRITE_MODE\b|\bFile\s*\.\s*(?:mkDir|remove|write|copy|move)\b/;
+const FILE_CREATED = /\bnew\s+File\s*\(/;
+const FILE_MUTATING_CALL = /\.\s*(?:write\w*|mkDir|remove|copyTo|moveTo)\s*\(/;
+export const touchesFiles = (code: string): boolean => FILE_WRITE_ALWAYS.test(code) || (FILE_CREATED.test(code) && FILE_MUTATING_CALL.test(code));
 
 export const runScript = defineTool({
   name: 'c3d_run_script',
@@ -33,10 +38,10 @@ export const runScript = defineTool({
     const errors = lint.filter((f) => f.severity === 'error');
     if (errors.length && !i.force) throw new BridgeError('LINT_BLOCKED', `Script blocked by ${errors.length} lint error(s): ${errors.map((e) => `${e.rule}@L${e.line}`).join(', ')}.`, 'Fix the errors (see details) or pass force:true if you are sure.', { findings: lint });
     const shell = SHELL.test(i.code);
-    const files = FILE_WRITE.test(i.code);
+    const files = touchesFiles(i.code);
     if (shell && ctx.config.disableShell) throw new BridgeError('NOT_AVAILABLE_IN_PROFILE', 'OS.system is disabled (C3D_MCP_DISABLE_SHELL).', 'Remove shell calls from the script.');
     if (shell || files) {
-      const yes = await ctx.services.confirm({ message: `This script uses ${shell ? 'OS.system (shell commands)' : 'file writes'}. Run it?\n\n${i.code.length > 800 ? `${i.code.slice(0, 800)}\n… (${i.code.length} chars total, sha256 ${createHash('sha256').update(i.code).digest('hex').slice(0, 12)})` : i.code}`, confirmFlag: i.confirm });
+      const yes = await ctx.services.confirm({ message: `This script uses ${shell ? 'OS.system (shell commands)' : 'file writes'}. Run it?\n\n${i.code.length > 800 ? `${i.code.slice(0, 800)}\n… (${i.code.length} chars total, sha256 ${createHash('sha256').update(i.code).digest('hex').slice(0, 12)})` : i.code}`, confirmFlag: i.confirm, ...(shell ? {} : { scope: `script:${createHash('sha256').update(i.code).digest('hex')}` }) });
       if (!yes) throw new BridgeError('CONFIRMATION_REQUIRED', `Scripts using ${shell ? 'OS.system' : 'file access'} need confirmation.`, 'Retry with confirm:true after checking the code.');
     }
     const cp = await autoCheckpoint(ctx, 'run_script');

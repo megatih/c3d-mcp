@@ -1,4 +1,4 @@
-// A fake C3D Bridge Helper: JSON lines over a Unix socket (contracts/helper-ipc.schema.json).
+// A fake helper (the one inside C3D MCP.app): JSON lines over a Unix socket (contracts/helper-ipc.schema.json).
 import { createServer, type Server, type Socket } from 'node:net';
 import { rmSync } from 'node:fs';
 

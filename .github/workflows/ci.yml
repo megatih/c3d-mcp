@@ -9,13 +9,16 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 } # the history scan below needs every commit
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - name: Leak scan (private names, paths, tokens, forbidden files)
         run: node scripts/check-public.mjs --tree .
+      - name: Leak scan of the git history (author emails must be noreply)
+        run: node scripts/check-public.mjs --history .
       - name: Agent skills validate
         run: node scripts/build-skills.mjs --check
-      - name: Build the bridge runtime (needed by the installer tests)
+      - name: Build the bridge runtime (needed by the server tests)
         run: node scripts/build-runtime.mjs
       - name: Server lint, typecheck, tests
         working-directory: packages/server
@@ -24,7 +27,14 @@ jobs:
           npm run lint
           npx tsc --noEmit
           npx vitest run
-      - name: Installer script tests
-        run: bash scripts/test-install.sh
       - name: Leak scanner self-test
         run: bash scripts/test-check-public.sh
+  swift:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Helper library, app model and app target (without the Sparkle updater)
+        working-directory: helper
+        run: |
+          swift build
+          swift test

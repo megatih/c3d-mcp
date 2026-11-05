@@ -1,11 +1,9 @@
-// Default HelperInstaller for the CLI: copies the helper app bundle shipped with the package (assets/helper), or a dev build
-// from the repo, into <mcpDir>/helper. No network access: downloads are a packaging concern (Homebrew cask / GitHub release).
+// Locating and reading the helper app. Since 0.4.0 the helper is part of C3D MCP.app and c3d-mcp no longer installs a separate one;
+// this file only finds an older standalone helper (for status, update and uninstall).
 import { existsSync, readFileSync } from 'node:fs';
-import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { PACKAGE_ROOT, REPO_ROOT } from './assets.js';
 import { HELPER_APP_NAME } from './helperClient.js';
-import type { HelperInstaller } from './install.js';
 import type { Runtime } from './runtime.js';
 import { systemExec, type Executor } from './platform.js';
 
@@ -36,24 +34,8 @@ export async function bundledHelperVersion(exec: Executor = systemExec, sources 
   return res.code === 0 ? /<key>CFBundleShortVersionString<\/key>\s*<string>([^<]+)</.exec(res.stdout)?.[1] : undefined;
 }
 
-export function createHelperInstaller(exec: Executor = systemExec, sources = helperSources()): HelperInstaller {
-  return async ({ helperDir }) => {
-    const dest = join(helperDir, HELPER_APP_NAME);
-    await mkdir(helperDir, { recursive: true, mode: 0o700 });
-    const app = sources.app.find((p) => existsSync(p));
-    const zip = sources.zip.find((p) => existsSync(p));
-    if (!app && !zip) return undefined;
-    await rm(dest, { recursive: true, force: true });
-    // ditto preserves the code signature, extended attributes and symlinks that `cp -R` can mangle.
-    const res = app ? await exec('ditto', [app, dest]) : await exec('ditto', ['-x', '-k', zip as string, helperDir]);
-    if (res.code !== 0 || !existsSync(dest)) throw new Error(`could not install the helper app: ${res.stderr.trim() || 'ditto failed'}`);
-    const version = readAppVersion(dest);
-    return { path: dest, installedByUs: true, ...(version ? { version } : {}) };
-  };
-}
-
 /** The helper app this install manages: the copy in <mcpDir>/helper when there is one, otherwise whatever the client resolves
- *  (a cask, or a C3D_HELPER_APP override, which is a bundle *source* and must not be mistaken for the installed copy). */
+ *  (a copy placed by hand, or a C3D_HELPER_APP override, which is a bundle *source* and must not be mistaken for the installed copy). */
 export function installedHelperApp(rt: Runtime): string | undefined {
   const managed = join(rt.paths.root, 'helper', HELPER_APP_NAME);
   return existsSync(managed) ? managed : rt.helper.installedApp?.();

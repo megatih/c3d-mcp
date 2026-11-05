@@ -1,20 +1,39 @@
 import { existsSync } from 'node:fs';
 import { createConnection, type Socket } from 'node:net';
 import { homedir } from 'node:os';
-import { join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { BridgeError, ERROR_CODES, type ErrorCode, type HelperClient } from '../toolkit.js';
 import { systemClock, systemExec, type Clock, type Executor } from './platform.js';
 
 export const HELPER_APP_NAME = 'C3D Bridge Helper.app';
+/** The all-in-one app: control panel plus the helper (started with --socket it runs headless as the helper). */
+export const MAIN_APP_NAME = 'C3D MCP.app';
 
-export function defaultHelperAppPaths(mcpDir: string): string[] {
+/** The `.app` bundle that contains `file`, if any (the server running from inside C3D MCP.app finds its own app wherever it was dragged to). */
+export function enclosingApp(file: string): string | undefined {
+  let dir = dirname(file);
+  for (let i = 0; i < 12 && dir !== dirname(dir); i++, dir = dirname(dir)) if (dir.endsWith('.app')) return dir;
+  return undefined;
+}
+
+export function defaultHelperAppPaths(mcpDir: string, runningFrom: string = process.argv[1] ?? ''): string[] {
   const fromEnv = process.env.C3D_HELPER_APP;
-  return [...(fromEnv ? [fromEnv] : []), join(mcpDir, 'helper', HELPER_APP_NAME), join(homedir(), 'Applications', HELPER_APP_NAME), join('/Applications', HELPER_APP_NAME)];
+  const own = runningFrom ? enclosingApp(runningFrom) : undefined;
+  return [
+    ...(fromEnv ? [fromEnv] : []),
+    ...(own && basename(own) === MAIN_APP_NAME ? [own] : []),
+    join(homedir(), 'Applications', MAIN_APP_NAME),
+    join('/Applications', MAIN_APP_NAME),
+    // the separate helper app of 0.3.x installs (the control panel offers to remove it)
+    join(mcpDir, 'helper', HELPER_APP_NAME),
+    join(homedir(), 'Applications', HELPER_APP_NAME),
+    join('/Applications', HELPER_APP_NAME),
+  ];
 }
 
 /** Thrown when the helper cannot be reached at all (as opposed to the helper answering with an error). */
 export class HelperUnavailableError extends BridgeError {
-  constructor(message: string, details?: unknown, hint = 'Install the C3D Bridge Helper app (`c3d-mcp install`) or use C3D_MCP_TRIGGER=osascript.') {
+  constructor(message: string, details?: unknown, hint = 'Open the C3D MCP app (it runs the helper) or use C3D_MCP_TRIGGER=osascript.') {
     super('INTERNAL', message, hint, details);
     this.name = 'HelperUnavailableError';
   }

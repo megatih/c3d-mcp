@@ -1,10 +1,11 @@
 #!/bin/bash
-# Notarizes and staples the helper app (Developer ID builds only).
+# Notarizes and staples C3D MCP.app (Developer ID builds only). Not used while the app is self-signed; kept so a paid Apple
+# Developer ID is a small switch: sign with it (C3D_SIGN_IDENTITY, plus --timestamp in packaging/sign-app.sh), run this, rebuild the dmg.
 #
-#   packaging/notarize.sh [--dry-run] ["helper/build/C3D Bridge Helper.app"]
+#   packaging/notarize.sh [--dry-run] ["release/app/C3D MCP.app"]
 #
 # Prerequisites for a real run (none are needed for --dry-run):
-#   * the app signed with a "Developer ID Application" identity (C3D_SIGN_IDENTITY=... helper/build-app.sh)
+#   * the app signed with a "Developer ID Application" identity (C3D_SIGN_IDENTITY=... packaging/sign-app.sh "release/app/C3D MCP.app")
 #   * a notarytool keychain profile, created once with:
 #       xcrun notarytool store-credentials "<profile>" --apple-id <id> --team-id <TEAM> --password <app-specific-pw>
 #   * export C3D_NOTARY_PROFILE="<profile>"
@@ -17,15 +18,15 @@ APP=""
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY=1 ;;
-    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,16p' "$0"; exit 0 ;;
     *) APP="$arg" ;;
   esac
 done
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-APP="${APP:-$HERE/../helper/build/C3D Bridge Helper.app}"
+APP="${APP:-$HERE/../release/app/C3D MCP.app}"
 PROFILE="${C3D_NOTARY_PROFILE:-<keychain-profile>}"
-ZIP="${TMPDIR:-/tmp}/C3D-Bridge-Helper-notarize.zip"
+ZIP="${TMPDIR:-/tmp}/C3D-MCP-notarize.zip"
 
 run() {
   if [ "$DRY" = 1 ]; then printf '[dry-run] '; printf '%q ' "$@"; printf '\n'; else "$@"; fi

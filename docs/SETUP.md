@@ -1,62 +1,70 @@
 # Setup per client
 
-> Until the package is published on npm, replace `npx -y c3d-mcp` below with `npx -y https://github.com/megatih/c3d-mcp/releases/download/v0.3.2/c3d-mcp-0.3.2.tgz` (or `npm i -g` that URL and use `c3d-mcp`).
+Install **C3D MCP.app** first ([INSTALL.md](INSTALL.md)). In its **AI clients** tab you tick the clients you use and the app writes the right config for each, with a backup of every file it edits. This page is for reading what it writes, for doing it by hand, and for the settings.
 
-All clients launch the same stdio server: `npx -y c3d-mcp serve` (or `node /path/to/packages/server/bin/c3d-mcp.js serve`).
-`c3d-mcp config <client>` prints a ready-to-paste snippet for each client below (with two leading `#` comment lines naming the config file). Add `--raw` to print only the snippet so it can be redirected into a file, e.g. `c3d-mcp config codex --raw > codex-snippet.toml`.
+All clients launch the same stdio server: the Node.js and server that live inside the app.
 
-## 0. Guided installer (recommended for new users)
 ```
-curl -fsSL https://github.com/megatih/c3d-mcp/releases/latest/download/install.sh | bash
+"/Applications/C3D MCP.app/Contents/Resources/node/bin/node"  "/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js"  serve
 ```
-Checks macOS, Cheetah3D 8.1.3 and Node.js 22+, offers to install Node.js (Homebrew, or a checksum-verified private copy in `~/.c3d-mcp/node`, never `sudo`), installs c3d-mcp into `~/.c3d-mcp`, then runs `c3d-mcp setup`, which installs the bridge and helper, opens the right System Settings pane for Accessibility, configures the AI clients it detects (asking first, with backups), installs the agent skills and runs a test render. Flags: `--dry-run`, `--yes`, `--clients <list|all|none>`, `--no-skills`, `--no-node-install`, `--prefix <dir>`. Full walkthrough: [INSTALL.md](INSTALL.md). Run just the wizard later with `c3d-mcp setup`. The steps below are the manual equivalent.
 
-## 0b. One-time bridge install (all clients)
-```
-npx -y c3d-mcp install      # detects fresh / outdated / partial, then installs or updates the bridge macro + runtime and the helper app (to ~/Library/Application Support/Cheetah3D/MCP/helper/); backs up Scripts/ first
-```
-Other lifecycle commands: `c3d-mcp status` (what is installed and what to run next; changes nothing), `c3d-mcp install --repair` (fix only what is broken), `c3d-mcp install --reinstall` (rewrite everything), `c3d-mcp install --dry-run` (show the plan), `c3d-mcp uninstall [--all] [--dry-run]`. Update by running `install` again after upgrading the package: an older helper app is replaced (macOS then asks for the Accessibility permission again). Details: [INSTALL.md](INSTALL.md#5-installing-updating-repairing-reinstalling-and-uninstalling).
-Then **restart Cheetah3D once** (new macros only appear after a restart). Grant **Accessibility** to *C3D Bridge Helper*: System Settings → Privacy & Security → Accessibility → **+** → ⇧⌘G → `~/Library/Application Support/Cheetah3D/MCP/helper/C3D Bridge Helper.app` (the helper never triggers the prompt itself, so it is not listed until you add it). Screen Recording is optional (only `c3d_capture_viewport`).
-Verify: `npx -y c3d-mcp doctor`. After the restart you will find the macro under *Tools › Script › Macro Script › C3D-MCP › C3D-MCP Bridge.js* — you never run it by hand; the helper presses it for you.
+(If you put the app in `~/Applications` or elsewhere, use that path. Absolute paths mean no `npx`, no npm registry and no login `PATH` are involved, which is why Claude Desktop and other GUI clients work without tinkering.) If you move or rename the app, open **AI clients**: entries that point at the old location are shown as "Connected to an older install" and *Switch to this app* rewrites them.
 
-**Requirements:** macOS 14+ on Apple Silicon (developed and tested on macOS 27.2), Cheetah3D 8.1.3, Node.js ≥ 22. Without the helper the server falls back to `osascript` (slower; your terminal/MCP client then needs Accessibility), and `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable.
+## What the app does for you
+```bash
+APP="/Applications/C3D MCP.app/Contents/Resources"
+alias c3d-mcp='"$APP/node/bin/node" "$APP/server/bin/c3d-mcp.js"'
+c3d-mcp clients list                      # per client: none | current | legacy | foreign
+c3d-mcp clients add cursor codex --yes    # the same as ticking them in the app
+c3d-mcp clients remove all
+c3d-mcp config <client>                   # print a ready-to-paste snippet (claude-desktop, claude-code, codex, gemini-cli, antigravity, cursor, lm-studio); --raw prints only the snippet
+```
+`clients add` never overwrites a different existing `c3d` entry unless you pass `--yes`, and it refuses config files it cannot parse.
 
 ## Claude Desktop
-* Easiest: double-click `c3d-mcp-0.3.2.mcpb`.
-* Manual: `~/Library/Application Support/Claude/claude_desktop_config.json`
+`~/Library/Application Support/Claude/claude_desktop_config.json`
 ```json
-{ "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"] } } }
+{ "mcpServers": { "c3d": {
+  "command": "/Applications/C3D MCP.app/Contents/Resources/node/bin/node",
+  "args": ["/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js", "serve"]
+} } }
 ```
+Restart Claude Desktop after changing it. In Claude Desktop choose "Always allow" on the first prompt of each tool to stop per-tool prompts.
 
 ## Claude Code
 ```
-claude mcp add c3d -- npx -y c3d-mcp serve
-# or via the plugin (adds a Cheetah3D skill + a SessionStart doctor hook):
-claude plugin marketplace add megatih/c3d-mcp && claude plugin install c3d-mcp
+claude mcp add --scope user c3d -- "/Applications/C3D MCP.app/Contents/Resources/node/bin/node" "/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js" serve
 ```
+Claude Code asks before every MCP tool call that is not allowed. **Permissions › Allow all c3d tools** in the app (or `c3d-mcp permissions allow`) adds `mcp__c3d` to `permissions.allow` in `~/.claude/settings.json` after asking, with a backup; `permissions revoke` undoes it.
 
 ## Codex CLI (`~/.codex/config.toml`)
 ```toml
 [mcp_servers.c3d]
-command = "npx"
-args = ["-y", "c3d-mcp", "serve"]
+command = "/Applications/C3D MCP.app/Contents/Resources/node/bin/node"
+args = ["/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js", "serve"]
 startup_timeout_sec = 30
 tool_timeout_sec = 600   # renders can take minutes (`c3d-mcp config codex` prints the same value)
 ```
 
 ## Gemini CLI (`~/.gemini/settings.json`)
 ```json
-{ "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"], "timeout": 600000 } } }
+{ "mcpServers": { "c3d": { "command": "/Applications/C3D MCP.app/Contents/Resources/node/bin/node", "args": ["/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js", "serve"], "timeout": 600000 } } }
 ```
 
 ## Antigravity
-`mcpServers` entry in `~/.gemini/config/mcp_config.json` (some builds use `.agents/mcp_config.json` in the workspace — check Antigravity's *Manage MCP servers* screen for the path it actually reads). Same JSON object as Gemini CLI.
+`mcpServers` entry in `~/.gemini/config/mcp_config.json` (some builds use `.agents/mcp_config.json` in the workspace; check Antigravity's *Manage MCP servers* screen for the path it actually reads). Same JSON object as Gemini CLI.
 
-## Cursor (`~/.cursor/mcp.json`) / LM Studio (`mcp.json`)
+## Cursor (`~/.cursor/mcp.json`) / LM Studio (`~/.lmstudio/mcp.json`)
 ```json
-{ "mcpServers": { "c3d": { "command": "npx", "args": ["-y", "c3d-mcp", "serve"], "env": { "C3D_MCP_PROFILE": "local" } } } }
+{ "mcpServers": { "c3d": { "command": "/Applications/C3D MCP.app/Contents/Resources/node/bin/node", "args": ["/Applications/C3D MCP.app/Contents/Resources/server/bin/c3d-mcp.js", "serve"], "env": { "C3D_MCP_PROFILE": "local" } } } }
 ```
-Use `C3D_MCP_PROFILE=local` for small local models (≤25 tools, short descriptions, no script execution).
+Use `C3D_MCP_PROFILE=local` for small local models (≤25 tools, short descriptions, no script execution). The app connects Cursor for you; LM Studio is configured by hand (Program → Install → *Edit mcp.json*).
+
+## How often c3d-mcp asks you to confirm
+Overwriting a file this session already wrote, deleting many objects, restoring a checkpoint and running scripts that write files or use the shell need a confirmation. **Permissions › Confirmation prompts** in the app (stored in `~/Library/Application Support/Cheetah3D/MCP/settings.json`, read each time a client starts the server) or `C3D_MCP_APPROVAL`:
+* `session` (default): a confirmation you accepted is remembered for that action (same file, same checkpoint) until the server restarts. Declines are never remembered; shell scripts and bulk deletions are asked every time.
+* `strict`: ask every time.
+* `trusted`: never ask. Files that existed before the session are still never overwritten.
 
 ## Environment variables
 | Variable | Meaning |
@@ -65,13 +73,13 @@ Use `C3D_MCP_PROFILE=local` for small local models (≤25 tools, short descripti
 | `C3D_MCP_DISABLE_EXEC=1` | hide `c3d_run_script` |
 | `C3D_MCP_DISABLE_ASSETS=1` | hide Poly Haven tools |
 | `C3D_MCP_DISABLE_SHELL=1` | never allow `OS.system` in scripts |
-| `C3D_MCP_NO_AUTOLAUNCH=1` | do not start Cheetah3D when it is not running (default: with the helper app installed, the first call launches it, waits for its menu bar and uses the untitled document it opens) |
-| `C3D_MCP_AUTO_CONFIRM=1` | **unattended agent runs only** (e.g. `claude -p`): honour `confirm:true` even when the client could ask a human. Default off — with it off, a client that supports elicitation is always asked and the model's `confirm` flag is ignored |
+| `C3D_MCP_NO_AUTOLAUNCH=1` | do not start Cheetah3D when it is not running (default: the first call launches it, waits for its menu bar and uses the untitled document it opens) |
+| `C3D_MCP_APPROVAL` | `session` (default), `strict`, `trusted`: see above. Overrides `settings.json` |
+| `C3D_MCP_AUTO_CONFIRM=1` | same as `C3D_MCP_APPROVAL=trusted` (kept for unattended runs such as `claude -p`) |
 | `C3D_MCP_WORKDIR` | where renders/checkpoints/downloads go (default `~/Library/Application Support/Cheetah3D/MCP/tmp`) |
 | `C3D_MCP_DIR`, `C3D_CHEETAH_SUPPORT_DIR` | override the mailbox dir / Cheetah3D support dir (tests) |
 | `C3D_MCP_LOG_DIR`, `C3D_MCP_LOG_LEVEL` | log location (default `~/Library/Logs/c3d-mcp`) and verbosity |
 | `C3D_MCP_TRIGGER` | `auto` (default), `helper` or `osascript` |
-| `C3D_HELPER_APP` | use a helper app bundle from a custom path |
+| `C3D_HELPER_APP` | use a different app bundle as the helper (development) |
 
-If Claude Desktop reports `spawn npx ENOENT`, print a config with absolute paths: `npx -y c3d-mcp config claude-desktop --form absolute`.
-LM Studio: Program → Install → *Edit mcp.json* (same JSON object).
+**Without the app running** the server falls back to `osascript` (slower; your terminal or MCP client then needs Accessibility), and `c3d_new_document`, `c3d_make_editable`, `c3d_merge_file` and `c3d_capture_viewport` are unavailable. When a client starts the server, it launches the app headless (no window) if it is not running.

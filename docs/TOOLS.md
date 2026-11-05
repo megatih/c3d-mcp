@@ -930,7 +930,7 @@ Screenshots the Cheetah3D document window (ScreenCaptureKit via the helper) and 
 
 **Post-process rendered image** - writes. Profiles: full.
 
-POST-PROCESSES an existing image file (normally a c3d_render_image result) with the helper app: bloom {threshold 0..1, radius px, intensity 0..2}, outline {strength 0..1, width 0.5..4, color [r,g,b]} edge lines from luminance, vignette {intensity 0..1, radius 0..2}, grade {saturation 0..2, contrast 0.5..1.5, exposure -2..2, shadow_tint, highlight_tint [r,g,b], tint_amount 0..1}, posterize {levels 2..32}. Cheetah3D itself has NO outlines or bloom: chain it after c3d_render_image(path) and pass that path here. Writes <workDir>/post/<name>_post_<n>.png (never overwrites) and returns a preview. Needs the helper (UNSUPPORTED otherwise: run `c3d-mcp install`).
+POST-PROCESSES an existing image file (normally a c3d_render_image result) with the helper app: bloom {threshold 0..1, radius px, intensity 0..2}, outline {strength 0..1, width 0.5..4, color [r,g,b]} edge lines from luminance, vignette {intensity 0..1, radius 0..2}, grade {saturation 0..2, contrast 0.5..1.5, exposure -2..2, shadow_tint, highlight_tint [r,g,b], tint_amount 0..1}, posterize {levels 2..32}. Cheetah3D itself has NO outlines or bloom: chain it after c3d_render_image(path) and pass that path here. Writes <workDir>/post/<name>_post_<n>.png (never overwrites) and returns a preview. Needs the helper that is part of the C3D MCP app (UNSUPPORTED otherwise: open the app).
 
 | Parameter | Type | Required | Description |
 |---|---|---|---|
@@ -1065,5 +1065,5 @@ Returns the bridge RUNTIME log ring buffer (diagnostics of c3d-mcp operations in
 | Tool | R/W | What it does |
 |---|---|---|
 | `c3d_doctor` | R | Structured health checks (Cheetah3D, bridge, helper, permissions, ping, dialogs) with a fix per failing check. |
-| `c3d_install_bridge` | W | Idempotent install of the bridge macro, runtime and helper app (backs up Scripts/ first); a Cheetah3D restart is needed once. Input: `skip_ping` (boolean). |
+| `c3d_install_bridge` | W | Idempotent install of the bridge macro and runtime (backs up Scripts/ first); a Cheetah3D restart is needed once. The helper is part of the C3D MCP app. Input: `skip_ping`, `mode`, `dry_run`. |
 | `c3d_capabilities` | R | Runtime type map (object/tag/material/node types, light types, formats, limits) and the active profile's tool list. |

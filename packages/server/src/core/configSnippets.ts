@@ -1,11 +1,12 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
+import { PACKAGE_ROOT } from './assets.js';
 
 export const CLIENTS = ['claude-desktop', 'claude-code', 'codex', 'gemini-cli', 'antigravity', 'cursor', 'lm-studio'] as const;
 export type ClientName = (typeof CLIENTS)[number];
 
 export interface SnippetOptions {
-  /** `npx` runs `npx -y c3d-mcp serve`; `absolute` pins node and the installed bin (needed by GUI clients without a login PATH). */
+  /** `absolute` (default) pins node and the c3d-mcp.js of this install (works for GUI clients without a login PATH); `npx` runs `npx -y c3d-mcp serve`. */
   form?: 'npx' | 'absolute';
   nodePath?: string;
   binPath?: string;
@@ -26,7 +27,9 @@ export interface ConfigSnippet {
 const TIMEOUT_SEC = 600;
 
 function launch(o: SnippetOptions): { command: string; args: string[] } {
-  if ((o.form ?? 'npx') === 'absolute') return { command: o.nodePath ?? process.execPath, args: [o.binPath ?? '/usr/local/lib/node_modules/c3d-mcp/bin/c3d-mcp.js', 'serve'] };
+  // The default pins the node and the c3d-mcp.js that are running this command (inside C3D MCP.app: its bundled Node and server),
+  // so no npx, npm registry or login PATH is involved. `npx` is only for someone who installed the package from npm themselves.
+  if ((o.form ?? 'absolute') === 'absolute') return { command: o.nodePath ?? process.execPath, args: [o.binPath ?? join(PACKAGE_ROOT, 'bin', 'c3d-mcp.js'), 'serve'] };
   return { command: 'npx', args: ['-y', 'c3d-mcp', 'serve'] };
 }
 

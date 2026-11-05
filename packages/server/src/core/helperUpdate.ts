@@ -1,4 +1,4 @@
-// Installs, updates or repairs the C3D Bridge Helper app. Safe by construction: the new bundle is staged next to the old one and
+// Installs, updates or repairs an older standalone C3D Bridge Helper app (0.3.x; the helper is now part of C3D MCP.app and Sparkle updates that). Safe by construction: the new bundle is staged next to the old one and
 // verified BEFORE the running helper is stopped; the old app is backed up; the swap is two renames; the new helper must answer
 // `ping` with the expected version, otherwise the old one is put back and restarted.
 import { existsSync } from 'node:fs';
@@ -86,7 +86,7 @@ export async function updateHelper(rt: Runtime, o: HelperUpdateOptions = {}): Pr
   const installed = installedHelperApp(rt);
   const dest = o.destApp ?? (installed && inside(installed, rt.paths.root) ? installed : installed ? undefined : join(rt.paths.root, 'helper', HELPER_APP_NAME));
   if (!dest) {
-    return { action: 'skipped', ...(installed ? { path: installed } : {}), permissions: 'n/a', detail: `The helper at ${installed ?? '?'} is not managed by c3d-mcp (for example a Homebrew cask): update it there (brew upgrade --cask c3d-bridge-helper).` };
+    return { action: 'skipped', ...(installed ? { path: installed } : {}), permissions: 'n/a', detail: `The helper at ${installed ?? '?'} is not managed by c3d-mcp (for example a copy you placed by hand): update or remove it where you installed it. The C3D MCP app replaces this helper and can remove it for you.` };
   }
   const srcApp = sources.app.find((p) => existsSync(p));
   const srcZip = sources.zip.find((p) => existsSync(p));

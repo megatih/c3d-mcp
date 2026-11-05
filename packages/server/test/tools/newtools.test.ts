@@ -124,11 +124,11 @@ describe('c3d_postprocess_image', () => {
     const s = src();
     t.helper.on = false;
     const e = await expectCode(runTool(postprocessImage, { path: s, vignette: {} }, t.ctx), 'UNSUPPORTED');
-    expect(e.hint).toMatch(/c3d-mcp install/);
+    expect(e.hint).toMatch(/C3D MCP app/);
     t.helper.on = true;
     t.helper.handlers.set('postProcessImage', () => { throw new BridgeError('INVALID_ARGUMENT', 'Unknown command postProcessImage'); });
     const e2 = await expectCode(runTool(postprocessImage, { path: s, vignette: {} }, t.ctx), 'UNSUPPORTED');
-    expect(e2.hint).toMatch(/c3d-mcp install/);
+    expect(e2.hint).toMatch(/C3D MCP app/);
   });
 });
 
