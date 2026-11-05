@@ -88,9 +88,9 @@ describe('scanLegacy', () => {
   it('finds every kind of older install and nothing that is not ours', async () => {
     seedEverything();
     const found = await scanLegacy(opts());
-    expect(new Set(kinds(found))).toEqual(new Set(['install-sh', 'shell-path', 'npm-global', 'npx-cache', 'helper-app', 'cask', 'launchagent', 'bridge', 'client', 'claude-plugin', 'desktop-extension', 'permissions']));
+    expect(new Set(kinds(found))).toEqual(new Set(['install-sh', 'shell-path', 'npm-global', 'npx-cache', 'helper-app', 'cask', 'launchagent', 'bridge', 'claude-plugin', 'desktop-extension', 'permissions']));
     expect(found.filter((f) => f.kind === 'helper-app')).toHaveLength(2); // the unrelated Other.app is ignored
-    expect(found.filter((f) => f.kind === 'client').map((f) => f.data?.client).sort()).toEqual(['claude-code', 'claude-desktop', 'codex', 'cursor', 'lm-studio']);
+    expect(found.some((f) => f.id.startsWith('client:'))).toBe(false); // client entries are handled by the AI clients tab, never by Cleanup
     const bridge = found.find((f) => f.kind === 'bridge');
     expect(bridge?.needsQuit).toBe('Cheetah3D');
     expect(bridge?.paths.some((p) => p.endsWith('copy.js'))).toBe(true); // hand copy found by content
@@ -118,10 +118,13 @@ describe('scanLegacy', () => {
     expect(await scanLegacy(opts())).toEqual([]);
   });
 
-  it('never reports entries and apps that belong to the current app (keepPaths)', async () => {
+  it('never reports an app that belongs to the current app (keepPaths) or a client entry, whoever wrote it', async () => {
     seedEverything();
-    const found = await scanLegacy(opts({ keepPaths: ['/Applications/C3D MCP.app'] }));
-    expect(found.filter((f) => f.kind === 'client').map((f) => f.data?.client)).not.toContain('cursor');
+    const found = await scanLegacy(opts({ keepPaths: [join(sys, 'Applications', 'C3D Bridge Helper.app')] }));
+    expect(found.filter((f) => f.kind === 'helper-app').map((f) => f.paths[0])).not.toContain(join(sys, 'Applications', 'C3D Bridge Helper.app'));
+    // the cursor entry of the seed launches /Applications/C3D MCP.app, claude-desktop's launches npx: neither is a cleanup finding
+    const names = new Set(found.flatMap((f) => f.paths).map((p) => p.split('/').pop()));
+    for (const clientConfig of ['mcp.json', 'claude_desktop_config.json', 'config.toml', 'mcp_config.json', '.claude.json']) expect(names.has(clientConfig), clientConfig).toBe(false);
   });
 
   it('never reports helper apps in a git checkout (dev builds) or in MCP-backups (rollback copies)', async () => {
@@ -180,19 +183,19 @@ describe('removeLegacy', () => {
     expect(existsSync(join(home, '.npm', '_npx', 'bbb', 'package.json'))).toBe(true);
     expect(existsSync(join(home, '.npm', '_npx', 'bbb', 'node_modules', 'c3d-mcp'))).toBe(false);
     expect(existsSync(join(home, '.npm', '_npx', 'aaa'))).toBe(false);
-    // config edits keep everything else, with backups
+    // client configs are NOT edited by Cleanup (the AI clients tab does that), so every entry is still there
     const desktop = JSON.parse(readFileSync(join(home, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json'), 'utf8'));
-    expect(desktop).toEqual({ theme: 'x', mcpServers: { other: { command: 'o' } } });
-    expect(readFileSync(join(home, '.codex', 'config.toml'), 'utf8')).toContain('[other]');
-    expect(readFileSync(join(home, '.codex', 'config.toml'), 'utf8')).not.toContain('c3d');
+    expect(desktop.mcpServers.c3d).toBeDefined();
+    expect(readFileSync(join(home, '.codex', 'config.toml'), 'utf8')).toContain('[mcp_servers.c3d]');
+    expect(JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8')).mcpServers.c3d).toBeDefined();
+    // the zprofile PATH line, the Claude Code plugin and the Desktop extension are removed with a backup of what was edited
     expect(readFileSync(join(home, '.zprofile'), 'utf8')).toBe('export A=1\nalias x=1\n');
-    expect(JSON.parse(readFileSync(join(home, '.claude.json'), 'utf8'))).toEqual({ projects: {}, mcpServers: {} });
     expect(JSON.parse(readFileSync(join(home, '.claude', 'settings.json'), 'utf8'))).toEqual({ model: 'x', enabledPlugins: { 'keep@m': true }, extraKnownMarketplaces: {} });
     expect(JSON.parse(readFileSync(join(home, '.claude', 'plugins', 'installed_plugins.json'), 'utf8')).plugins).toEqual({ 'keep@m': [{}] });
     expect(existsSync(join(home, '.claude', 'plugins', 'cache', 'other', 'keep'))).toBe(true);
     const inst = JSON.parse(readFileSync(join(home, 'Library', 'Application Support', 'Claude', 'extensions-installations.json'), 'utf8'));
     expect(Object.keys(inst.extensions)).toEqual(['local.mcpb.x.keep']);
-    expect(readdirSync(home, { recursive: true }).filter((f) => String(f).includes('c3d-backup')).length).toBeGreaterThanOrEqual(6);
+    expect(readdirSync(home, { recursive: true }).filter((f) => String(f).includes('c3d-backup')).length).toBeGreaterThanOrEqual(3);
     // old helper stopped, launch agent booted out, grants reset
     expect(calls.some((c) => c.startsWith('/usr/bin/pkill'))).toBe(true);
     expect(calls.some((c) => c.includes('bootout'))).toBe(true);
@@ -204,21 +207,10 @@ describe('removeLegacy', () => {
     runningApps.add('Cheetah3D');
     runningApps.add('Claude Desktop');
     const found = await scanLegacy(opts());
-    const results = await removeLegacy(found.filter((f) => ['bridge', 'desktop-extension', 'client'].includes(f.kind)), opts());
+    const results = await removeLegacy(found.filter((f) => ['bridge', 'desktop-extension'].includes(f.kind)), opts());
     expect(results.find((r) => r.kind === 'bridge')?.status).toBe('blocked');
     expect(results.find((r) => r.kind === 'desktop-extension')?.status).toBe('blocked');
-    expect(results.filter((r) => r.kind === 'client').find((r) => r.id === 'client:claude-desktop')?.status).toBe('blocked');
     expect(existsSync(join(support, 'Scripts', 'Macro', 'Mine', 'copy.js'))).toBe(true);
-  });
-
-  it('re-checks a client entry at removal time and leaves one that now belongs to the new app', async () => {
-    seedEverything();
-    const found = await scanLegacy(opts());
-    const cursor = found.find((f) => f.id === 'client:cursor');
-    expect(cursor).toBeDefined(); // without keepPaths the entry looks like any c3d-mcp launcher
-    const [r] = await removeLegacy(cursor ? [cursor] : [], opts({ keepPaths: ['/Applications/C3D MCP.app'] }));
-    expect(r?.status).toBe('skipped');
-    expect(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).toContain('C3D MCP.app');
   });
 
   it('reports non-removable findings as skipped and writes a report next to the logs', async () => {

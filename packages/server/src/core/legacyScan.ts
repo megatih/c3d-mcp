@@ -2,7 +2,7 @@ import { lstatSync, readdirSync, readFileSync, readlinkSync, rmdirSync } from 'n
 import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
-import { backup, lmStudioConfigPath, unconfigureClient, unconfigureLmStudio, type SetupClient } from './clientConfigs.js';
+import { backup, lmStudioConfigPath, type SetupClient } from './clientConfigs.js';
 import { MACRO_DIR_NAME } from './paths.js';
 import { systemExec, type Executor } from './platform.js';
 
@@ -19,7 +19,7 @@ const LOADER_MARKER = '// c3d-mcp bridge loader';
 
 export type LegacyKind =
   | 'install-sh' | 'shell-path' | 'npm-global' | 'npx-cache' | 'helper-app' | 'cask' | 'launchagent'
-  | 'bridge' | 'client' | 'claude-plugin' | 'desktop-extension' | 'permissions';
+  | 'bridge' | 'claude-plugin' | 'desktop-extension' | 'permissions';
 
 export type QuitApp = 'Cheetah3D' | 'Claude Desktop' | 'Claude Code';
 
@@ -274,19 +274,8 @@ export async function clientEntry(client: SetupClient | 'lm-studio', home: strin
   return entry === undefined ? undefined : { text: JSON.stringify(entry), where: file };
 }
 
-async function scanClients(home: string, o: ScanOptions, exec: Executor): Promise<LegacyFinding[]> {
-  const out: LegacyFinding[] = [];
-  for (const client of CLIENT_NAMES) {
-    const e = await clientEntry(client, home, exec);
-    if (!e || !/c3d-mcp/.test(e.text) || keeps(o, e.text)) continue;
-    out.push({
-      id: `client:${client}`, kind: 'client', label: `"c3d" entry in ${client}`, installedBy: 'an older c3d-mcp setup / hand-edited config', paths: [clientFile(client, home) ?? e.where],
-      evidence: `${e.where}: ${e.text.replace(/\s+/g, ' ').slice(0, 120)}`, removable: true, data: { client },
-      ...(client === 'claude-desktop' ? { needsQuit: 'Claude Desktop' as const } : {}),
-    });
-  }
-  return out;
-}
+// Client entries (the "c3d" server in Claude Desktop, Codex, ...) are deliberately NOT cleanup findings: an old entry is replaced by the
+// AI clients tab ("Switch to this app"), which keeps the client connected, and removing one here could remove the entry of the current app.
 
 function scanClaudePlugin(home: string): LegacyFinding[] {
   const settings = join(home, '.claude', 'settings.json');
@@ -329,7 +318,6 @@ export async function scanLegacy(o: ScanOptions = {}): Promise<LegacyFinding[]> 
     ...scanCask(sys),
     ...scanLaunchAgent(home),
     ...scanLoaderCopies(support),
-    ...(await scanClients(home, o, exec)),
     ...scanClaudePlugin(home),
     ...scanDesktopExtension(home),
   ];
@@ -471,15 +459,6 @@ async function removeOne(f: LegacyFinding, c: Ctx): Promise<Outcome> {
       return done(await c.trashAll(f.paths));
     }
     case 'bridge': return done(await c.trashAll(f.paths));
-    case 'client': {
-      const client = (f.data?.client ?? '') as SetupClient | 'lm-studio';
-      const current = await clientEntry(client, c.home, c.exec);
-      if (!current || keeps(c.o, current.text)) return { status: 'skipped', detail: 'the entry changed or now belongs to the new app; left alone' };
-      const o = { home: c.home, exec: c.exec, now: c.now };
-      const r = client === 'lm-studio' ? await unconfigureLmStudio(o) : client === 'claude-code' ? await removeClaudeCodeEntry(c) : await unconfigureClient(client, o);
-      if (r.status === 'removed') return { status: 'removed', detail: r.detail, ...(r.backup ? { backups: [r.backup] } : {}) };
-      return { status: r.status === 'failed' || r.status === 'refused' ? 'failed' : 'skipped', detail: r.detail };
-    }
     case 'claude-plugin': return removeClaudePlugin(f, c);
     case 'desktop-extension': return removeDesktopExtension(f, c);
     case 'permissions': {
@@ -493,20 +472,6 @@ async function removeOne(f: LegacyFinding, c: Ctx): Promise<Outcome> {
       return { status: failed ? 'failed' : 'removed', detail: failed ? `${notes.join('; ')}. Remove "C3D Bridge Helper" by hand in System Settings › Privacy & Security.` : notes.join('; ') };
     }
   }
-}
-
-async function removeClaudeCodeEntry(c: Ctx): Promise<{ status: 'removed' | 'failed'; detail: string; backup?: string }> {
-  const viaCli = await c.exec('claude', ['mcp', 'remove', '--scope', 'user', 'c3d'], { timeoutMs: 60_000 }).catch(() => undefined);
-  const still = readJson(join(c.home, '.claude.json'));
-  const gone = !(isRecord(still) && isRecord(still.mcpServers) && still.mcpServers.c3d !== undefined);
-  if (viaCli?.code === 0 && gone) return { status: 'removed', detail: 'unregistered with `claude mcp remove`' };
-  const file = join(c.home, '.claude.json');
-  const doc = readJson(file);
-  if (!isRecord(doc) || !isRecord(doc.mcpServers) || doc.mcpServers.c3d === undefined) return gone ? { status: 'removed', detail: 'already gone' } : { status: 'failed', detail: `${file} could not be read` };
-  const bak = await backup(file, c.now());
-  const rest = Object.fromEntries(Object.entries(doc.mcpServers).filter(([k]) => k !== 'c3d'));
-  await writeFile(file, `${JSON.stringify({ ...doc, mcpServers: rest }, null, 2)}\n`);
-  return { status: 'removed', detail: `removed "c3d" from ${file} (the claude CLI was not usable)`, backup: bak };
 }
 
 async function editJson(file: string, c: Ctx, edit: (doc: Record<string, unknown>) => boolean, backups: string[]): Promise<void> {

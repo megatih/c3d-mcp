@@ -49,7 +49,7 @@ Set in the client config `env` block or the shell.
 Long operations: renders can take minutes, so raise the client's tool timeout (the Codex and Gemini entries the app writes already do).
 
 ## First diagnosis
-1. Run `c3d_doctor` (or the app's Overview); read the failing check's `fix`.
+1. Run `c3d_doctor` (or the app's Overview, which lists a Setup checklist, re-checks by itself when Cheetah3D starts and has a Re-check button; a result from before Cheetah3D was started is simply old); read the failing check's `fix`.
 2. Look up the error code in [troubleshooting](references/troubleshooting.md). Every tool error carries `{code, message, hint, details}`; follow `hint`.
 3. Logs: `~/Library/Logs/c3d-mcp/` (the app's Activity tab shows the helper log); the in-app bridge log comes from `c3d_get_console`.
 

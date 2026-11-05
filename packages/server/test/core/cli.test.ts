@@ -306,7 +306,7 @@ describe('cli lifecycle: status, install modes, uninstall scopes', () => {
     const listed = JSON.parse((await run('list', '--keep-path', '/A/C3D MCP.app')).out) as { client: string; state: string }[];
     expect(listed.find((r) => r.client === 'cursor')?.state).toBe('current');
     const legacy = JSON.parse((await run('list')).out) as { client: string; state: string }[];
-    expect(legacy.find((r) => r.client === 'cursor')?.state).toBe('legacy');
+    expect(legacy.find((r) => r.client === 'cursor')?.state).toBe('moved'); // launches another copy of C3D MCP.app, so it is not a leftover to delete
     expect((await run('remove', 'cursor')).code).toBe(0);
     expect(JSON.parse(readFileSync(join(home, '.cursor', 'mcp.json'), 'utf8')).mcpServers).toEqual({});
     expect((await run('add', 'nope')).code).toBe(2);

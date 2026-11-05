@@ -51,6 +51,7 @@ Commands:
 Options:
   --json             Machine-readable output (install, uninstall, doctor, config, version)
   --yes, -y          Do not ask for confirmation (uninstall, clients add, legacy remove, permissions)
+  --passive          doctor: skip the live ping round trip (it activates Cheetah3D); used by the control panel's automatic re-checks
   --brief            doctor: one line when healthy, otherwise only the failing checks (for hooks)
   --form <absolute|npx>   config: launch via this install's node and c3d-mcp.js (default) or "npx -y c3d-mcp serve"
   --target <t>       skills: claude, codex, antigravity or all (default all)
@@ -95,7 +96,7 @@ export const defaultIO: CliIO = {
 
 const PARSE_OPTIONS = {
   allowPositionals: true,
-  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' }, 'node-path': { type: 'string' }, repair: { type: 'boolean' }, reinstall: { type: 'boolean' }, 'skip-ping': { type: 'boolean' }, ids: { type: 'string' }, 'bin-path': { type: 'string' }, 'quit-apps': { type: 'boolean' }, 'keep-path': { type: 'string', multiple: true }, all: { type: 'boolean' } },
+  options: { json: { type: 'boolean' }, yes: { type: 'boolean', short: 'y' }, help: { type: 'boolean', short: 'h' }, form: { type: 'string' }, brief: { type: 'boolean' }, raw: { type: 'boolean' }, target: { type: 'string' }, project: { type: 'string' }, 'dry-run': { type: 'boolean' }, 'node-path': { type: 'string' }, repair: { type: 'boolean' }, reinstall: { type: 'boolean' }, 'skip-ping': { type: 'boolean' }, passive: { type: 'boolean' }, ids: { type: 'string' }, 'bin-path': { type: 'string' }, 'quit-apps': { type: 'boolean' }, 'keep-path': { type: 'string', multiple: true }, all: { type: 'boolean' } },
 } as const;
 
 function parseCli(argv: string[]): ReturnType<typeof parseArgs<typeof PARSE_OPTIONS>> | string {
@@ -222,7 +223,7 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
     }
 
     case 'doctor': {
-      const report = await doctor(io.runtime(config));
+      const report = await doctor(io.runtime(config), { passive: values.passive === true });
       if (json) emit(report);
       else if (values.brief) {
         const bad = report.checks.filter((c) => c.status !== 'ok');
@@ -292,7 +293,7 @@ export async function main(argv: string[], overrides: Partial<CliIO> = {}): Prom
         const rows = [];
         for (const client of CLIENT_NAMES) {
           const entry = await clientEntry(client, home, defaultExec);
-          const state = !entry ? 'none' : keep.some((k) => k !== '' && entry.text.includes(k)) ? 'current' : /c3d-mcp/.test(entry.text) ? 'legacy' : 'foreign';
+          const state = !entry ? 'none' : keep.some((k) => k !== '' && entry.text.includes(k)) ? 'current' : /\/C3D MCP\.app\//.test(entry.text) ? 'moved' : /c3d-mcp/.test(entry.text) ? 'legacy' : 'foreign'; // moved: launches another copy of C3D MCP.app
           const d = detected.get(client);
           rows.push({ client, label: client === 'lm-studio' ? 'LM Studio' : CLIENT_LABELS[client], detected: d?.detected ?? existsSync(join(home, '.lmstudio')), state, detail: entry?.where ?? d?.detail ?? 'not found' });
         }

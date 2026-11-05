@@ -23,7 +23,7 @@ interface HelperPermissions { accessibility?: boolean; screenRecording?: boolean
 interface HelperWindow { title?: string; role?: string; subrole?: string; main?: boolean }
 
 /** Helper version shipped with this release: the helper is part of C3D MCP.app, so it equals the package version (checked by a test). */
-export const EXPECTED_HELPER_VERSION = '0.4.1';
+export const EXPECTED_HELPER_VERSION = '0.4.2';
 
 function versionLess(a: string, b: string): boolean {
   const pa = a.split('.').map((n) => Number.parseInt(n, 10) || 0);
@@ -35,7 +35,15 @@ function versionLess(a: string, b: string): boolean {
   return false;
 }
 
-export async function doctor(rt: Runtime): Promise<DoctorReport> {
+export interface DoctorOptions {
+  /**
+   * Skip the live ping round trip. That round trip makes the helper activate Cheetah3D and press its menu, so a check that runs on its own
+   * (the control panel re-checks when Cheetah3D starts or the window comes back to the front) must not do it: it would pull focus around.
+   */
+  passive?: boolean;
+}
+
+export async function doctor(rt: Runtime, opts: DoctorOptions = {}): Promise<DoctorReport> {
   const checks: DoctorCheck[] = [];
   const { paths } = rt;
   const guarded = async (name: string, fn: () => DoctorCheck | DoctorCheck[] | Promise<DoctorCheck | DoctorCheck[]>): Promise<void> => {
@@ -160,6 +168,7 @@ export async function doctor(rt: Runtime): Promise<DoctorReport> {
   await guarded('ping', async () => {
     if (!installed) return warn('ping', 'Skipped: bridge not installed', 'Run `c3d-mcp install`.');
     if (!app.running) return warn('ping', 'Skipped: Cheetah3D is not running', 'Start Cheetah3D.');
+    if (opts.passive) return warn('ping', 'Not tested yet: automatic re-checks skip the live round trip', 'Press Re-check to test it.');
     const counter = ++pingCounter;
     const started = rt.clock.now();
     try {

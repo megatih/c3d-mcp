@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         host.start()
+        model.startObserving()
         model.helperState = host.state
         installMenu()
         installStatusItem()

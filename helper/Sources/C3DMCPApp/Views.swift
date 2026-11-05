@@ -113,6 +113,8 @@ struct OverviewView: View {
     @ObservedObject var updates: UpdateController
     var body: some View {
         Page(title: "C3D MCP", subtitle: "Let AI assistants build and render in Cheetah3D. This panel installs, connects and monitors everything.") {
+            HealthHeader(model: model)
+            SetupChecklistView(model: model)
             if let s = model.status {
                 GroupBox("Bridge in Cheetah3D") {
                     VStack(alignment: .leading, spacing: 6) {
@@ -176,6 +178,58 @@ struct OverviewView: View {
     }
 }
 
+/// Green or red summary of the last health check, when it ran, and a button to run the full check (including the live round trip) now.
+struct HealthHeader: View {
+    @ObservedObject var model: AppModel
+    private var failures: Int { model.doctor?.checks.filter { $0.status == "fail" }.count ?? 0 }
+    var body: some View {
+        GroupBox {
+            HStack(alignment: .center, spacing: 10) {
+                if let d = model.doctor {
+                    Image(systemName: d.ok ? "checkmark.seal.fill" : "exclamationmark.triangle.fill").foregroundStyle(d.ok ? .green : .red).font(.title2)
+                } else {
+                    Image(systemName: "questionmark.circle").foregroundStyle(.secondary).font(.title2)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(model.doctor.map { $0.ok ? "All checks passed" : "\(failures) problem\(failures == 1 ? "" : "s") found" } ?? "Not checked yet").font(.headline)
+                    Text(model.lastChecked.map { "Checked at \($0.formatted(date: .omitted, time: .standard)). This page checks again by itself when Cheetah3D starts." } ?? "Checking…")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
+                Spacer()
+                if model.checking { ProgressView().controlSize(.small) }
+                Button("Re-check") { Task { await model.refreshHealth(passive: false) } }.disabled(model.checking || model.busy != nil)
+            }.padding(4)
+        }
+    }
+}
+
+/// The four things a new user has to get right, each with its next step.
+struct SetupChecklistView: View {
+    @ObservedObject var model: AppModel
+    var body: some View {
+        GroupBox("Setup") {
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(model.checklist) { item in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: item.done ? "checkmark.circle.fill" : "circle").foregroundStyle(item.done ? .green : .orange)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(item.title).fontWeight(item.done ? .regular : .semibold)
+                            if !item.done && !item.next.isEmpty { Text(item.next).font(.callout).foregroundStyle(.secondary) }
+                        }
+                        Spacer()
+                        switch item.action {
+                        case .installBridge: Button("Install") { Task { await model.installBridge() } }.buttonStyle(.borderedProminent)
+                        case .grantAccessibility: Button("Grant…") { model.requestAccessibility() }
+                        case .openClients: Button("Connect…") { model.selectedSection = .clients }
+                        case .none: EmptyView()
+                        }
+                    }
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading).padding(4)
+        }
+    }
+}
+
 struct ComponentsView: View {
     @ObservedObject var model: AppModel
     @State private var confirmUninstall = false
@@ -226,8 +280,11 @@ struct ClientsView: View {
                         switch row.state {
                         case "current":
                             Button("Disconnect") { Task { await model.setClient(row, connected: false) } }
-                        case "legacy":
-                            Button("Switch to this app") { Task { await model.setClient(row, connected: true) } }.buttonStyle(.borderedProminent)
+                        case "legacy", "moved":
+                            HStack {
+                                Button("Disconnect") { Task { await model.setClient(row, connected: false) } }
+                                Button("Switch to this app") { Task { await model.setClient(row, connected: true) } }.buttonStyle(.borderedProminent)
+                            }
                         case "foreign":
                             Text("custom entry").foregroundStyle(.secondary)
                         default:
@@ -242,7 +299,8 @@ struct ClientsView: View {
     private func stateText(_ r: ClientRow) -> String {
         switch r.state {
         case "current": return "Connected through this app"
-        case "legacy": return "Connected to an older install"
+        case "legacy": return "Connected to an older install (npx, npm or the old script)"
+        case "moved": return "Connected to another copy of C3D MCP (the app was moved or reinstalled)"
         case "foreign": return "A different \"c3d\" entry exists; left alone"
         default: return r.detected ? "Not connected" : "Not found on this Mac"
         }

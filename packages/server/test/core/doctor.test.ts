@@ -103,6 +103,31 @@ describe('doctor', () => {
     expect(status(r, 'modal')).toBe('fail');
   });
 
+  it('passive mode never pings (the ping activates Cheetah3D), keeps every other check, and is not a failure', async () => {
+    const helper = helperWith({
+      ping: { version: EXPECTED_HELPER_VERSION, pid: 7 },
+      permissions: { accessibility: true, screenRecording: true },
+      windows: [{ title: 'Doc A', subrole: 'AXStandardWindow' }],
+      modalState: { open: false, dialogs: [] },
+      status: { cheetah: { running: true, pid: 5, frontmost: false, version: '8.1.3', responsive: true } },
+    });
+    h = makeHarness({ exec, helper });
+    let pressed = 0;
+    h.app.trigger.press = () => { pressed++; return h.app.runMacro(); };
+    h.rt.probe.inspect = () => Promise.resolve({ running: true, version: '8.1.3', frontmost: false, source: 'helper' });
+    const passive = await doctor(h.rt, { passive: true });
+    expect(pressed).toBe(0);
+    expect(status(passive, 'ping')).toBe('warn');
+    expect(passive.checks.find((c) => c.name === 'ping')?.fix).toMatch(/Re-check/);
+    expect(status(passive, 'accessibility')).toBe('ok');
+    expect(status(passive, 'document-windows')).toBe('ok');
+    expect(status(passive, 'modal')).toBe('ok');
+    expect(passive.ok).toBe(true);
+    const full = await doctor(h.rt);
+    expect(pressed).toBeGreaterThan(0);
+    expect(status(full, 'ping')).toBe('ok');
+  });
+
   it('uses the helper for permissions, windows and modal state', async () => {
     const helper = helperWith({
       ping: { version: EXPECTED_HELPER_VERSION, pid: 7 },

@@ -66,6 +66,9 @@ extension UpdateController: SPUUpdaterDelegate {
     }
 
     nonisolated func updater(_ updater: SPUUpdater, didAbortWithError error: any Error) {
+        // Sparkle reports "no update" as an abort as well (SUNoUpdateError, 1001) right after updaterDidNotFindUpdate: that is not a failure.
+        let ns = error as NSError
+        if ns.domain == SUSparkleErrorDomain, ns.code == Int(SUError.noUpdateError.rawValue) { return }
         let text = "Update check failed: \(error.localizedDescription)"
         Task { @MainActor in self.note(text) }
     }

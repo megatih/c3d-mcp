@@ -106,3 +106,54 @@ final class AppCoreTests: XCTestCase {
         XCTAssertEqual(obj?["approval"] as? String, "strict")
     }
 }
+
+final class HealthRefreshPolicyTests: XCTestCase {
+    func testActivationIsThrottledAndNeverOverlapsAnAction() {
+        let p = HealthRefreshPolicy()
+        let t0 = Date(timeIntervalSince1970: 1_000)
+        XCTAssertTrue(p.shouldCheckOnActivation(lastChecked: nil, now: t0, busy: false), "no check yet: run one")
+        XCTAssertFalse(p.shouldCheckOnActivation(lastChecked: t0, now: t0.addingTimeInterval(4.9), busy: false), "inside the throttle window")
+        XCTAssertTrue(p.shouldCheckOnActivation(lastChecked: t0, now: t0.addingTimeInterval(5), busy: false))
+        XCTAssertFalse(p.shouldCheckOnActivation(lastChecked: nil, now: t0, busy: true), "an install or refresh is running")
+    }
+
+    func testLaunchRunsStopOnceHealthyAndEndWithTheSchedule() {
+        let p = HealthRefreshPolicy()
+        XCTAssertEqual(p.gapBeforeLaunchRun(0, previousHealthy: nil), 4, "the first run after a launch always happens")
+        XCTAssertEqual(p.gapBeforeLaunchRun(0, previousHealthy: true), 4)
+        XCTAssertEqual(p.gapBeforeLaunchRun(1, previousHealthy: false), 8, "still red: look again")
+        XCTAssertNil(p.gapBeforeLaunchRun(1, previousHealthy: true), "green: stop")
+        XCTAssertEqual(p.gapBeforeLaunchRun(2, previousHealthy: false), 18)
+        XCTAssertNil(p.gapBeforeLaunchRun(3, previousHealthy: false), "schedule exhausted")
+        XCTAssertEqual(p.launchGaps.reduce(0, +), 30, "the last run is 30 s after the launch")
+    }
+}
+
+final class SetupChecklistTests: XCTestCase {
+    private func report(_ checks: [(String, String)]) -> DoctorReport {
+        DoctorReport(ok: !checks.contains { $0.1 == "fail" }, summary: "", checks: checks.map { DoctorCheck(name: $0.0, status: $0.1, detail: "", fix: "") })
+    }
+    private func client(_ state: String) -> ClientRow { ClientRow(client: "cursor", label: "Cursor", detected: true, state: state, detail: "") }
+
+    func testTheStaleStartupReportShowsCheetahAsTheOnlyOpenStep() {
+        let stale = report([("bridge-installed", "ok"), ("cheetah-running", "fail"), ("menu-item", "warn")])
+        let items = SetupChecklist.build(doctor: stale, accessibilityGranted: true, clients: [client("current")])
+        XCTAssertEqual(items.map(\.done), [true, false, true, true])
+        XCTAssertTrue(items[1].next.contains("Start Cheetah3D"))
+        XCTAssertTrue(items[1].next.contains("by itself"))
+    }
+
+    func testRunningWithoutTheMenuAsksForOneRestart() {
+        let items = SetupChecklist.build(doctor: report([("bridge-installed", "ok"), ("cheetah-running", "ok"), ("menu-item", "fail")]), accessibilityGranted: true, clients: [])
+        XCTAssertFalse(items[1].done)
+        XCTAssertTrue(items[1].next.contains("Restart Cheetah3D"))
+    }
+
+    func testEverythingDoneAndActionsForTheOthers() {
+        let ok = report([("bridge-installed", "ok"), ("cheetah-running", "ok"), ("menu-item", "ok")])
+        XCTAssertTrue(SetupChecklist.build(doctor: ok, accessibilityGranted: true, clients: [client("current")]).allSatisfy(\.done))
+        let none = SetupChecklist.build(doctor: report([("bridge-installed", "fail")]), accessibilityGranted: false, clients: [client("legacy")])
+        XCTAssertEqual(none.map(\.action), [.installBridge, .none, .grantAccessibility, .openClients])
+        XCTAssertEqual(SetupChecklist.build(doctor: nil, accessibilityGranted: false, clients: [])[1].next, "Checking…")
+    }
+}

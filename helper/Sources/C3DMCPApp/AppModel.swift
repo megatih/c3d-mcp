@@ -5,6 +5,11 @@ import CoreGraphics
 import Foundation
 import HelperCore
 
+/// Is this NSWorkspace launch/terminate notification about Cheetah3D? (A free function: it runs inside the observer closure, off the main actor.)
+private func isCheetahNotification(_ n: Notification) -> Bool {
+    (n.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication)?.bundleIdentifier == Cheetah.bundleID
+}
+
 @MainActor
 final class AppModel: ObservableObject {
     // Engine
@@ -27,6 +32,16 @@ final class AppModel: ObservableObject {
     @Published var lastReport: String?
     /// The sidebar page. Lives in the model (not in the view) so that tests and "show me the Cleanup tab" can drive it.
     @Published var selectedSection: Section? = .overview
+    /// When the health check last finished (the Overview shows it, so a stale result is recognisable as stale).
+    @Published var lastChecked: Date?
+    /// An automatic or manual health check is running (small spinner on Overview; actions use `busy` instead).
+    @Published var checking = false
+
+    var healthPolicy = HealthRefreshPolicy()
+    /// Waits between the automatic runs after a Cheetah3D launch; tests replace it.
+    var pause: @Sendable (TimeInterval) async -> Void = { seconds in try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000)) }
+    private var launchTask: Task<Void, Never>?
+    private var observers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
 
     struct Banner: Identifiable, Equatable {
         enum Kind { case info, success, error }
@@ -82,6 +97,7 @@ final class AppModel: ObservableObject {
         self.clients = clients ?? []
         self.legacy = legacy ?? []
         reloadLog()
+        lastChecked = Date()
         if !firstLoadDone {
             firstLoadDone = true
             if !self.legacy.filter(\.removable).isEmpty {
@@ -90,6 +106,71 @@ final class AppModel: ObservableObject {
             }
         }
     }
+
+    /// Re-runs only the health check (status + doctor + permissions), not the client and cleanup scans.
+    /// `passive` skips the live ping round trip, which makes the helper activate Cheetah3D and press its menu: automatic re-checks must
+    /// not do that (it would pull focus away from this window), the Re-check button and Install do.
+    func refreshHealth(passive: Bool) async {
+        guard let engine, busy == nil, !checking else { return }
+        checking = true
+        defer { checking = false }
+        refreshPermissions()
+        async let s = try? engine.json(InstallStatus.self, ["status"]).value
+        async let d = try? engine.json(DoctorReport.self, ["doctor"] + (passive ? ["--passive"] : [])).value
+        let (status, doctor) = await (s, d)
+        self.status = status
+        self.doctor = doctor
+        lastChecked = Date()
+        reloadLog()
+    }
+
+    // MARK: automatic re-checks
+
+    /// Cheetah3D started: its menu bar needs a moment, so look again after 4 s and, while something is still red, after 12 s and 30 s.
+    func cheetahLaunched() {
+        launchTask?.cancel()
+        launchTask = Task { [weak self] in
+            var run = 0
+            var healthy: Bool?
+            while let self, let gap = self.healthPolicy.gapBeforeLaunchRun(run, previousHealthy: healthy) {
+                await self.pause(gap)
+                if Task.isCancelled { return }
+                await self.refreshHealth(passive: true)
+                healthy = self.doctor?.ok
+                run += 1
+            }
+        }
+    }
+
+    func cheetahTerminated() {
+        launchTask?.cancel()
+        Task { await refreshHealth(passive: true) }
+    }
+
+    /// The window came to the front again (for example after granting Accessibility in System Settings, or after starting Cheetah3D).
+    func appBecameActive() {
+        guard healthPolicy.shouldCheckOnActivation(lastChecked: lastChecked, now: Date(), busy: busy != nil || checking) else { return }
+        Task { await refreshHealth(passive: true) }
+    }
+
+    /// Hooks the events above up to the system. Called once by the app delegate.
+    func startObserving() {
+        let workspace = NSWorkspace.shared.notificationCenter
+        observers.append((workspace, workspace.addObserver(forName: NSWorkspace.didLaunchApplicationNotification, object: nil, queue: .main) { [weak self] n in
+            let hit = isCheetahNotification(n)
+            Task { @MainActor in if hit { self?.cheetahLaunched() } }
+        }))
+        observers.append((workspace, workspace.addObserver(forName: NSWorkspace.didTerminateApplicationNotification, object: nil, queue: .main) { [weak self] n in
+            let hit = isCheetahNotification(n)
+            Task { @MainActor in if hit { self?.cheetahTerminated() } }
+        }))
+        let center = NotificationCenter.default
+        observers.append((center, center.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.appBecameActive() }
+        }))
+    }
+
+    var checklist: [ChecklistItem] { SetupChecklist.build(doctor: doctor, accessibilityGranted: accessibility, clients: clients) }
 
     func refreshPermissions() {
         accessibility = AXIsProcessTrusted()
